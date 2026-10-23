@@ -47,9 +47,19 @@ def _discovery() -> dict[str, Any]:
     return data
 
 
+def _prune_states() -> None:
+    now = time.time()
+    for key, value in list(_STATES.items()):
+        if now - value["created"] > 600:
+            _STATES.pop(key, None)
+    while len(_STATES) > 1000:
+        _STATES.pop(next(iter(_STATES)), None)
+
+
 def start_url() -> str:
     if not enabled():
         raise AppError("auth.oidc_disabled")
+    _prune_states()
     data = _discovery()
     state = secrets.token_urlsafe(32)
     verifier = secrets.token_urlsafe(64)

@@ -59,7 +59,8 @@ export function LoginPage() {
         }
       }
       toast.success(t("auth.welcomeBack", { username: values.username }));
-      const target = (location.state as { from?: string } | null)?.from ?? "/";
+      const rawTarget = (location.state as { from?: string } | null)?.from ?? "/";
+      const target = rawTarget.startsWith("/") && !rawTarget.startsWith("//") ? rawTarget : "/";
       navigate(target, { replace: true });
     } catch (error) {
       if (error instanceof ApiError && error.code === "auth.invalid_mfa_code") {

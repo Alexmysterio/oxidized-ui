@@ -21,7 +21,8 @@
   <a href="#quick-start"><strong>Quick start</strong></a> ·
   <a href="#what-you-get"><strong>Features</strong></a> ·
   <a href="#configuration-reference"><strong>Configuration</strong></a> ·
-  <a href="#troubleshooting"><strong>Troubleshooting</strong></a>
+  <a href="#troubleshooting"><strong>Troubleshooting</strong></a> ·
+  <a href="SECURITY.md"><strong>Security</strong></a>
 </p>
 
 Oxidized UI turns [Oxidized](https://github.com/ytti/oxidized) into a complete
@@ -899,6 +900,12 @@ See [Updating and resetting](#updating-and-resetting).
 
 ---
 
+## Security
+
+See [SECURITY.md](SECURITY.md) for the reporting process and the secure
+deployment checklist, and [docs/SECURITY-AUDIT.md](docs/SECURITY-AUDIT.md) for
+the latest review.
+
 ## Security notes
 
 - Keep `.env` out of Git and backups in a secure place.
@@ -987,6 +994,8 @@ More documentation:
 - [Configuration coverage](docs/CONFIGURATION-COVERAGE.md)
 - [Backend](docs/BACKEND.md)
 - [Frontend](docs/FRONTEND.md)
+- [Security audit](docs/SECURITY-AUDIT.md)
+- [Security policy](SECURITY.md)
 
 ---
 

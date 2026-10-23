@@ -4,6 +4,8 @@ mkdir -p /data /oxidized-config /var/lib/oxidized /var/log/supervisor /home/oxid
 mkdir -p /oxidized-config/.ssh
 chown -R 30000:30000 /data /oxidized-config /var/lib/oxidized /var/log/supervisor
 chmod 700 /oxidized-config/.ssh
+chmod -R go-rwx /data /oxidized-config
+chmod 755 /var/log/supervisor
 rm -f /oxidized-config/pid
 rm -rf /home/oxidized/.config/oxidized /home/oxidized/.ssh
 ln -s /oxidized-config /home/oxidized/.config/oxidized

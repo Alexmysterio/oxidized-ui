@@ -166,7 +166,12 @@ def logout_route(
 
 @router.get("/auth/oidc/login")
 def oidc_login():
-    return RedirectResponse(oidc_service.start_url(), status_code=303)
+    try:
+        return RedirectResponse(oidc_service.start_url(), status_code=303)
+    except AppError:
+        return RedirectResponse("/login?oidc_error=1", status_code=303)
+    except Exception:  # noqa: BLE001 - provider/network failures must not leak internals
+        return RedirectResponse("/login?oidc_error=1", status_code=303)
 
 
 @router.get("/auth/oidc/callback")
@@ -179,6 +184,8 @@ def oidc_callback(
     try:
         user, raw, context = oidc_service.complete(db, code, state, request)
     except AppError:
+        return RedirectResponse("/login?oidc_error=1", status_code=303)
+    except Exception:  # noqa: BLE001 - provider/network failures must not leak internals
         return RedirectResponse("/login?oidc_error=1", status_code=303)
     add_audit(
         db,

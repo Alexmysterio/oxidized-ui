@@ -12,6 +12,7 @@ from .catalog import models as catalog_models
 from .config_service import applied_config, applied_groups
 from .crypto import decrypt_optional
 from .models import Node
+from .settings import settings
 
 
 def test_connection(db: Session, node: Node) -> dict[str, Any]:
@@ -57,7 +58,10 @@ def test_connection(db: Session, node: Node) -> dict[str, Any]:
         return result
 
     client = paramiko.SSHClient()
-    client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    known_hosts = settings.oxidized_config_dir / ".ssh" / "known_hosts"
+    if known_hosts.exists():
+        client.load_host_keys(str(known_hosts))
+    client.set_missing_host_key_policy(paramiko.RejectPolicy())
     try:
         client.connect(
             node.address,
@@ -93,7 +97,11 @@ def test_connection(db: Session, node: Node) -> dict[str, Any]:
         shell.close()
     except paramiko.AuthenticationException:
         result["message"] = "authentication_failed"
-    except (paramiko.SSHException, OSError, EOFError) as exc:
+    except paramiko.SSHException as exc:
+        message = str(exc)
+        unknown = "known_hosts" in message or "not found in" in message
+        result["message"] = "host_key_unknown" if unknown else f"ssh: {exc.__class__.__name__}"
+    except (OSError, EOFError) as exc:
         result["message"] = f"ssh: {exc.__class__.__name__}"
     finally:
         client.close()
