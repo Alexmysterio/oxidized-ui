@@ -1,0 +1,67 @@
+# Secrets and local environment
+.env
+.env.*
+!.env.example
+
+# Local research / reference checkouts
+.reference/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+htmlcov/
+.coverage
+coverage.xml
+
+# Node / frontend
+node_modules/
+frontend/dist/
+frontend/coverage/
+*.tsbuildinfo
+.pnpm-store/
+.pnpm-home/
+.pnpm/
+
+# Local databases and generated runtime files
+data/
+.devdata/
+.testdata/
+.testconfig/
+.smoke/
+.smoke2/
+.migrationsmoke/
+.build-tmp/
+.uv-cache/
+pytest-cache-files-*/
+*.sqlite
+*.sqlite3
+*.db
+*.db-wal
+*.db-shm
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Generated local Caddy root CA (export it per installation, do not commit)
+docker/caddy-root.crt
+
+# Pytest temp trees
+backend/pytest-of-Alex/
+
+# Contract fixture
+!tests/contract/router.db
+
+# Application catalogs
+!backend/app/data/
+!backend/app/data/*.json

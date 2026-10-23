@@ -1,0 +1,35 @@
+name: oxidized-contract
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Start disposable Oxidized
+        run: |
+          mkdir -p /tmp/oxidized-output
+          docker run -d --name oxidized-contract -p 8888:8888 \
+            -v "$PWD/tests/contract/home:/home/oxidized/.config/oxidized" \
+            -v "$PWD/tests/contract/router.db:/tmp/router.db:ro" \
+            oxidized/oxidized:0.37.0
+          for i in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:8888/nodes.json; then exit 0; fi
+            sleep 2
+          done
+          docker logs oxidized-contract
+          exit 1
+      - uses: astral-sh/setup-uv@v5
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: uv sync --frozen --extra dev
+        working-directory: backend
+      - run: OXIDIZED_CONTRACT_URL=http://127.0.0.1:8888 uv run --frozen pytest tests/test_oxidized_contract.py -q
+        working-directory: backend
+      - name: Stop Oxidized
+        if: always()
+        run: docker rm -f oxidized-contract || true

@@ -1,0 +1,56 @@
+[project]
+name = "oxidized-ui-backend"
+version = "0.1.0"
+description = "Backend for Oxidized UI"
+requires-python = ">=3.12"
+dependencies = [
+    "alembic>=1.14,<2",
+    "argon2-cffi>=23.1,<26",
+    "cryptography>=43,<51",
+    "fastapi>=0.115,<0.160",
+    "httpx>=0.28,<0.29",
+    "pydantic>=2.9,<3",
+    "paramiko>=3.5,<4",
+    "pydantic-settings>=2.6,<3",
+    "pyotp>=2.9,<3",
+    "python-multipart>=0.0.12,<0.1",
+    "ruamel.yaml>=0.18,<0.20",
+    "sqlalchemy>=2.0.36,<2.1",
+    "tzdata>=2024.2",
+    "uvicorn>=0.30,<0.55",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.3,<10",
+    "pytest-asyncio>=0.24,<2",
+    "ruff>=0.8,<1",
+]
+
+[build-system]
+requires = ["setuptools>=70"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["app*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = "-q -p no:cacheprovider"
+filterwarnings = [
+    "ignore::DeprecationWarning",
+]
+markers = [
+    "integration: requires a running Docker Compose stack",
+]
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+exclude = ["alembic/versions"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
+ignore = ["B008"]

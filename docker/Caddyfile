@@ -1,0 +1,26 @@
+{
+	# The LAN hostname/IP is supplied by docker-compose. Caddy's internal CA
+	# issues the certificate, so no public DNS or ACME challenge is required.
+	# Clients that connect by IP do not send SNI (Windows explicitly refuses to),
+	# so use the configured identifier as the default certificate selector.
+	default_sni {$UI_HOSTNAME}
+}
+
+https://{$UI_HOSTNAME} {
+	tls internal
+
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Permissions-Policy "camera=(), microphone=(), geolocation=()"
+		-Server
+	}
+
+	reverse_proxy oxidized-ui:8080
+}
+
+http://{$UI_HOSTNAME} {
+	redir https://{host}{uri} permanent
+}

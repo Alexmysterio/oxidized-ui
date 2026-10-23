@@ -1,0 +1,18 @@
+---
+source:
+  default: csv
+  csv:
+    file: "/tmp/router.db"
+    delimiter: ":"
+    map:
+      name: 0
+      model: 1
+      ip: 2
+      group: 3
+output:
+  default: file
+  file:
+    directory: "/tmp/configs"
+rest: 0.0.0.0:8888
+model: junos
+interval: 3600

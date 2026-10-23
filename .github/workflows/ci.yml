@@ -1,0 +1,88 @@
+﻿name: ci
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: uv sync --frozen --extra dev
+        working-directory: backend
+      - run: uv run --frozen pytest -q
+        working-directory: backend
+      - run: uv run --frozen ruff check app tests
+        working-directory: backend
+
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.33.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+        working-directory: frontend
+      - run: pnpm test
+        working-directory: frontend
+      - run: pnpm typecheck
+        working-directory: frontend
+      - run: node scripts/check-i18n.mjs
+        working-directory: frontend
+      - run: pnpm build
+        working-directory: frontend
+
+
+  e2e:
+    runs-on: ubuntu-24.04
+    needs: [frontend]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.33.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+        working-directory: frontend
+      - run: pnpm exec playwright install --with-deps chromium
+        working-directory: frontend
+      - run: pnpm build
+        working-directory: frontend
+      - run: pnpm test:e2e
+        working-directory: frontend
+
+  docker:
+    runs-on: ubuntu-latest
+    needs: [backend, frontend]
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t oxidized-ui:ci .
+      - name: Trivy scan
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: oxidized-ui:ci
+          format: table
+          exit-code: "0"
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+      - name: SBOM
+        uses: anchore/sbom-action@v0
+        with:
+          image: oxidized-ui:ci
+          format: spdx-json
+          artifact-name: oxidized-ui.spdx.json

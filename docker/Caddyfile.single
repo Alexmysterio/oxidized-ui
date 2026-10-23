@@ -1,0 +1,20 @@
+{
+	default_sni {$UI_HOSTNAME}
+}
+
+https://{$UI_HOSTNAME}, https://{$UI_DOMAIN} {
+	tls internal
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Permissions-Policy "camera=(), microphone=(), geolocation=()"
+		-Server
+	}
+	reverse_proxy 127.0.0.1:8080
+}
+
+http://{$UI_HOSTNAME}, http://{$UI_DOMAIN} {
+	redir https://{host}{uri} permanent
+}

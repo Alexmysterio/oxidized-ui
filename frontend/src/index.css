@@ -1,0 +1,231 @@
+@import "@fontsource-variable/inter";
+@import "@fontsource-variable/jetbrains-mono";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 220 33% 97%;
+    --foreground: 224 38% 10%;
+    --card: 0 0% 100%;
+    --card-foreground: 224 38% 10%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 224 38% 10%;
+    --primary: 229 100% 61%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 220 25% 94%;
+    --secondary-foreground: 224 30% 18%;
+    --muted: 220 24% 95%;
+    --muted-foreground: 220 12% 42%;
+    --accent: 229 100% 96%;
+    --accent-foreground: 229 76% 42%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --success: 152 64% 36%;
+    --success-foreground: 0 0% 100%;
+    --warning: 33 92% 45%;
+    --warning-foreground: 0 0% 100%;
+    --info: 198 86% 40%;
+    --info-foreground: 0 0% 100%;
+    --border: 220 20% 88%;
+    --input: 220 20% 86%;
+    --ring: 229 100% 61%;
+    --radius: 0.85rem;
+    --sidebar: 224 42% 9%;
+    --sidebar-foreground: 219 28% 88%;
+    --sidebar-muted: 220 16% 57%;
+    --sidebar-border: 221 26% 17%;
+    --chart-success: 152 64% 46%;
+    --chart-failed: 0 72% 58%;
+    --chart-grid: 220 20% 88%;
+    --shadow-color: 220 40% 18%;
+  }
+
+  .dark {
+    --background: 224 44% 6%;
+    --foreground: 216 32% 93%;
+    --card: 223 36% 9%;
+    --card-foreground: 216 32% 93%;
+    --popover: 223 38% 9%;
+    --popover-foreground: 216 32% 93%;
+    --primary: 229 100% 68%;
+    --primary-foreground: 224 44% 7%;
+    --secondary: 222 28% 15%;
+    --secondary-foreground: 216 28% 90%;
+    --muted: 222 28% 13%;
+    --muted-foreground: 219 14% 63%;
+    --accent: 228 38% 18%;
+    --accent-foreground: 229 100% 78%;
+    --destructive: 0 68% 56%;
+    --destructive-foreground: 0 0% 100%;
+    --success: 152 58% 46%;
+    --success-foreground: 224 44% 7%;
+    --warning: 36 92% 54%;
+    --warning-foreground: 224 44% 7%;
+    --info: 198 82% 52%;
+    --info-foreground: 224 44% 7%;
+    --border: 222 24% 17%;
+    --input: 222 24% 20%;
+    --ring: 229 100% 68%;
+    --sidebar: 225 44% 5%;
+    --sidebar-foreground: 217 27% 90%;
+    --sidebar-muted: 220 14% 58%;
+    --sidebar-border: 222 24% 14%;
+    --chart-success: 152 58% 50%;
+    --chart-failed: 0 70% 63%;
+    --chart-grid: 222 24% 17%;
+    --shadow-color: 224 60% 2%;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply h-full bg-background font-sans text-foreground antialiased;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11", "ss01";
+    text-rendering: optimizeLegibility;
+  }
+
+  #root {
+    min-height: 100%;
+  }
+
+  ::selection {
+    background: hsl(var(--primary) / 0.22);
+    color: hsl(var(--foreground));
+  }
+
+  :focus-visible {
+    @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
+  }
+
+  button,
+  [role="button"] {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  input[type="search"]::-webkit-search-cancel-button {
+    display: none;
+  }
+
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--border));
+    border: 3px solid transparent;
+    border-radius: 999px;
+    background-clip: padding-box;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground) / 0.4);
+    border: 3px solid transparent;
+    background-clip: padding-box;
+  }
+}
+
+@layer components {
+  .app-grid {
+    background-image:
+      radial-gradient(circle at 18% 0%, hsl(var(--primary) / 0.09), transparent 32rem),
+      radial-gradient(circle at 100% 0%, hsl(var(--info) / 0.06), transparent 28rem),
+      linear-gradient(to right, hsl(var(--border) / 0.28) 1px, transparent 1px),
+      linear-gradient(to bottom, hsl(var(--border) / 0.28) 1px, transparent 1px);
+    background-size: auto, auto, 36px 36px, 36px 36px;
+    mask-image: linear-gradient(to bottom, black, black 70%, transparent 100%);
+  }
+
+  .surface {
+    @apply rounded-lg border bg-card text-card-foreground shadow-soft;
+  }
+
+  .surface-quiet {
+    @apply rounded-lg border border-border/70 bg-card/60;
+  }
+
+  .eyebrow {
+    @apply font-mono text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground;
+  }
+
+  .metric-number {
+    @apply font-mono text-3xl font-medium tabular-nums tracking-tight;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .network-label {
+    @apply font-mono text-[11px] uppercase tracking-[0.12em] text-muted-foreground;
+  }
+
+  .grid-noise {
+    position: relative;
+  }
+
+  .grid-noise::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.28;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 240 240' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.16'/%3E%3C/svg%3E");
+    border-radius: inherit;
+    mix-blend-mode: soft-light;
+  }
+
+  .sidebar-grid {
+    background-image:
+      linear-gradient(to right, hsl(0 0% 100% / 0.035) 1px, transparent 1px),
+      linear-gradient(to bottom, hsl(0 0% 100% / 0.035) 1px, transparent 1px);
+    background-size: 28px 28px;
+  }
+
+  .skeleton-shimmer {
+    @apply relative overflow-hidden bg-muted;
+  }
+  .skeleton-shimmer::after {
+    @apply absolute inset-0 -translate-x-full animate-shimmer;
+    content: "";
+    background-image: linear-gradient(90deg, transparent, hsl(var(--foreground) / 0.06), transparent);
+  }
+
+  .cm-host .cm-editor {
+    @apply bg-transparent text-[13px];
+  }
+  .cm-host .cm-gutters {
+    background: transparent;
+    border-right: 1px solid hsl(var(--border));
+    color: hsl(var(--muted-foreground) / 0.7);
+  }
+  .cm-host .cm-activeLine,
+  .cm-host .cm-activeLineGutter {
+    background: hsl(var(--primary) / 0.05);
+  }
+  .cm-host .cm-scroller {
+    font-family: "JetBrains Mono Variable", ui-monospace, monospace;
+    line-height: 1.7;
+  }
+  .cm-host .cm-focused {
+    outline: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

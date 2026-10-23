@@ -1,0 +1,1614 @@
+{
+  "app": {
+    "name": "Oxidized UI",
+    "tagline": "Network configuration backup control plane",
+    "version": "Version",
+    "loading": "Preparing the console",
+    "taglineShort": "Backup control plane"
+  },
+  "languages": {
+    "es": "Español",
+    "en": "English"
+  },
+  "common": {
+    "add": "Add",
+    "apply": "Apply",
+    "back": "Back",
+    "cancel": "Cancel",
+    "clear": "Clear",
+    "close": "Close",
+    "confirm": "Confirm",
+    "copied": "Copied",
+    "copy": "Copy",
+    "delete": "Delete",
+    "download": "Download",
+    "edit": "Edit",
+    "enabled": "Enabled",
+    "disabled": "Disabled",
+    "hide": "Hide",
+    "language": "Language",
+    "more": "More",
+    "never": "Never",
+    "next": "Next",
+    "none": "None",
+    "previous": "Previous",
+    "refresh": "Refresh",
+    "remove": "Remove",
+    "retry": "Retry",
+    "save": "Save",
+    "saving": "Saving…",
+    "search": "Search",
+    "show": "Show",
+    "status": "Status",
+    "theme": "Theme",
+    "tryAgain": "Try again",
+    "updatedAt": "Updated",
+    "actions": "Actions",
+    "description": "Description",
+    "details": "Details",
+    "open": "Open",
+    "selectAll": "Select all",
+    "page": "Page {{page}} of {{pages}}",
+    "rows": "{{count}} rows",
+    "loadingError": "Could not load data",
+    "loadingErrorDescription": "The service did not respond. Please try again.",
+    "unexpectedError": "Something unexpected happened.",
+    "copiedDescription": "The content is on your clipboard.",
+    "copyFailed": "Could not copy to clipboard.",
+    "working": "Working…",
+    "searchPlaceholder": "Search…",
+    "filters": "Filters",
+    "clearFilters": "Clear filters",
+    "viewAll": "View all",
+    "operationCompleted": "Operation completed",
+    "continue": "Continue",
+    "default": "Default",
+    "keep": "Keep",
+    "replace": "Replace",
+    "from": "From",
+    "to": "To",
+    "dismiss": "Dismiss"
+  },
+  "theme": {
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System",
+    "toggle": "Change theme"
+  },
+  "roles": {
+    "admin": "Administrator",
+    "operator": "Operator",
+    "viewer": "Viewer",
+    "adminDescription": "Full access, global configuration, users and restart.",
+    "operatorDescription": "Nodes, groups, backups and logs. No global configuration.",
+    "viewerDescription": "Read-only dashboard, nodes, backups and diffs."
+  },
+  "nav": {
+    "overview": "Overview",
+    "inventory": "Inventory",
+    "operations": "Operations",
+    "administration": "Administration",
+    "dashboard": "Dashboard",
+    "nodes": "Nodes",
+    "groups": "Groups",
+    "config": "Configuration",
+    "status": "Status & logs",
+    "users": "Users",
+    "audit": "Audit",
+    "system": "System settings",
+    "profile": "My profile",
+    "signOut": "Sign out",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu",
+    "collapse": "Collapse sidebar",
+    "expand": "Expand sidebar",
+    "mainNavigation": "Main navigation",
+    "userMenu": "User menu",
+    "search": "Search everything",
+    "searchHint": "Search nodes, groups or pages",
+    "skipToContent": "Skip to content"
+  },
+  "status": {
+    "online": "Online",
+    "offline": "Offline",
+    "degraded": "Degraded",
+    "starting": "Starting",
+    "unknown": "Unknown",
+    "running": "Running",
+    "stopped": "Stopped",
+    "healthy": "Healthy",
+    "unhealthy": "Unhealthy",
+    "apiOnline": "API available",
+    "apiOffline": "API unavailable",
+    "container": "Container",
+    "lastSeen": "Last signal",
+    "lastBackup": "Last successful backup",
+    "lastFailure": "Last failure",
+    "neverBackedUp": "No backups",
+    "lastSync": "Last sync",
+    "activeJobs": "Active jobs",
+    "job": "Job"
+  },
+  "nodeStatus": {
+    "ok": "OK",
+    "failed": "Failed",
+    "pending": "Pending",
+    "never": "Never",
+    "success": "Success",
+    "no_connection": "No connection",
+    "fail": "Error",
+    "timelimit": "Time limit",
+    "unknown": "Unknown"
+  },
+  "auth": {
+    "loginTitle": "Sign in to the control plane",
+    "username": "Username",
+    "usernamePlaceholder": "your.username",
+    "password": "Password",
+    "passwordPlaceholder": "Enter your password",
+    "signIn": "Sign in",
+    "signingIn": "Signing in…",
+    "loginError": "Incorrect username or password.",
+    "loginRateLimited": "Too many attempts. Wait a few minutes before trying again.",
+    "welcomeBack": "Signed in as {{username}}.",
+    "loggedOut": "Signed out.",
+    "noAccount": "Access is managed by an administrator.",
+    "secureConnection": "Secure cookie-based session",
+    "brandTitle": "Your entire network inventory. A single source of truth.",
+    "brandSubtitle": "Nodes, credentials, versions and Oxidized configuration — under control and without hand-editing YAML.",
+    "brandPointInventory": "Centralized inventory and credentials",
+    "brandPointHistory": "Versions, diffs and one-click rollback",
+    "brandPointLive": "Live status and logs",
+    "setupTitle": "Set up your instance",
+    "setupSubtitle": "Create the first administrator account. You can add nodes and connect Oxidized afterwards.",
+    "setupEyebrow": "First run",
+    "confirmPassword": "Repeat password",
+    "passwordMismatch": "Passwords do not match.",
+    "passwordHint": "At least 12 characters and three of: lowercase, uppercase, numbers and symbols.",
+    "createAdmin": "Create administrator",
+    "creatingAdmin": "Creating administrator…",
+    "setupError": "Could not complete the setup.",
+    "setupDone": "Administrator created. You can use the console now.",
+    "accountStep": "Administrator account",
+    "accountStepDescription": "This user will have full access to the system.",
+    "preferencesStep": "Initial preferences",
+    "preferencesStepDescription": "Choose how you want to see the console. You can change it later.",
+    "setupPoint": "Guided, secure first-run setup",
+    "stepOf": "Step {{current}} of {{total}}",
+    "setupFooter": "This screen only appears while no administrator exists.",
+    "loginSubtitle": "Manage backups, configurations and network state from one place.",
+    "loginHeroTitle": "Your entire network, under control.",
+    "loginHeroDescription": "Inventory, credentials and Oxidized configurations in a single console.",
+    "loginEyebrow": "Operations console",
+    "sessionExpired": "Your session has expired. Sign in again.",
+    "mfaPrompt": "Enter the 6-digit code from your authenticator app.",
+    "mfaCode": "Verification code",
+    "mfaCodeRequired": "Enter the verification code.",
+    "verifyCode": "Verify code",
+    "mfaBack": "Back to sign in",
+    "invalidMfaCode": "The verification code is incorrect.",
+    "mfaExpired": "The verification expired. Sign in again.",
+    "oidcLogin": "Sign in with OIDC"
+  },
+  "dashboard": {
+    "eyebrow": "Operations center",
+    "title": "Network state",
+    "subtitle": "A quick read of inventory, Oxidized health and backup activity.",
+    "forceBackupAll": "Back up all nodes",
+    "backupAllQueued": "Mass backup queued.",
+    "backupAllConfirmTitle": "Back up every node",
+    "backupAllConfirmDescription": "{{count}} nodes will be queued in Oxidized. Backups will run according to the worker configuration.",
+    "oxidizedSignal": "Oxidized signal",
+    "apiLabel": "REST API",
+    "containerLabel": "Container",
+    "lastBackupLabel": "Last backup",
+    "activity": "Backup activity",
+    "activityDescription": "Observations from the last two weeks. Data refreshes with the poller.",
+    "success": "Successful",
+    "failed": "Failed",
+    "noActivity": "No activity recorded yet",
+    "noActivityDescription": "Successful and failed backups will appear here as soon as Oxidized starts working.",
+    "nodesTotal": "Nodes",
+    "ok": "Healthy",
+    "failedNodes": "Failing",
+    "pending": "Pending",
+    "never": "No backup",
+    "failedNodesTitle": "Nodes that need attention",
+    "failedNodesDescription": "Recent attempts without a successful result.",
+    "noFailedNodes": "No node is failing right now.",
+    "recentJobs": "Recent jobs",
+    "recentJobsDescription": "Activity launched from the console.",
+    "noJobs": "No recent jobs.",
+    "noNodesTitle": "Your inventory is empty",
+    "noNodesDescription": "Add your first node so Oxidized can start storing configurations.",
+    "addFirstNode": "Add first node",
+    "warnings": "Warnings",
+    "systemOfflineDescription": "The console will keep working. Check the Oxidized container and connection settings.",
+    "openLogs": "Open logs",
+    "refreshStatus": "Refresh status",
+    "nodesHint": "Managed nodes",
+    "activitySummary": "Backup activity: {{success}} successful and {{failed}} failed in the last 14 days.",
+    "noActiveJobs": "No active jobs",
+    "sla": "Backup SLA",
+    "slaDescription": "Success by group over the last {{days}} days.",
+    "slaCounts": "{{success}} successful · {{failed}} failed",
+    "onboarding": "First steps",
+    "onboardingDescription": "The instance has nodes but no successful backup yet.",
+    "onboardingNodes": "Review nodes",
+    "onboardingTest": "Test connection",
+    "onboardingBackup": "Run first backup",
+    "onboardingNotify": "Configure alerts"
+  },
+  "nodes": {
+    "title": "Node inventory",
+    "subtitle": "The console database is the source of truth. Oxidized consumes it over HTTP after every change.",
+    "addNode": "Add node",
+    "searchPlaceholder": "Search by name, IP, model or username…",
+    "filterGroup": "Group",
+    "filterModel": "Model",
+    "filterStatus": "Status",
+    "allGroups": "All groups",
+    "allModels": "All models",
+    "allStatuses": "All statuses",
+    "name": "Node",
+    "address": "Address",
+    "model": "Model",
+    "group": "Group",
+    "lastBackup": "Last backup",
+    "port": "Port",
+    "credentials": "Credentials",
+    "bulkBackup": "Force backup",
+    "bulkGroup": "Change group",
+    "bulkDelete": "Delete",
+    "bulkSelected": "{{count}} nodes selected",
+    "bulkGroupTitle": "Change group for selected nodes",
+    "bulkGroupDescription": "Pick an applied group. Nodes will be reloaded in Oxidized.",
+    "bulkDeleteTitle": "Delete selected nodes",
+    "bulkDeleteDescription": "{{count}} nodes will be deleted. Backup history in Oxidized is not removed.",
+    "deleteTitle": "Delete node",
+    "deleteDescription": "Delete “{{name}}”? Historical backups remain in Oxidized, but the node will no longer be managed from the console.",
+    "emptyTitle": "No nodes yet",
+    "emptyDescription": "Add a node or import a CSV to start building your inventory.",
+    "noMatchTitle": "No nodes match these filters",
+    "noMatchDescription": "Try changing the search or clearing the filters.",
+    "importTitle": "Import nodes from CSV",
+    "importDescription": "Upload a CSV with columns name, address, model, group, input, port, username, password, enable and vars. Blank credentials preserve existing values when updating.",
+    "importMode": "Import mode",
+    "importSkip": "Skip existing nodes",
+    "importUpdate": "Update existing nodes",
+    "importDryRun": "Validate without writing",
+    "fileSelected": "{{name}} · {{size}}",
+    "dropFile": "Drop a CSV here or click to browse",
+    "importRun": "Import",
+    "importPreview": "Validate",
+    "importSummary": "{{created}} created, {{updated}} updated, {{skipped}} skipped.",
+    "importErrors": "{{count}} validation errors",
+    "row": "Row",
+    "column": "Column",
+    "downloadExport": "Export CSV",
+    "exportSuccess": "CSV exported.",
+    "backupQueued": "Backup of {{name}} queued.",
+    "input": "Input",
+    "username": "Username",
+    "hasPassword": "Password configured",
+    "hasEnable": "Enable configured",
+    "deleteSuccess": "Node deleted.",
+    "bulkDeleteSuccess": "{{count}} nodes deleted.",
+    "bulkGroupSuccess": "Group updated on {{count}} nodes.",
+    "reloadFailed": "The node was saved, but Oxidized did not reload the list.",
+    "import": "Import",
+    "saveFilter": "Save filter",
+    "saveFilterDescription": "Save the current filters to apply them again.",
+    "filterName": "Filter name",
+    "bulkEdit": "Edit",
+    "bulkEditTitle": "Bulk edit",
+    "bulkEditDescription": "Update fields on {{count}} nodes. Only filled fields are applied.",
+    "bulkEditSuccess": "{{count}} nodes updated.",
+    "compare": "Compare",
+    "compareDescription": "Differences between the current configurations of two nodes."
+  },
+  "nodeForm": {
+    "createTitle": "New node",
+    "createDescription": "Add a device to the inventory. It will be reloaded in Oxidized without restarting the container.",
+    "editTitle": "Edit node",
+    "editDescription": "Update device details and credentials.",
+    "identity": "Identity",
+    "connection": "Connection",
+    "credentials": "Credentials",
+    "variables": "Device-specific variables",
+    "name": "Node name",
+    "nameHelp": "Used as the Oxidized identifier and backup filename. Must be unique.",
+    "namePlaceholder": "core-sw-01",
+    "address": "IP or hostname",
+    "addressHelp": "Leave blank so Oxidized resolves the name over DNS.",
+    "addressPlaceholder": "10.20.0.11",
+    "model": "Model",
+    "modelHelp": "Oxidized model that understands the device operating system.",
+    "group": "Group",
+    "groupHelp": "Groups are only available once their configuration has been applied.",
+    "noGroup": "No group",
+    "input": "Input",
+    "inputHelp": "Ordered protocols by preference. If empty, global inputs are used.",
+    "inputPlaceholder": "ssh, telnet",
+    "port": "Port",
+    "portHelp": "Mapped to ssh_port, telnet_port or both based on the effective input.",
+    "username": "Username",
+    "password": "Password",
+    "passwordHelp": "Write-only. It is never returned by the API.",
+    "passwordKeep": "Keep current password",
+    "passwordReplace": "Replace password",
+    "passwordClear": "Clear password",
+    "enable": "Enable",
+    "enableHelp": "Privileged mode password. Write-only.",
+    "enableKeep": "Keep current enable",
+    "enableReplace": "Replace enable",
+    "enableClear": "Clear enable",
+    "varsHelp": "Sent to Oxidized as vars. Use the known variable catalog or your own keys.",
+    "addVar": "Add variable",
+    "variableKey": "Key",
+    "variableValue": "Value",
+    "advancedOptions": "Advanced options",
+    "output": "Output",
+    "outputHelp": "Output override for this node. Usually inherited from global configuration.",
+    "prompt": "Prompt",
+    "promptHelp": "Device-specific regular expression.",
+    "timeout": "Timeout (seconds)",
+    "submitCreate": "Create node",
+    "submitEdit": "Save changes",
+    "saving": "Saving node…",
+    "created": "Node created and sent to Oxidized.",
+    "updated": "Node updated and sent to Oxidized.",
+    "secretReplaceHint": "Enter a new value to replace the existing one.",
+    "modelPlaceholder": "Search model…",
+    "modelNoResults": "No models found.",
+    "modelCustomHint": "It will be used as a custom model."
+  },
+  "nodeDetail": {
+    "back": "Back to nodes",
+    "overview": "Overview",
+    "configuration": "Configuration",
+    "versions": "Versions",
+    "diff": "Compare",
+    "backupNow": "Back up now",
+    "edit": "Edit node",
+    "delete": "Delete node",
+    "connectionInfo": "Connection",
+    "inventoryInfo": "Inventory",
+    "lastAttempt": "Last attempt",
+    "lastSuccess": "Last success",
+    "duration": "Duration",
+    "observed": "Observed",
+    "configTitle": "Current configuration",
+    "configDescription": "Content returned by oxidized-web. Shown unmodified.",
+    "configEmpty": "No configuration available for this node.",
+    "downloadConfig": "Download configuration",
+    "versionsTitle": "Version history",
+    "versionsDescription": "Select two versions to compare them side by side.",
+    "noVersions": "No versions available.",
+    "outputUnsupported": "This node uses an output without version history. Switch to git or gitcrypt to enable it.",
+    "version": "Version",
+    "author": "Author",
+    "message": "Message",
+    "selectVersion": "Open version",
+    "compareSelected": "Compare selected",
+    "selectTwo": "Select exactly two versions.",
+    "noChanges": "No changes between the selected versions.",
+    "additions": "+{{count}}",
+    "deletions": "−{{count}}",
+    "backupQueued": "Backup requested.",
+    "deleteConfirm": "Delete “{{name}}”? The history stored in Oxidized will not be erased.",
+    "current": "Current",
+    "backupNowHint": "Moves the node to the front of the Oxidized queue.",
+    "rawStatus": "Reported status",
+    "trustHostKey": "Trust SSH host key",
+    "trustHostKeyTitle": "Trust the SSH host key for {{name}}?",
+    "trustHostKeyDescription": "Oxidized will query {{address}}, store its public key in known_hosts and show the fingerprint for verification. Only do this if it matches the device fingerprint.",
+    "trustHostKeyConfirm": "Trust and save",
+    "trustHostKeySuccess": "SSH key saved: {{fingerprint}}",
+    "lastError": "Last error",
+    "noErrorDetail": "Oxidized did not record a detailed reason for this failure. Check the container logs or run the backup again.",
+    "testConnection": "Test connection",
+    "connectionOk": "Connection OK. Prompt: {{prompt}}",
+    "connectionFailed": "Connection failed: {{reason}}",
+    "history": "History",
+    "historySummary": "{{rate}}% success in the last {{total}} runs.",
+    "historyEmpty": "No runs recorded.",
+    "historyStarted": "Started",
+    "trigger": "Trigger",
+    "status": "Status"
+  },
+  "groups": {
+    "title": "Groups & credentials",
+    "subtitle": "Share credentials and variables between nodes. Changes stay in draft until an administrator applies them.",
+    "addGroup": "New group",
+    "name": "Group",
+    "nodeCount": "Nodes",
+    "credentials": "Credentials",
+    "vars": "Variables",
+    "models": "Model overrides",
+    "applied": "Applied",
+    "draft": "Draft",
+    "requiresApply": "There are pending changes to apply.",
+    "requiresApplyDescription": "An administrator must apply the configuration before Oxidized uses the new credentials.",
+    "applyNow": "Review and apply",
+    "emptyTitle": "No groups yet",
+    "emptyDescription": "Create a group to share credentials between several nodes.",
+    "deleteTitle": "Delete group",
+    "deleteDescription": "Delete the “{{name}}” group? It must not be used by any node.",
+    "createTitle": "New group",
+    "editTitle": "Edit group",
+    "createDescription": "Changes are saved as a configuration draft.",
+    "editDescription": "Blank secrets preserve the current value.",
+    "groupName": "Group name",
+    "username": "Shared username",
+    "password": "Shared password",
+    "enable": "Shared enable",
+    "varsHelp": "Variables shared by every node in the group.",
+    "addVar": "Add variable",
+    "modelOverrides": "Credentials per model",
+    "addModel": "Add model override",
+    "model": "Model",
+    "noModels": "No model overrides.",
+    "savedDraft": "Group saved as draft.",
+    "deletedDraft": "Group marked for removal in the draft.",
+    "save": "Save draft",
+    "modelOverridesHelp": "Define model-specific credentials inside the group."
+  },
+  "config": {
+    "title": "Oxidized configuration",
+    "subtitle": "Edit, validate and version the YAML that drives Oxidized. Global changes require restarting the container.",
+    "saveDraft": "Save draft",
+    "saveApply": "Save and apply",
+    "saveApplyHint": "Apply YAML and restart Oxidized.",
+    "applied": "Applied",
+    "draft": "Draft",
+    "noDraft": "No draft",
+    "draftBanner": "There are saved changes waiting to be applied.",
+    "draftBannerDescription": "Review the diff and apply when ready. Oxidized keeps using the applied revision until then.",
+    "applyDraft": "Apply draft",
+    "driftTitle": "The configuration file changed outside the console",
+    "driftDescription": "The volume checksum does not match the applied revision. Review the YAML and save a draft before overwriting it.",
+    "managedTitle": "Blocks managed by the console",
+    "managedDescription": "The internal HTTP source and the oxidized-web extension are injected automatically and cannot be edited.",
+    "tabs": {
+      "general": "General",
+      "input": "Inputs",
+      "output": "Outputs",
+      "source": "Sources",
+      "hooks": "Hooks",
+      "models": "Models",
+      "rest": "REST / Extensions",
+      "advanced": "Advanced YAML"
+    },
+    "generalDescription": "Runtime parameters, default credentials and global variables.",
+    "inputDescription": "Connection protocols and global input options.",
+    "outputDescription": "Where and how configurations are stored.",
+    "sourceDescription": "The internal HTTP source is required for the console to be the source of truth.",
+    "hooksDescription": "Automations Oxidized runs on backup events.",
+    "modelsDescription": "Credentials and variables per model, plus model aliases.",
+    "restDescription": "Oxidized extensions and internal web API.",
+    "advancedDescription": "Full editable YAML. Unknown keys are preserved.",
+    "varsTitle": "Global variables",
+    "varsDescription": "Values shared by every node: enable, remove_secret and any variable supported by models.",
+    "addVar": "Add variable",
+    "addHook": "Add hook",
+    "hookName": "Hook name",
+    "hookType": "Type",
+    "hookEvents": "Events",
+    "noHooks": "No hooks configured.",
+    "execWarning": "Exec hooks run commands inside the Oxidized container. Only configure them if you trust the command.",
+    "addModelOverride": "Add credentials per model",
+    "username": "Username",
+    "password": "Password",
+    "enable": "Enable",
+    "modelMap": "model_map",
+    "modelMapHelp": "Aliases or regular expressions mapping source models to Oxidized models.",
+    "addMapping": "Add mapping",
+    "match": "Pattern",
+    "target": "Target",
+    "regex": "Regex",
+    "yamlEditorTitle": "Editable YAML",
+    "yamlEditorDescription": "Managed blocks are excluded. On save, the backend validates the YAML and renders the effective configuration.",
+    "validate": "Validate YAML",
+    "yamlValid": "Valid YAML.",
+    "yamlDirty": "There are unvalidated changes in the editor.",
+    "previewTitle": "Change preview",
+    "previewDescription": "This is the diff to be saved. The source and oxidized-web blocks are injected automatically.",
+    "noChanges": "No changes against the applied revision.",
+    "confirmSaveTitle": "Save configuration draft",
+    "confirmSaveDescription": "An encrypted revision will be created. Oxidized will not change until you apply it.",
+    "confirmApplyTitle": "Apply configuration and restart Oxidized",
+    "confirmApplyDescription": "The file will be written atomically and the container restarted. In-flight backups may be affected.",
+    "savedToast": "Draft saved.",
+    "appliedToast": "Configuration applied and Oxidized restarted.",
+    "applyFailed": "The configuration was written, but the restart failed.",
+    "restarting": "Restarting Oxidized…",
+    "revisionHistory": "Revision history",
+    "revisionHistoryDescription": "Every revision is stored encrypted and immutable.",
+    "noRevisions": "No revisions yet.",
+    "viewDiff": "View diff",
+    "restore": "Restore",
+    "restoreTitle": "Restore revision",
+    "restoreDescription": "A new draft will be created from revision #{{id}}. You can review and apply it afterwards.",
+    "restored": "Revision restored as draft.",
+    "origin": "Origin",
+    "author": "Author",
+    "created": "Created",
+    "appliedAt": "Applied",
+    "showHistory": "View history",
+    "unknownUser": "System",
+    "advancedFields": "Advanced options",
+    "deprecated": "Deprecated",
+    "managed": "Managed",
+    "sensitive": "Secret",
+    "defaultValue": "Default: {{value}}",
+    "unsavedChanges": "Unsaved changes",
+    "reloadToForm": "Validate and update form",
+    "revisionDiff": "Revision diff",
+    "againstApplied": "Against applied revision",
+    "copyYaml": "Copy YAML",
+    "downloadYaml": "Download YAML",
+    "jsonInvalid": "The JSON is invalid.",
+    "revisionStatus": {
+      "applied": "Applied",
+      "draft": "Draft",
+      "superseded": "Superseded",
+      "discarded": "Discarded",
+      "rolled_back": "Rolled back"
+    },
+    "knownVariables": "Known variables",
+    "schedule": "Schedule",
+    "scheduleTitle": "Schedule apply",
+    "scheduleDescription": "Choose when to apply the draft. The scheduler runs it even if you close the browser.",
+    "scheduleAt": "Date and time",
+    "scheduleConfirm": "Schedule",
+    "scheduleCreated": "Apply scheduled.",
+    "scheduleCancelled": "Schedule cancelled."
+  },
+  "logs": {
+    "title": "Status & logs",
+    "subtitle": "Container health, live stream and jobs launched from the console.",
+    "live": "Live",
+    "connecting": "Connecting…",
+    "connected": "Connected",
+    "disconnected": "Disconnected",
+    "paused": "Paused",
+    "pause": "Pause",
+    "resume": "Resume",
+    "clear": "Clear view",
+    "level": "Level",
+    "allLevels": "All levels",
+    "searchPlaceholder": "Filter lines…",
+    "download": "Download logs",
+    "jobs": "Jobs",
+    "jobsDescription": "Asynchronous jobs from this UI.",
+    "noJobs": "No jobs in this view.",
+    "noLogs": "No lines to show",
+    "noLogsDescription": "The container may not be emitting stdout logs. Check Oxidized's logger configuration.",
+    "streamError": "The log stream was interrupted.",
+    "downloadError": "Could not download logs.",
+    "autoScroll": "Auto-scroll",
+    "lines": "{{count}} lines",
+    "filteredLive": "Filters applied to stream",
+    "restartOxidized": "Restart Oxidized",
+    "reloadNodes": "Reload nodes",
+    "reloadDone": "Nodes reloaded.",
+    "restartDone": "Restart requested.",
+    "restartConfirmTitle": "Restart Oxidized",
+    "restartConfirmDescription": "In-flight backups and the log stream will be interrupted until the container starts again.",
+    "openLogs": "Open stream",
+    "jobProgress": "{{done}} / {{total}}",
+    "jobResult": "Result",
+    "jobError": "Error",
+    "queueTitle": "Job queue",
+    "tail": "Latest lines",
+    "timestamp": "Time",
+    "source": "Source",
+    "cancelJob": "Cancel",
+    "jobCancelled": "Job cancelled.",
+    "backupSchedules": "Backup schedules",
+    "backupSchedulesDescription": "Run automatic backups by group or for all nodes.",
+    "scheduleGroup": "Group",
+    "scheduleAllGroups": "All groups",
+    "scheduleInterval": "Interval (min)",
+    "scheduleCreate": "Schedule",
+    "scheduleCreated": "Backup scheduled.",
+    "scheduleDeleted": "Schedule deleted.",
+    "noSchedules": "No schedules."
+  },
+  "jobs": {
+    "queued": "Queued",
+    "running": "Running",
+    "succeeded": "Succeeded",
+    "failed": "Failed",
+    "cancelled": "Cancelled",
+    "backup_node": "Node backup",
+    "backup_all": "Mass backup",
+    "oxidized_reload": "Oxidized reload",
+    "oxidized_restart": "Oxidized restart",
+    "config_apply": "Apply configuration",
+    "requested": "Requested",
+    "finished": "Finished",
+    "noProgress": "No progress",
+    "requestedBy": "Requested by",
+    "resultJson": "Detail"
+  },
+  "users": {
+    "title": "Users & roles",
+    "subtitle": "Control who can manage inventory, launch backups or access read-only data.",
+    "addUser": "Add user",
+    "username": "Username",
+    "role": "Role",
+    "active": "Active",
+    "inactive": "Inactive",
+    "lastLogin": "Last login",
+    "createdAt": "Created",
+    "emptyTitle": "No users",
+    "emptyDescription": "Create the first user besides the initial administrator.",
+    "createTitle": "New user",
+    "createDescription": "The password must contain at least 12 characters.",
+    "editTitle": "Edit user",
+    "editDescription": "Role or state changes apply immediately.",
+    "passwordTitle": "New password",
+    "passwordDescription": "All open sessions for this user will be revoked.",
+    "newPassword": "New password",
+    "resetPassword": "Reset password",
+    "resetDone": "Password reset.",
+    "deleteTitle": "Delete user",
+    "deleteDescription": "Delete “{{username}}”? This action cannot be undone.",
+    "created": "User created.",
+    "updated": "User updated.",
+    "deleted": "User deleted.",
+    "language": "Language",
+    "self": "You",
+    "rolesHelp": "The backend enforces permissions on every request."
+  },
+  "audit": {
+    "title": "Audit",
+    "subtitle": "Who did what and when, with no secrets or sensitive content.",
+    "actor": "Actor",
+    "action": "Action",
+    "target": "Target",
+    "when": "Date",
+    "ip": "IP",
+    "emptyTitle": "No audit events",
+    "emptyDescription": "Relevant actions will appear here.",
+    "filterActor": "Filter by actor",
+    "filterAction": "Filter by action",
+    "from": "From",
+    "to": "To",
+    "applyFilters": "Apply filters",
+    "allTargets": "All targets",
+    "details": "Parameters",
+    "systemActor": "System",
+    "actions": {
+      "auth": {
+        "login_succeeded": "Successful sign in",
+        "login_failed": "Failed sign-in attempt",
+        "logout": "Signed out",
+        "password_changed": "Password changed",
+        "session_revoked": "Session revoked",
+        "mfa_challenge_issued": "MFA challenge issued",
+        "mfa_enabled": "MFA enabled",
+        "mfa_disabled": "MFA disabled",
+        "login_mfa_succeeded": "MFA login",
+        "token_created": "API token created",
+        "token_revoked": "API token revoked",
+        "oidc_login_succeeded": "OIDC login succeeded"
+      },
+      "setup": {
+        "completed": "Initial setup completed",
+        "bootstrap_admin": "Bootstrap administrator created from environment"
+      },
+      "node": {
+        "created": "Node created",
+        "updated": "Node updated",
+        "deleted": "Node deleted",
+        "bulk_updated": "Bulk node action",
+        "imported": "Nodes imported",
+        "backup_requested": "Backup requested",
+        "host_key_trusted": "Host SSH key trusted",
+        "connection_tested": "Node connection tested"
+      },
+      "group": {
+        "created": "Group created as draft",
+        "updated": "Group updated as draft",
+        "deleted": "Group marked for removal"
+      },
+      "config": {
+        "draft_saved": "Configuration draft saved",
+        "applied": "Configuration applied",
+        "apply_failed": "Configuration apply failed",
+        "apply_requested": "Configuration apply requested",
+        "bootstrap_written": "Initial configuration generated",
+        "external_imported": "External configuration adopted",
+        "rolled_back": "Configuration rolled back",
+        "apply_scheduled": "Apply scheduled",
+        "apply_schedule_cancelled": "Scheduled apply cancelled"
+      },
+      "oxidized": {
+        "reload_requested": "Node reload requested",
+        "restart_requested": "Oxidized restart requested",
+        "auto_recovered": "Oxidized auto-recovered"
+      },
+      "user": {
+        "created": "User created",
+        "updated": "User updated",
+        "deleted": "User deleted",
+        "password_reset": "Password reset"
+      },
+      "system": {
+        "settings_updated": "System settings updated",
+        "connection_test": "Connection test",
+        "export_created": "Encrypted export created"
+      },
+      "job": {
+        "cancelled": "Job cancelled"
+      }
+    },
+    "export": "Export CSV"
+  },
+  "profile": {
+    "title": "My profile",
+    "subtitle": "Language, appearance and account security.",
+    "appearance": "Appearance & language",
+    "appearanceDescription": "These preferences are stored on your user and follow you across devices.",
+    "language": "Language",
+    "theme": "Theme",
+    "savePreferences": "Save preferences",
+    "preferencesSaved": "Preferences saved.",
+    "security": "Security",
+    "securityDescription": "Change your password periodically. Other sessions will be signed out.",
+    "currentPassword": "Current password",
+    "newPassword": "New password",
+    "confirmPassword": "Repeat new password",
+    "changePassword": "Change password",
+    "passwordChanged": "Password updated.",
+    "passwordMismatch": "Passwords do not match.",
+    "account": "Account",
+    "username": "Username",
+    "role": "Role",
+    "lastLogin": "Last login",
+    "sessions": "Active sessions",
+    "sessionsDescription": "Devices and browsers with an open session. Revoke any you do not recognize.",
+    "sessionsLoadFailed": "The sessions could not be loaded.",
+    "unknownIp": "Unknown IP",
+    "currentSession": "Current session",
+    "unknownDevice": "Unknown device",
+    "sessionCreated": "Created",
+    "sessionLastSeen": "Last seen",
+    "sessionExpires": "Expires",
+    "revokeSession": "Revoke",
+    "sessionRevoked": "Session revoked.",
+    "noSessions": "There are no other active sessions.",
+    "mfa": "Two-step verification",
+    "mfaDescription": "Protect the administrator account with TOTP and recovery codes.",
+    "mfaEnabled": "Enabled",
+    "mfaDisabled": "Disabled",
+    "mfaEnable": "Enable MFA",
+    "mfaDisable": "Disable MFA",
+    "mfaSetupTitle": "Set up two-step verification",
+    "mfaSetupDescription": "Add this key to your authenticator app (Google Authenticator, 1Password, Aegis, etc.) and confirm the generated code.",
+    "mfaSecret": "Secret key",
+    "mfaConfirm": "Confirm and enable",
+    "mfaRecoveryTitle": "Save these recovery codes",
+    "mfaRecoveryDescription": "Each code can be used once. Store them safely; they will not be shown again.",
+    "mfaRecoveryRemaining": "Recovery codes remaining: {{count}}",
+    "mfaClose": "I saved the codes",
+    "mfaDisableTitle": "Disable two-step verification",
+    "mfaDisableDescription": "Confirm your password and a current TOTP code to disable MFA.",
+    "mfaPassword": "Current password",
+    "mfaCodeLabel": "TOTP code",
+    "mfaEnabledToast": "Two-step verification enabled.",
+    "mfaDisabledToast": "Two-step verification disabled.",
+    "apiTokens": "API tokens",
+    "apiTokensDescription": "Automation with Bearer tokens, permissions and expiry.",
+    "tokenName": "Name",
+    "tokenRole": "Role",
+    "tokenDays": "Days",
+    "createToken": "Create token",
+    "tokenOnlyOnce": "Copy this token now; it will not be shown again.",
+    "revokeToken": "Revoke",
+    "noTokens": "No active tokens.",
+    "tokenCreated": "Token created.",
+    "tokenRevoked": "Token revoked."
+  },
+  "system": {
+    "title": "System settings",
+    "subtitle": "Oxidized connection, Docker proxy and console behaviour.",
+    "connection": "Connection",
+    "connectionDescription": "Only administrators can change these values. Environment values are used as fallback.",
+    "oxidizedApiUrl": "Oxidized API URL",
+    "oxidizedApiUrlHelp": "Internal address of oxidized-web. It is not published externally.",
+    "containerName": "Oxidized container name",
+    "containerNameHelp": "Container the Docker proxy can inspect, read and restart.",
+    "dockerProxyUrl": "Docker proxy URL",
+    "dockerProxyUrlHelp": "tecnativa/docker-socket-proxy endpoint inside the internal network.",
+    "timezone": "Interface time zone",
+    "timezoneHelp": "Leave empty to use the browser time zone.",
+    "behavior": "Behaviour",
+    "behaviorDescription": "Observation frequency, retention and log size.",
+    "pollInterval": "Observation interval (seconds)",
+    "activityRetention": "Activity retention (days)",
+    "logTail": "Default log lines",
+    "backupKeep": "YAML copies to keep",
+    "save": "Save settings",
+    "saved": "Settings saved.",
+    "testOxidized": "Test Oxidized",
+    "testDocker": "Test Docker",
+    "testSuccess": "Connection succeeded.",
+    "environmentValues": "Current environment values",
+    "environmentNote": "Database values take precedence over the environment for connection settings.",
+    "browserTimezone": "Browser time zone",
+    "securityPolicy": "Security policy",
+    "securityPolicyDescription": "Passwords, attempt lockout and network access.",
+    "passwordMinLength": "Minimum password length",
+    "passwordRequireComplexity": "Require complexity",
+    "passwordRequireComplexityHelp": "At least three of: lowercase, uppercase, number and symbol.",
+    "passwordHistoryCount": "Remembered passwords",
+    "loginMaxFailuresUser": "Failures per user",
+    "loginMaxFailuresIp": "Failures per IP",
+    "loginWindow": "Window (minutes)",
+    "loginLockout": "Lockout (minutes)",
+    "ipAllowlist": "IP and network allowlist",
+    "ipAllowlistHelp": "One CIDR entry per line. Empty allows all. The internal Oxidized source is excluded. Add your network before saving or you will lose access.",
+    "notifications": "Notifications",
+    "notificationsDescription": "Webhook for backup and job failures.",
+    "webhookUrl": "Webhook URL",
+    "webhookHelp": "Sends JSON with text, event and source. Works with Slack/Teams and generic relays.",
+    "notifyOnFailure": "Notify failures",
+    "testNotification": "Test",
+    "notificationSent": "Notification sent.",
+    "notificationNotConfigured": "No webhook configured.",
+    "notifyStaleHours": "Alert if a node has no backup for hours (0 = off)",
+    "auditRetention": "Audit retention (days)",
+    "exportEncrypted": "Export encrypted",
+    "exportPassphrase": "Passphrase (at least 12 characters)"
+  },
+  "search": {
+    "title": "Global search",
+    "placeholder": "Search a node, group or page…",
+    "hint": "Type to search inventory and navigate.",
+    "nodes": "Nodes",
+    "groups": "Groups",
+    "pages": "Pages",
+    "noResults": "No matches.",
+    "configSearch": "Search inside configurations",
+    "configSearchPlaceholder": "Regular expression or text…",
+    "configSearchHint": "oxidized-web runs this search over stored configurations. It can be a regular expression.",
+    "configSearchResults": "Configuration matches",
+    "configSearchEmpty": "No configuration matches.",
+    "shortcut": "Ctrl K",
+    "inventory": "Inventory"
+  },
+  "notFound": {
+    "eyebrow": "404",
+    "title": "This route does not exist",
+    "description": "The resource may have moved or the URL may be wrong.",
+    "goDashboard": "Back to dashboard"
+  },
+  "forbidden": {
+    "eyebrow": "403",
+    "title": "You do not have permission for this section",
+    "description": "Your current role cannot access this content. Ask an administrator for access.",
+    "goDashboard": "Back to dashboard"
+  },
+  "warnings": {
+    "title": "Warnings",
+    "dismiss": "Dismiss"
+  },
+  "fileInput": {
+    "invalidType": "The file must be a CSV.",
+    "tooLarge": "The file is too large."
+  },
+  "connection": {},
+  "table": {
+    "selectRow": "Select row"
+  },
+  "diff": {
+    "split": "Side by side",
+    "unified": "Unified"
+  },
+  "errors": {
+    "generic": "The operation could not be completed. Review the data and try again.",
+    "title": "The action could not be completed",
+    "app": {
+      "internal_error": "Console internal error.",
+      "not_found": "Resource not found.",
+      "payload_too_large": "The request is too large.",
+      "rate_limited": "Too many requests. Try again in a few seconds.",
+      "unavailable": "The console is unavailable right now."
+    },
+    "audit": {
+      "not_found": "The audit event does not exist."
+    },
+    "auth": {
+      "account_disabled": "The account is disabled.",
+      "csrf_failed": "CSRF protection rejected the request. Reload the page.",
+      "forbidden": "You do not have permission for this action.",
+      "invalid_credentials": "Incorrect username or password.",
+      "invalid_current_password": "The current password is incorrect.",
+      "last_admin": "The last administrator cannot be removed or demoted.",
+      "origin_rejected": "The request origin is not allowed.",
+      "session_expired": "Your session has expired. Sign in again.",
+      "too_many_attempts": "Too many failed attempts. Wait a few minutes.",
+      "unauthenticated": "You must sign in to continue.",
+      "weak_password": "The password does not meet the security requirements.",
+      "session_not_found": "The session does not exist or was already revoked.",
+      "invalid_mfa_code": "Incorrect verification code.",
+      "mfa_already_enabled": "Two-step verification is already enabled.",
+      "mfa_challenge_expired": "The verification expired. Sign in again.",
+      "mfa_challenge_invalid": "The verification is invalid. Sign in again.",
+      "mfa_not_configured": "Two-step verification is not configured.",
+      "mfa_too_many_attempts": "Too many verification attempts. Sign in again.",
+      "password_reused": "You cannot reuse one of your last {{count}} passwords.",
+      "ip_not_allowed": "Your IP address is not allowed.",
+      "token_not_found": "The token does not exist.",
+      "oidc_failed": "OIDC login could not be completed.",
+      "oidc_disabled": "OIDC is not configured."
+    },
+    "config": {
+      "apply_busy": "A configuration apply is already running.",
+      "apply_failed": "The configuration could not be applied.",
+      "content_too_large": "The configuration exceeds the maximum size.",
+      "drift_detected": "The configuration file changed outside the console.",
+      "group_in_use": "The “{{name}}” group is used by a node.",
+      "invalid_yaml": "The YAML is invalid.",
+      "managed_key_modified": "The managed “{{key}}” key cannot be changed.",
+      "no_changes": "There are no changes to save.",
+      "no_draft": "There is no draft to apply.",
+      "not_draft": "The selected revision is not a draft.",
+      "revision_not_found": "The revision does not exist.",
+      "restart_required": "The configuration can only be applied by restarting Oxidized.",
+      "secret_token_exposed": "The YAML exposes the source token. Use the managed key.",
+      "stale_draft": "The draft changed since you loaded it. Reload before saving.",
+      "unsupported_extension": "The selected extension is not supported by this version.",
+      "unsupported_source": "Only the internal HTTP source is supported.",
+      "validation_failed": "The configuration failed validation.",
+      "preflight_failed": "Preflight validation failed: {{models}}.",
+      "health_check_failed": "Oxidized failed the post-apply health check ({{reason}}). The previous configuration was restored.",
+      "rollback_failed": "The configuration rollback failed ({{reason}}).",
+      "schedule_invalid": "The time must be at least 30 seconds in the future.",
+      "schedule_conflict": "A scheduled apply already exists for this revision.",
+      "schedule_not_found": "The scheduled apply does not exist."
+    },
+    "docker": {
+      "container_not_found": "The Oxidized container was not found.",
+      "logs_unavailable": "Container logs are unavailable.",
+      "restart_failed": "The container could not be restarted.",
+      "unavailable": "The Docker proxy is not responding."
+    },
+    "group": {
+      "duplicate_name": "A group with that name already exists.",
+      "in_use": "The group is in use and cannot be deleted.",
+      "invalid_name": "The group name is invalid.",
+      "name_immutable": "The group name cannot be changed.",
+      "not_found": "The group does not exist.",
+      "password_change_failed": "The group password could not be updated."
+    },
+    "internal_source": {
+      "unauthorized": "The internal source token is invalid."
+    },
+    "job": {
+      "already_running": "A job is already running.",
+      "interrupted": "The job was interrupted when the console restarted.",
+      "not_found": "The job does not exist.",
+      "not_cancellable": "The job already finished and cannot be cancelled."
+    },
+    "logs": {
+      "stream_failed": "The log stream failed.",
+      "too_large": "The log download exceeds the allowed size."
+    },
+    "node": {
+      "backup_failed": "The backup could not be requested.",
+      "bulk_too_large": "The bulk operation exceeds the node limit.",
+      "credentials_read_only": "Credentials are write-only.",
+      "duplicate_name": "A node with that name already exists.",
+      "export_failed": "The CSV could not be exported.",
+      "group_not_applied": "The selected group has not been applied yet.",
+      "group_not_found": "The selected group does not exist.",
+      "import_invalid": "The CSV could not be processed.",
+      "import_too_large": "The CSV exceeds the maximum size.",
+      "invalid_address": "The address is invalid.",
+      "invalid_input": "The input protocol is invalid.",
+      "invalid_model": "The model is invalid.",
+      "invalid_name": "The node name is invalid.",
+      "invalid_port": "The port must be between 1 and 65535.",
+      "invalid_vars": "The node variables are invalid.",
+      "not_found": "The node does not exist.",
+      "port_ignored_for_input": "The port is ignored for this input.",
+      "reserved_var": "The “{{name}}” variable is reserved.",
+      "host_key_invalid": "The host SSH key is invalid.",
+      "host_key_not_ssh": "This node does not use SSH; an SSH host key cannot be trusted.",
+      "host_key_unreachable": "Could not retrieve the SSH host key from {{address}}:{{port}}.",
+      "auth_failed": "The device rejected the credentials for user {{user}}.",
+      "host_key_unknown": "The device SSH host key is not trusted.",
+      "connection_timeout": "The device did not respond before the timeout.",
+      "connection_refused": "The device refused the connection.",
+      "dns_error": "The device address could not be resolved.",
+      "connection_error": "Could not connect to the device ({{class}})."
+    },
+    "oxidized": {
+      "auto_recovery_failed": "Oxidized did not start after creating the first node.",
+      "bad_response": "Oxidized returned an invalid response.",
+      "next_adds_job_disabled": "Manual backup is disabled in Oxidized configuration.",
+      "output_unsupported": "The output does not support version history.",
+      "reload_failed": "Oxidized did not reload nodes.",
+      "restart_failed": "Oxidized could not be restarted.",
+      "timeout": "Oxidized did not respond in time.",
+      "unavailable": "Oxidized is unavailable."
+    },
+    "search": {
+      "query_invalid": "The search is invalid.",
+      "upstream_failed": "The configuration search failed."
+    },
+    "setup": {
+      "completed": "Initial setup is already complete.",
+      "invalid_language": "The selected language is not available.",
+      "rate_limited": "Too many setup attempts."
+    },
+    "system": {
+      "connection_failed": "The connection test failed.",
+      "invalid_setting": "The “{{key}}” value is invalid.",
+      "unavailable": "System settings are unavailable."
+    },
+    "user": {
+      "duplicate_username": "A user with that username already exists.",
+      "last_admin": "The last administrator cannot be deleted or disabled.",
+      "not_found": "The user does not exist.",
+      "password_reset_failed": "The password could not be reset.",
+      "self_delete": "You cannot delete your own account."
+    },
+    "validation": {
+      "duplicate": "There is a duplicate value.",
+      "failed": "Data validation failed.",
+      "invalid_choice": "The selected option is invalid.",
+      "invalid_format": "The format of “{{field}}” is invalid.",
+      "invalid_type": "The data type is invalid.",
+      "max": "The value exceeds the maximum allowed.",
+      "min": "The value is below the minimum allowed.",
+      "required": "The “{{field}}” field is required.",
+      "too_long": "The value is too long.",
+      "range": "The value must be between {{min}} and {{max}}."
+    }
+  },
+  "validation": {
+    "required": "This field is required.",
+    "usernameLength": "The username must be between 3 and 64 characters.",
+    "usernameFormat": "Use letters, numbers, dots, dashes or underscores; it must start with a letter or number.",
+    "passwordLength": "The password must contain at least 12 characters.",
+    "passwordComplexity": "Combine at least three of: lowercase, uppercase, numbers and symbols.",
+    "passwordSameAsUsername": "The password cannot match the username.",
+    "nodeNameFormat": "The name only accepts letters, numbers, dots, dashes and underscores.",
+    "modelFormat": "The model only accepts letters, numbers, dots, dashes and underscores.",
+    "groupNameFormat": "The group only accepts letters, numbers, dots, dashes and underscores.",
+    "url": "Enter a valid http or https URL.",
+    "containerName": "Enter a valid container name.",
+    "number": "Enter a valid number.",
+    "range": "The value must be between {{min}} and {{max}}."
+  },
+  "oxidized": {
+    "fields": {
+      "username": {
+        "label": "Default username",
+        "help": "Username used when a node or group does not define its own."
+      },
+      "password": {
+        "label": "Default password",
+        "help": "Password used when a node or group does not define its own."
+      },
+      "model": {
+        "label": "Default model",
+        "help": "Model Oxidized uses when the node does not specify another."
+      },
+      "interval": {
+        "label": "Backup interval",
+        "help": "Seconds between scheduled backup cycles."
+      },
+      "threads": {
+        "label": "Worker threads",
+        "help": "Number of nodes Oxidized can process concurrently."
+      },
+      "use_max_threads": {
+        "label": "Use all thread slots",
+        "help": "Allows Oxidized to use every configured worker slot."
+      },
+      "timeout": {
+        "label": "Connection timeout",
+        "help": "Maximum seconds to connect to and read from a device."
+      },
+      "timelimit": {
+        "label": "Backup time limit",
+        "help": "Total limit in seconds for a backup to finish."
+      },
+      "retries": {
+        "label": "Retries",
+        "help": "Number of retries before marking a node as failed."
+      },
+      "prompt": {
+        "label": "Global prompt",
+        "help": "Regular expression matching device prompts."
+      },
+      "next_adds_job": {
+        "label": "Manual backup uses the queue",
+        "help": "When enabled, /node/next queues the node instead of waiting."
+      },
+      "resolve_dns": {
+        "label": "Resolve DNS",
+        "help": "Resolve node hostnames before connecting."
+      },
+      "debug": {
+        "label": "Debug mode",
+        "help": "Increases Oxidized log detail."
+      },
+      "run_once": {
+        "label": "Run once",
+        "help": "Runs a single backup cycle and exits."
+      },
+      "pid": {
+        "label": "PID file",
+        "help": "Path where Oxidized writes its PID when running as a daemon."
+      },
+      "use_syslog": {
+        "label": "Use syslog",
+        "help": "Legacy option to send logs to syslog."
+      },
+      "log": {
+        "label": "Log file",
+        "help": "Oxidized log path. Usually left empty to use stdout."
+      },
+      "logger_level": {
+        "label": "Log level",
+        "help": "Minimum level written to the log."
+      },
+      "logger_appenders": {
+        "label": "Log appenders",
+        "help": "JSON array of Oxidized logger appenders."
+      },
+      "crash_directory": {
+        "label": "Crash directory",
+        "help": "Directory where crash dumps are stored."
+      },
+      "crash_hostnames": {
+        "label": "Hostnames in crashes",
+        "help": "Include hostnames in crash dump names."
+      },
+      "stats_history_size": {
+        "label": "Statistics history",
+        "help": "Number of samples kept by the internal statistics counter."
+      },
+      "vars": {
+        "label": "Global variables",
+        "help": "Variables shared by every node, such as enable or remove_secret."
+      },
+      "group_map": {
+        "label": "Group map",
+        "help": "Aliases or regexes translating source groups to configuration groups."
+      },
+      "model_map": {
+        "label": "Model map",
+        "help": "Aliases or regexes translating source models to Oxidized models."
+      },
+      "input_default": {
+        "label": "Default inputs",
+        "help": "Protocols tried when the node does not define an input."
+      },
+      "input_debug": {
+        "label": "Input debug",
+        "help": "Enables connection protocol tracing."
+      },
+      "input_ssh_secure": {
+        "label": "SSH secure",
+        "help": "Enforces stricter SSH algorithms when supported."
+      },
+      "input_ftp_passive": {
+        "label": "Passive FTP",
+        "help": "Uses passive mode for FTP transfers."
+      },
+      "input_http_scheme": {
+        "label": "HTTP scheme",
+        "help": "Scheme used by the HTTP input."
+      },
+      "input_http_ssl_verify": {
+        "label": "Input TLS verification",
+        "help": "Verifies the device certificate for HTTP inputs."
+      },
+      "input_http_timeout": {
+        "label": "Input HTTP timeout",
+        "help": "Timeout in seconds for the HTTP input."
+      },
+      "input_utf8_encoded": {
+        "label": "UTF-8 encoding",
+        "help": "Forces UTF-8 encoding on device output."
+      },
+      "output_default": {
+        "label": "Default output",
+        "help": "Destination where configurations are stored."
+      },
+      "output_clean_obsolete_nodes": {
+        "label": "Clean obsolete nodes",
+        "help": "Removes nodes that no longer exist in inventory from the output."
+      },
+      "output_file_directory": {
+        "label": "File directory",
+        "help": "Directory for the file output."
+      },
+      "output_git_user": {
+        "label": "Git user",
+        "help": "Author name used in commits."
+      },
+      "output_git_email": {
+        "label": "Git email",
+        "help": "Author email used in commits."
+      },
+      "output_git_repo": {
+        "label": "Git repository",
+        "help": "Path to the configuration git repository."
+      },
+      "output_git_single_repo": {
+        "label": "Single repository",
+        "help": "Stores every node in a single repository."
+      },
+      "output_git_type_as_directory": {
+        "label": "Split by type",
+        "help": "Uses the device type as a directory inside the repository."
+      },
+      "output_gitcrypt_user": {
+        "label": "Git-crypt user",
+        "help": "Commit author for the gitcrypt output."
+      },
+      "output_gitcrypt_email": {
+        "label": "Git-crypt email",
+        "help": "Commit author email for gitcrypt."
+      },
+      "output_gitcrypt_repo": {
+        "label": "Git-crypt repository",
+        "help": "Path to the encrypted repository."
+      },
+      "output_gitcrypt_users": {
+        "label": "Git-crypt users",
+        "help": "Authorized users for the git-crypt repository."
+      },
+      "output_gitcrypt_single_repo": {
+        "label": "Single git-crypt repository",
+        "help": "Stores every node in one encrypted repository."
+      },
+      "output_http_url": {
+        "label": "HTTP output URL",
+        "help": "Endpoint receiving configurations."
+      },
+      "output_http_user": {
+        "label": "HTTP output user",
+        "help": "Username for basic authentication."
+      },
+      "output_http_password": {
+        "label": "HTTP output password",
+        "help": "Password for basic authentication."
+      },
+      "output_http_ssl_verify": {
+        "label": "Output TLS verification",
+        "help": "Verifies the HTTP endpoint certificate."
+      },
+      "output_http_headers": {
+        "label": "HTTP output headers",
+        "help": "Extra headers sent to the endpoint."
+      },
+      "source_http_read_timeout": {
+        "label": "Source read timeout",
+        "help": "Seconds oxidized-web waits for the internal HTTP source response."
+      },
+      "source_default": {
+        "label": "Default source",
+        "help": "The console pins the internal HTTP source."
+      },
+      "source_http_url": {
+        "label": "HTTP source URL",
+        "help": "Internal endpoint serving the inventory."
+      },
+      "source_http_headers": {
+        "label": "Source headers",
+        "help": "Internal headers, including the source token."
+      },
+      "source_http_map": {
+        "label": "Source map",
+        "help": "JSON fields Oxidized maps to the node."
+      },
+      "source_http_vars_map": {
+        "label": "Variables map",
+        "help": "Additional source variable mapping."
+      },
+      "extensions_oxidized-web_load": {
+        "label": "Load oxidized-web",
+        "help": "Enables Oxidized's internal web API."
+      },
+      "extensions_oxidized-web_listen": {
+        "label": "oxidized-web listen",
+        "help": "Internal interface the web API listens on."
+      },
+      "extensions_oxidized-web_port": {
+        "label": "oxidized-web port",
+        "help": "Internal web API port."
+      },
+      "extensions_oxidized-web_url_prefix": {
+        "label": "URL prefix",
+        "help": "Optional prefix for web routes."
+      },
+      "extensions_oxidized-web_vhosts": {
+        "label": "Virtual hosts",
+        "help": "Hosts allowed by oxidized-web."
+      },
+      "extensions_oxidized-web_hide_node_vars": {
+        "label": "Hide node variables",
+        "help": "Variables oxidized-web omits from /nodes.json."
+      },
+      "cmd": {
+        "label": "Command",
+        "help": "Command executed by the hook."
+      },
+      "async": {
+        "label": "Asynchronous",
+        "help": "Runs the hook without blocking the backup cycle."
+      },
+      "remote_repo": {
+        "label": "Remote repository",
+        "help": "GitHub repository URL."
+      },
+      "privatekey": {
+        "label": "Private key",
+        "help": "Private key path or content."
+      },
+      "publickey": {
+        "label": "Public key",
+        "help": "Public key path or content."
+      },
+      "region": {
+        "label": "AWS region",
+        "help": "Region containing the SNS topic."
+      },
+      "topic_arn": {
+        "label": "SNS topic ARN",
+        "help": "SNS topic receiving events."
+      },
+      "token": {
+        "label": "Token",
+        "help": "Service authentication token."
+      },
+      "channel": {
+        "label": "Channel",
+        "help": "Channel or room receiving the event."
+      },
+      "diff": {
+        "label": "Include diff",
+        "help": "Attaches the configuration diff to the message."
+      },
+      "message": {
+        "label": "Message",
+        "help": "Template of the outgoing message."
+      },
+      "proxy": {
+        "label": "Proxy",
+        "help": "Proxy URL for the connection."
+      },
+      "accesskey": {
+        "label": "Access key",
+        "help": "Service access key."
+      },
+      "space": {
+        "label": "Space",
+        "help": "Webex space to publish to."
+      },
+      "jid": {
+        "label": "JID",
+        "help": "Jabber ID used by the XMPP hook."
+      },
+      "nick": {
+        "label": "Nick",
+        "help": "Nick shown in the XMPP room."
+      },
+      "hooks_exec_cmd": {
+        "label": "Hook command",
+        "help": "Command the exec hook runs inside the container."
+      }
+    },
+    "vars": {
+      "enable": {
+        "label": "Enable",
+        "help": "Default privileged mode password."
+      },
+      "remove_secret": {
+        "label": "Remove secrets",
+        "help": "Removes secrets from configurations before storing them."
+      },
+      "metadata": {
+        "label": "Metadata",
+        "help": "Includes backup metadata in stored content."
+      },
+      "metadata_top": {
+        "label": "Metadata at top",
+        "help": "Places metadata at the top of the file."
+      },
+      "metadata_bottom": {
+        "label": "Metadata at bottom",
+        "help": "Places metadata at the bottom of the file."
+      },
+      "output_store_mode": {
+        "label": "Store mode",
+        "help": "Output storage mode for this node."
+      },
+      "ssh_no_exec": {
+        "label": "SSH without exec",
+        "help": "Opens an SSH shell without an exec channel."
+      },
+      "ssh_no_keepalive": {
+        "label": "SSH without keepalive",
+        "help": "Disables SSH keepalive packets."
+      },
+      "ssh_keys": {
+        "label": "SSH keys",
+        "help": "SSH private key paths."
+      },
+      "auth_methods": {
+        "label": "Authentication methods",
+        "help": "Order of SSH authentication methods."
+      },
+      "ssh_proxy": {
+        "label": "SSH proxy",
+        "help": "Jump host used to reach the device."
+      },
+      "ssh_proxy_port": {
+        "label": "SSH proxy port",
+        "help": "Jump host port."
+      },
+      "ssh_kex": {
+        "label": "SSH KEX",
+        "help": "Allowed SSH key exchange algorithms."
+      },
+      "ssh_host_key": {
+        "label": "SSH host key",
+        "help": "Allowed SSH host key algorithms."
+      },
+      "ssh_hmac": {
+        "label": "SSH HMAC",
+        "help": "Allowed SSH HMAC algorithms."
+      },
+      "ssh_encryption": {
+        "label": "SSH encryption",
+        "help": "Allowed SSH encryption algorithms."
+      },
+      "ssh_pubkey_algorithms": {
+        "label": "Public key algorithms",
+        "help": "Allowed SSH public key algorithms."
+      },
+      "ssh_port": {
+        "label": "SSH port",
+        "help": "Node SSH port."
+      },
+      "telnet_port": {
+        "label": "Telnet port",
+        "help": "Node telnet port."
+      },
+      "comware_cmdline": {
+        "label": "Comware command line",
+        "help": "Command line adjustment for Comware models."
+      },
+      "cumulus_use_nclu": {
+        "label": "Cumulus NCLU",
+        "help": "Uses NCLU to retrieve Cumulus configuration."
+      },
+      "cumulus_use_nvue": {
+        "label": "Cumulus NVUE",
+        "help": "Uses NVUE to retrieve Cumulus configuration."
+      },
+      "cumulus_routing_daemon": {
+        "label": "Cumulus routing daemon",
+        "help": "Routing daemon queried on Cumulus."
+      },
+      "ftd_api_endpoint": {
+        "label": "FTD API endpoint",
+        "help": "Cisco FTD API endpoint."
+      },
+      "ftd_api_port": {
+        "label": "FTD API port",
+        "help": "Cisco FTD API port."
+      },
+      "ftd_polls": {
+        "label": "FTD polls",
+        "help": "Number of FTD API polls."
+      },
+      "ftd_poll_wait": {
+        "label": "FTD poll wait",
+        "help": "Seconds between FTD API polls."
+      },
+      "ftd_config_filename": {
+        "label": "FTD config filename",
+        "help": "Configuration filename requested from FTD."
+      },
+      "fortios_autoupdate": {
+        "label": "FortiOS autoupdate",
+        "help": "Enables FortiOS autoupdate."
+      },
+      "fortigate_autoupdate": {
+        "label": "FortiGate autoupdate",
+        "help": "Enables FortiGate autoupdate."
+      },
+      "fullconfig": {
+        "label": "Full config",
+        "help": "Requests the full configuration when supported."
+      },
+      "ios_rbac": {
+        "label": "IOS RBAC",
+        "help": "Adjusts collection for IOS with RBAC."
+      },
+      "lenovonos_remove_unstable_lines": {
+        "label": "LenovoNOS unstable lines",
+        "help": "Removes volatile lines from LenovoNOS."
+      },
+      "openwrt_binary_files": {
+        "label": "OpenWrt binaries",
+        "help": "Includes OpenWrt binary files."
+      },
+      "openwrt_non_sensitive_files": {
+        "label": "OpenWrt non-sensitive",
+        "help": "Includes non-sensitive OpenWrt files."
+      },
+      "openwrt_partitions_to_backup": {
+        "label": "OpenWrt partitions",
+        "help": "Partitions included in the backup."
+      },
+      "openwrt_backup_partitions": {
+        "label": "Backup partitions",
+        "help": "Enables OpenWrt partition backup."
+      },
+      "realm": {
+        "label": "Realm",
+        "help": "Device authentication realm."
+      },
+      "admin": {
+        "label": "Admin",
+        "help": "Model-specific administrator username."
+      }
+    },
+    "hooks": {
+      "exec": {
+        "label": "Run command",
+        "help": "Runs a local command when an event occurs."
+      },
+      "githubrepo": {
+        "label": "GitHub repository",
+        "help": "Publishes changes to a GitHub repository."
+      },
+      "awssns": {
+        "label": "AWS SNS",
+        "help": "Publishes events to an Amazon SNS topic."
+      },
+      "slackdiff": {
+        "label": "Slack diff",
+        "help": "Sends the configuration diff to Slack."
+      },
+      "ciscosparkdiff": {
+        "label": "Webex diff",
+        "help": "Sends the configuration diff to Webex."
+      },
+      "xmppdiff": {
+        "label": "XMPP diff",
+        "help": "Sends the configuration diff to an XMPP room."
+      }
+    },
+    "events": {
+      "node_success": "Node success",
+      "node_fail": "Node failed",
+      "post_store": "After store",
+      "nodes_done": "Cycle complete"
+    },
+    "tabs": {
+      "general": "General",
+      "input": "Inputs",
+      "output": "Outputs",
+      "source": "Sources",
+      "hooks": "Hooks",
+      "models": "Models",
+      "rest": "REST / Extensions",
+      "advanced": "Advanced YAML"
+    }
+  }
+}

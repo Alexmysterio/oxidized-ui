@@ -1,0 +1,225 @@
+name: oxidized-ui
+
+# Only the UI publishes a port. oxidized-web and the Docker socket proxy stay
+# on internal Docker networks. The Docker socket is mounted only in the proxy.
+#
+# Startup order: socket-proxy (healthy) -> UI (writes bootstrap config, healthy)
+# -> Oxidized. This guarantees Oxidized finds a generated config on the first
+# boot, before it is started.
+
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "20m"
+    max-file: "5"
+
+services:
+  oxidized-ui:
+    build:
+      context: .
+      dockerfile: Dockerfile.secure
+    image: oxidized-ui:local
+    container_name: oxidized-ui
+    restart: unless-stopped
+    user: "30000:30000"
+    init: true
+    stop_grace_period: 20s
+    environment:
+      TZ: ${TZ:-UTC}
+      DEFAULT_LANGUAGE: ${DEFAULT_LANGUAGE:-es}
+      SECRET_KEY: ${SECRET_KEY:?SECRET_KEY is required}
+      FERNET_KEY: ${FERNET_KEY:?FERNET_KEY is required}
+      OXIDIZED_SOURCE_TOKEN: ${OXIDIZED_SOURCE_TOKEN:?OXIDIZED_SOURCE_TOKEN is required}
+      OXIDIZED_API_URL: ${OXIDIZED_API_URL:-http://oxidized:8888}
+      OXIDIZED_CONTAINER_NAME: ${OXIDIZED_CONTAINER_NAME:-oxidized}
+      DOCKER_PROXY_URL: ${DOCKER_PROXY_URL:-http://docker-socket-proxy:2375}
+      UI_INTERNAL_URL: ${UI_INTERNAL_URL:-http://oxidized-ui:8080}
+      OXIDIZED_CONFIG_DIR: /oxidized-config
+      DATA_DIR: /data
+      SESSION_COOKIE_SECURE: ${SESSION_COOKIE_SECURE:-false}
+      TRUSTED_ORIGINS: ${TRUSTED_ORIGINS:-}
+      TRUST_PROXY_HEADERS: ${TRUST_PROXY_HEADERS:-false}
+      BOOTSTRAP_ADMIN_USERNAME: ${BOOTSTRAP_ADMIN_USERNAME:-}
+      BOOTSTRAP_ADMIN_PASSWORD: ${BOOTSTRAP_ADMIN_PASSWORD:-}
+      BOOTSTRAP_ADMIN_LANGUAGE: ${BOOTSTRAP_ADMIN_LANGUAGE:-es}
+      UI_LOG_LEVEL: ${UI_LOG_LEVEL:-INFO}
+      METRICS_TOKEN: ${METRICS_TOKEN:-}
+      CONFIG_BACKUP_KEEP: ${CONFIG_BACKUP_KEEP:-50}
+      PYTHONDONTWRITEBYTECODE: "1"
+      PYTHONUNBUFFERED: "1"
+    volumes:
+      - oxidized_config:/oxidized-config
+      - ui_data:/data
+    ports:
+      - "${UI_BIND_ADDRESS:-127.0.0.1}:${UI_PORT:-8080}:8080"
+    networks:
+      - backend
+      - docker_api
+    depends_on:
+      docker-socket-proxy:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - >-
+          import urllib.request;
+          urllib.request.urlopen('http://127.0.0.1:8080/api/health', timeout=3).read()
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 25s
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    logging: *default-logging
+
+  caddy:
+    image: caddy:2.8-alpine
+    container_name: oxidized-ui-caddy
+    restart: unless-stopped
+    environment:
+      UI_HOSTNAME: ${UI_HOSTNAME:-oxidized.local}
+    ports:
+      - "${UI_HTTP_PORT:-80}:80"
+      - "${UI_HTTPS_PORT:-443}:443"
+      - "${UI_HTTPS_PORT:-443}:443/udp"
+    volumes:
+      - ./docker/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - backend
+    depends_on:
+      oxidized-ui:
+        condition: service_healthy
+    read_only: true
+    tmpfs:
+      - /tmp:size=16m,mode=1777
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_BIND_SERVICE
+    logging: *default-logging
+
+  oxidized:
+    image: ${OXIDIZED_IMAGE:-oxidized/oxidized:0.37.0}
+    container_name: ${OXIDIZED_CONTAINER_NAME:-oxidized}
+    restart: unless-stopped
+    environment:
+      TZ: ${TZ:-UTC}
+      OXIDIZED_SOURCE_TOKEN: ${OXIDIZED_SOURCE_TOKEN:?OXIDIZED_SOURCE_TOKEN is required}
+      UI_INTERNAL_URL: ${UI_INTERNAL_URL:-http://oxidized-ui:8080}
+    # Oxidized exits with "source returns no usable nodes" when the inventory
+    # is empty. Wait for the first node before starting the supervisor so a
+    # fresh install does not enter a crash loop. The UI restarts this container
+    # automatically after the first node is created.
+    command:
+      - /bin/sh
+      - -c
+      - |
+        set -eu
+        echo "oxidized: waiting for the first node in the UI source"
+        while ! curl -fsS -H "X-Oxidized-Source-Token: $$OXIDIZED_SOURCE_TOKEN" \
+          "$$UI_INTERNAL_URL/api/internal/source/nodes" | grep -q '"name"'; do
+          sleep 5
+        done
+        echo "oxidized: inventory available, starting supervisor"
+        chown oxidized:oxidized /var/lib/oxidized /home/oxidized/.config/oxidized
+        # Strict SSH host-key verification reads ~/.ssh/known_hosts. Keep the
+        # trusted keys inside the shared config volume so they survive container
+        # recreation, and expose that directory through the oxidized user's home.
+        mkdir -p /home/oxidized/.config/oxidized/.ssh
+        chmod 700 /home/oxidized/.config/oxidized/.ssh
+        chown oxidized:oxidized /home/oxidized/.config/oxidized/.ssh
+        ln -sfn /home/oxidized/.config/oxidized/.ssh /home/oxidized/.ssh
+        chown -h oxidized:oxidized /home/oxidized/.ssh
+        exec runsvdir -P /etc/service
+    volumes:
+      - oxidized_config:/home/oxidized/.config/oxidized
+      - oxidized_data:/var/lib/oxidized
+    networks:
+      - backend
+    depends_on:
+      oxidized-ui:
+        condition: service_healthy
+    stop_grace_period: 30s
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test:
+        - CMD
+        - curl
+        - -fsS
+        - --max-time
+        - "3"
+        - http://127.0.0.1:8888/nodes.json
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    logging: *default-logging
+
+  docker-socket-proxy:
+    image: ${SOCKET_PROXY_IMAGE:-tecnativa/docker-socket-proxy:v0.5.0}
+    container_name: docker-socket-proxy
+    restart: unless-stopped
+    environment:
+      # Minimal API surface used by the UI:
+      #   GET  /containers/<name>/json
+      #   GET  /containers/<name>/logs
+      #   POST /containers/<name>/restart
+      # CONTAINERS enables container inspect/log endpoints; POST + ALLOW_RESTARTS
+      # enable restart. Everything else stays disabled.
+      CONTAINERS: "1"
+      POST: "1"
+      ALLOW_RESTARTS: "1"
+      PING: "1"
+      VERSION: "0"
+      EVENTS: "0"
+      LOG_LEVEL: warning
+    volumes:
+      # This is the only service that receives the Docker socket, read-only.
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - docker_api
+    depends_on: []
+    healthcheck:
+      test:
+        - CMD
+        - wget
+        - -q
+        - -O
+        - /dev/null
+        - http://127.0.0.1:2375/_ping
+      interval: 15s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+    security_opt:
+      - no-new-privileges:true
+    logging: *default-logging
+
+networks:
+  backend:
+    name: oxidized_ui_backend
+  docker_api:
+    name: oxidized_ui_docker_api
+    internal: true
+
+volumes:
+  oxidized_config:
+    name: oxidized_ui_config
+  oxidized_data:
+    name: oxidized_ui_oxidized_data
+  ui_data:
+    name: oxidized_ui_data
+  caddy_data:
+    name: oxidized_ui_caddy_data
+  caddy_config:
+    name: oxidized_ui_caddy_config

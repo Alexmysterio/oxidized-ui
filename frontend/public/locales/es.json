@@ -1,0 +1,1614 @@
+{
+  "app": {
+    "name": "Oxidized UI",
+    "tagline": "Plano de control de backups de configuración",
+    "version": "Versión",
+    "loading": "Preparando el panel",
+    "taglineShort": "Control de backups"
+  },
+  "languages": {
+    "es": "Español",
+    "en": "English"
+  },
+  "common": {
+    "add": "Añadir",
+    "apply": "Aplicar",
+    "back": "Volver",
+    "cancel": "Cancelar",
+    "clear": "Limpiar",
+    "close": "Cerrar",
+    "confirm": "Confirmar",
+    "copied": "Copiado",
+    "copy": "Copiar",
+    "delete": "Eliminar",
+    "download": "Descargar",
+    "edit": "Editar",
+    "enabled": "Activado",
+    "disabled": "Desactivado",
+    "hide": "Ocultar",
+    "language": "Idioma",
+    "more": "Más",
+    "never": "Nunca",
+    "next": "Siguiente",
+    "none": "Ninguno",
+    "previous": "Anterior",
+    "refresh": "Actualizar",
+    "remove": "Quitar",
+    "retry": "Reintentar",
+    "save": "Guardar",
+    "saving": "Guardando…",
+    "search": "Buscar",
+    "show": "Mostrar",
+    "status": "Estado",
+    "theme": "Tema",
+    "tryAgain": "Intentar de nuevo",
+    "updatedAt": "Actualizado",
+    "actions": "Acciones",
+    "description": "Descripción",
+    "details": "Detalles",
+    "open": "Abrir",
+    "selectAll": "Seleccionar todo",
+    "page": "Página {{page}} de {{pages}}",
+    "rows": "{{count}} filas",
+    "loadingError": "No se pudo cargar la información",
+    "loadingErrorDescription": "El servicio no respondió. Vuelve a intentarlo.",
+    "unexpectedError": "Se ha producido un error inesperado.",
+    "copiedDescription": "El contenido está en el portapapeles.",
+    "copyFailed": "No se pudo copiar al portapapeles.",
+    "working": "Procesando…",
+    "searchPlaceholder": "Buscar…",
+    "filters": "Filtros",
+    "clearFilters": "Limpiar filtros",
+    "viewAll": "Ver todo",
+    "operationCompleted": "Operación completada",
+    "continue": "Continuar",
+    "default": "Por defecto",
+    "keep": "Mantener",
+    "replace": "Reemplazar",
+    "from": "Desde",
+    "to": "Hasta",
+    "dismiss": "Descartar"
+  },
+  "theme": {
+    "light": "Claro",
+    "dark": "Oscuro",
+    "system": "Sistema",
+    "toggle": "Cambiar tema"
+  },
+  "roles": {
+    "admin": "Administrador",
+    "operator": "Operador",
+    "viewer": "Consulta",
+    "adminDescription": "Acceso completo, configuración global, usuarios y reinicio.",
+    "operatorDescription": "Nodos, grupos, backups y logs. Sin configuración global.",
+    "viewerDescription": "Solo lectura de dashboard, nodos, backups y diffs."
+  },
+  "nav": {
+    "overview": "Resumen",
+    "inventory": "Inventario",
+    "operations": "Operaciones",
+    "administration": "Administración",
+    "dashboard": "Dashboard",
+    "nodes": "Nodos",
+    "groups": "Grupos",
+    "config": "Configuración",
+    "status": "Estado y logs",
+    "users": "Usuarios",
+    "audit": "Auditoría",
+    "system": "Ajustes del sistema",
+    "profile": "Mi perfil",
+    "signOut": "Cerrar sesión",
+    "openMenu": "Abrir menú",
+    "closeMenu": "Cerrar menú",
+    "collapse": "Contraer barra lateral",
+    "expand": "Expandir barra lateral",
+    "mainNavigation": "Navegación principal",
+    "userMenu": "Menú de usuario",
+    "search": "Buscar en todo",
+    "searchHint": "Busca nodos, grupos o páginas",
+    "skipToContent": "Saltar al contenido"
+  },
+  "status": {
+    "online": "Online",
+    "offline": "Offline",
+    "degraded": "Degradado",
+    "starting": "Arrancando",
+    "unknown": "Desconocido",
+    "running": "En ejecución",
+    "stopped": "Detenido",
+    "healthy": "Saludable",
+    "unhealthy": "No saludable",
+    "apiOnline": "API disponible",
+    "apiOffline": "API no disponible",
+    "container": "Contenedor",
+    "lastSeen": "Última señal",
+    "lastBackup": "Último backup correcto",
+    "lastFailure": "Último fallo",
+    "neverBackedUp": "Sin backups",
+    "lastSync": "Última sincronización",
+    "activeJobs": "Jobs activos",
+    "job": "Job"
+  },
+  "nodeStatus": {
+    "ok": "OK",
+    "failed": "Fallo",
+    "pending": "Pendiente",
+    "never": "Nunca",
+    "success": "Correcto",
+    "no_connection": "Sin conexión",
+    "fail": "Error",
+    "timelimit": "Tiempo límite",
+    "unknown": "Desconocido"
+  },
+  "auth": {
+    "loginTitle": "Accede al control plane",
+    "username": "Usuario",
+    "usernamePlaceholder": "tu.usuario",
+    "password": "Contraseña",
+    "passwordPlaceholder": "Introduce tu contraseña",
+    "signIn": "Entrar",
+    "signingIn": "Entrando…",
+    "loginError": "Usuario o contraseña incorrectos.",
+    "loginRateLimited": "Demasiados intentos. Espera unos minutos antes de volver a probar.",
+    "welcomeBack": "Sesión iniciada como {{username}}.",
+    "loggedOut": "Sesión cerrada.",
+    "noAccount": "El acceso lo gestiona un administrador.",
+    "secureConnection": "Conexión segura mediante cookie de sesión",
+    "brandTitle": "Todo tu inventario de red. Una sola fuente de verdad.",
+    "brandSubtitle": "Nodos, credenciales, versiones y configuración de Oxidized, siempre bajo control y sin editar YAML a mano.",
+    "brandPointInventory": "Inventario y credenciales centralizados",
+    "brandPointHistory": "Versiones, diffs y rollback en un clic",
+    "brandPointLive": "Estado y logs en vivo",
+    "setupTitle": "Configura tu instancia",
+    "setupSubtitle": "Crea la primera cuenta de administración. Después podrás añadir nodos y conectar con Oxidized.",
+    "setupEyebrow": "Primer arranque",
+    "confirmPassword": "Repite la contraseña",
+    "passwordMismatch": "Las contraseñas no coinciden.",
+    "passwordHint": "Mínimo 12 caracteres y al menos tres de: minúsculas, mayúsculas, números y símbolos.",
+    "createAdmin": "Crear administrador",
+    "creatingAdmin": "Creando administrador…",
+    "setupError": "No se pudo completar la configuración.",
+    "setupDone": "Administrador creado. Ya puedes usar el panel.",
+    "accountStep": "Cuenta de administración",
+    "accountStepDescription": "Este usuario tendrá acceso completo al sistema.",
+    "preferencesStep": "Preferencias iniciales",
+    "preferencesStepDescription": "Elige cómo quieres ver el panel. Podrás cambiarlo más tarde.",
+    "setupPoint": "Configuración inicial guiada y segura",
+    "stepOf": "Paso {{current}} de {{total}}",
+    "setupFooter": "Esta pantalla solo aparece mientras no exista ningún administrador.",
+    "loginSubtitle": "Gestiona backups, configuraciones y el estado de tu red desde un único lugar.",
+    "loginHeroTitle": "Toda tu red, bajo control.",
+    "loginHeroDescription": "Inventario, credenciales y configuraciones de Oxidized en una sola consola.",
+    "loginEyebrow": "Consola de operaciones",
+    "sessionExpired": "La sesión ha caducado. Vuelve a iniciar sesión.",
+    "mfaPrompt": "Introduce el código de 6 dígitos de tu aplicación de autenticación.",
+    "mfaCode": "Código de verificación",
+    "mfaCodeRequired": "Introduce el código de verificación.",
+    "verifyCode": "Verificar código",
+    "mfaBack": "Volver al inicio de sesión",
+    "invalidMfaCode": "El código de verificación no es correcto.",
+    "mfaExpired": "La verificación ha caducado. Inicia sesión de nuevo.",
+    "oidcLogin": "Entrar con OIDC"
+  },
+  "dashboard": {
+    "eyebrow": "Centro de operaciones",
+    "title": "Estado de la red",
+    "subtitle": "Una lectura rápida del inventario, la salud de Oxidized y la actividad de backups.",
+    "forceBackupAll": "Forzar backup de todos",
+    "backupAllQueued": "Backup masivo encolado.",
+    "backupAllConfirmTitle": "Forzar backup de todos los nodos",
+    "backupAllConfirmDescription": "Se encolarán {{count}} nodos en Oxidized. Los backups se ejecutarán según la configuración de workers.",
+    "oxidizedSignal": "Señal Oxidized",
+    "apiLabel": "API REST",
+    "containerLabel": "Contenedor",
+    "lastBackupLabel": "Último backup",
+    "activity": "Actividad de backups",
+    "activityDescription": "Observaciones de las últimas dos semanas. Los datos se refrescan con el poller.",
+    "success": "Correctos",
+    "failed": "Fallidos",
+    "noActivity": "Aún no hay actividad registrada",
+    "noActivityDescription": "Los backups correctos y fallidos aparecerán aquí en cuanto Oxidized empiece a trabajar.",
+    "nodesTotal": "Nodos",
+    "ok": "Saludables",
+    "failedNodes": "Con fallo",
+    "pending": "Pendientes",
+    "never": "Sin backup",
+    "failedNodesTitle": "Nodos que necesitan atención",
+    "failedNodesDescription": "Últimos intentos sin resultado correcto.",
+    "noFailedNodes": "Ningún nodo está fallando ahora mismo.",
+    "recentJobs": "Trabajos recientes",
+    "recentJobsDescription": "Actividad lanzada desde el panel.",
+    "noJobs": "No hay jobs recientes.",
+    "noNodesTitle": "Tu inventario está vacío",
+    "noNodesDescription": "Añade tu primer nodo para que Oxidized pueda empezar a guardar configuraciones.",
+    "addFirstNode": "Añadir primer nodo",
+    "warnings": "Avisos",
+    "systemOfflineDescription": "El panel seguirá funcionando. Revisa el contenedor de Oxidized y la configuración de conexión.",
+    "openLogs": "Abrir logs",
+    "refreshStatus": "Actualizar estado",
+    "nodesHint": "Nodos gestionados",
+    "activitySummary": "Actividad de backups: {{success}} correctos y {{failed}} fallidos en los últimos 14 días.",
+    "noActiveJobs": "Sin trabajos activos",
+    "sla": "SLA de backups",
+    "slaDescription": "Éxito por grupo en los últimos {{days}} días.",
+    "slaCounts": "{{success}} correctos · {{failed}} fallidos",
+    "onboarding": "Primeros pasos",
+    "onboardingDescription": "La instancia tiene nodos pero aún no hay ningún backup correcto.",
+    "onboardingNodes": "Revisar nodos",
+    "onboardingTest": "Probar conexión",
+    "onboardingBackup": "Lanzar primer backup",
+    "onboardingNotify": "Configurar avisos"
+  },
+  "nodes": {
+    "title": "Inventario de nodos",
+    "subtitle": "La base de datos del panel es la fuente de verdad. Oxidized la consume vía HTTP después de cada cambio.",
+    "addNode": "Añadir nodo",
+    "searchPlaceholder": "Buscar por nombre, IP, modelo o usuario…",
+    "filterGroup": "Grupo",
+    "filterModel": "Modelo",
+    "filterStatus": "Estado",
+    "allGroups": "Todos los grupos",
+    "allModels": "Todos los modelos",
+    "allStatuses": "Todos los estados",
+    "name": "Nodo",
+    "address": "Dirección",
+    "model": "Modelo",
+    "group": "Grupo",
+    "lastBackup": "Último backup",
+    "port": "Puerto",
+    "credentials": "Credenciales",
+    "bulkBackup": "Forzar backup",
+    "bulkGroup": "Cambiar grupo",
+    "bulkDelete": "Eliminar",
+    "bulkSelected": "{{count}} nodos seleccionados",
+    "bulkGroupTitle": "Cambiar grupo de los nodos seleccionados",
+    "bulkGroupDescription": "Elige un grupo ya aplicado. Los nodos se recargan en Oxidized.",
+    "bulkDeleteTitle": "Eliminar nodos seleccionados",
+    "bulkDeleteDescription": "Se eliminarán {{count}} nodos. Los historiales de backup en Oxidized no se borran.",
+    "deleteTitle": "Eliminar nodo",
+    "deleteDescription": "¿Eliminar «{{name}}»? Los backups históricos permanecen en Oxidized, pero el nodo dejará de gestionarse desde el panel.",
+    "emptyTitle": "Todavía no hay nodos",
+    "emptyDescription": "Añade un nodo o importa un CSV para empezar a construir tu inventario.",
+    "noMatchTitle": "No hay nodos con estos filtros",
+    "noMatchDescription": "Prueba a cambiar la búsqueda o a limpiar los filtros.",
+    "importTitle": "Importar nodos desde CSV",
+    "importDescription": "Sube un CSV con columnas name, address, model, group, input, port, username, password, enable y vars. Las credenciales vacías preservan las existentes al actualizar.",
+    "importMode": "Modo de importación",
+    "importSkip": "Omitir nodos existentes",
+    "importUpdate": "Actualizar nodos existentes",
+    "importDryRun": "Validar sin escribir",
+    "fileSelected": "{{name}} · {{size}}",
+    "dropFile": "Arrastra un CSV aquí o haz clic para buscarlo",
+    "importRun": "Importar",
+    "importPreview": "Validar",
+    "importSummary": "{{created}} creados, {{updated}} actualizados, {{skipped}} omitidos.",
+    "importErrors": "{{count}} errores de validación",
+    "row": "Fila",
+    "column": "Columna",
+    "downloadExport": "Exportar CSV",
+    "exportSuccess": "CSV exportado.",
+    "backupQueued": "Backup de {{name}} encolado.",
+    "input": "Input",
+    "username": "Usuario",
+    "hasPassword": "Contraseña configurada",
+    "hasEnable": "Enable configurado",
+    "deleteSuccess": "Nodo eliminado.",
+    "bulkDeleteSuccess": "{{count}} nodos eliminados.",
+    "bulkGroupSuccess": "Grupo actualizado en {{count}} nodos.",
+    "reloadFailed": "El nodo se guardó, pero Oxidized no recargó la lista.",
+    "import": "Importar",
+    "saveFilter": "Guardar filtro",
+    "saveFilterDescription": "Guarda los filtros actuales para volver a aplicarlos.",
+    "filterName": "Nombre del filtro",
+    "bulkEdit": "Editar",
+    "bulkEditTitle": "Edición masiva",
+    "bulkEditDescription": "Actualiza campos en {{count}} nodos. Solo se aplican los campos rellenos.",
+    "bulkEditSuccess": "{{count}} nodos actualizados.",
+    "compare": "Comparar",
+    "compareDescription": "Diferencias entre las configuraciones actuales de dos nodos."
+  },
+  "nodeForm": {
+    "createTitle": "Nuevo nodo",
+    "createDescription": "Añade un dispositivo al inventario. Se recargará en Oxidized sin reiniciar el contenedor.",
+    "editTitle": "Editar nodo",
+    "editDescription": "Actualiza los datos del dispositivo y sus credenciales.",
+    "identity": "Identidad",
+    "connection": "Conexión",
+    "credentials": "Credenciales",
+    "variables": "Variables específicas",
+    "name": "Nombre del nodo",
+    "nameHelp": "Se usa como identificador en Oxidized y en el nombre de los backups. Debe ser único.",
+    "namePlaceholder": "core-sw-01",
+    "address": "IP o hostname",
+    "addressHelp": "Déjalo vacío para que Oxidized resuelva el nombre por DNS.",
+    "addressPlaceholder": "10.20.0.11",
+    "model": "Modelo",
+    "modelHelp": "Modelo de Oxidized que entiende el sistema operativo del dispositivo.",
+    "group": "Grupo",
+    "groupHelp": "Los grupos solo están disponibles cuando su configuración está aplicada.",
+    "noGroup": "Sin grupo",
+    "input": "Input",
+    "inputHelp": "Protocolos ordenados por preferencia. Si se deja vacío se usan los globales.",
+    "inputPlaceholder": "ssh, telnet",
+    "port": "Puerto",
+    "portHelp": "Se traduce a ssh_port, telnet_port o ambos según el input efectivo.",
+    "username": "Usuario",
+    "password": "Contraseña",
+    "passwordHelp": "Solo escritura. Nunca se devuelve desde la API.",
+    "passwordKeep": "Dejar la contraseña actual",
+    "passwordReplace": "Reemplazar contraseña",
+    "passwordClear": "Borrar contraseña",
+    "enable": "Enable",
+    "enableHelp": "Contraseña de modo privilegiado. Solo escritura.",
+    "enableKeep": "Dejar el enable actual",
+    "enableReplace": "Reemplazar enable",
+    "enableClear": "Borrar enable",
+    "varsHelp": "Se envían a Oxidized como vars. Puedes usar el catálogo de variables conocidas o claves propias.",
+    "addVar": "Añadir variable",
+    "variableKey": "Clave",
+    "variableValue": "Valor",
+    "advancedOptions": "Opciones avanzadas",
+    "output": "Output",
+    "outputHelp": "Override del output para este nodo. Normalmente se hereda de la configuración global.",
+    "prompt": "Prompt",
+    "promptHelp": "Expresión regular específica del dispositivo.",
+    "timeout": "Timeout (segundos)",
+    "submitCreate": "Crear nodo",
+    "submitEdit": "Guardar cambios",
+    "saving": "Guardando nodo…",
+    "created": "Nodo creado y enviado a Oxidized.",
+    "updated": "Nodo actualizado y enviado a Oxidized.",
+    "secretReplaceHint": "Introduce un valor nuevo para reemplazar el existente.",
+    "modelPlaceholder": "Buscar modelo…",
+    "modelNoResults": "No se encontraron modelos.",
+    "modelCustomHint": "Se usará como modelo personalizado."
+  },
+  "nodeDetail": {
+    "back": "Volver a nodos",
+    "overview": "Resumen",
+    "configuration": "Configuración",
+    "versions": "Versiones",
+    "diff": "Comparar",
+    "backupNow": "Backup ahora",
+    "edit": "Editar nodo",
+    "delete": "Eliminar nodo",
+    "connectionInfo": "Conexión",
+    "inventoryInfo": "Inventario",
+    "lastAttempt": "Último intento",
+    "lastSuccess": "Último correcto",
+    "duration": "Duración",
+    "observed": "Observado",
+    "configTitle": "Configuración actual",
+    "configDescription": "Contenido devuelto por oxidized-web. Se muestra sin modificar.",
+    "configEmpty": "No hay configuración disponible para este nodo.",
+    "downloadConfig": "Descargar configuración",
+    "versionsTitle": "Historial de versiones",
+    "versionsDescription": "Selecciona dos versiones para compararlas lado a lado.",
+    "noVersions": "No hay versiones disponibles.",
+    "outputUnsupported": "Este nodo usa un output sin historial de versiones. Cambia a git o gitcrypt para habilitarlo.",
+    "version": "Versión",
+    "author": "Autor",
+    "message": "Mensaje",
+    "selectVersion": "Abrir versión",
+    "compareSelected": "Comparar seleccionadas",
+    "selectTwo": "Selecciona exactamente dos versiones.",
+    "noChanges": "No hay cambios entre las versiones seleccionadas.",
+    "additions": "+{{count}}",
+    "deletions": "−{{count}}",
+    "backupQueued": "Backup solicitado.",
+    "deleteConfirm": "¿Eliminar «{{name}}»? El historial almacenado en Oxidized no se borrará.",
+    "current": "Actual",
+    "backupNowHint": "Mueve el nodo al inicio de la cola de Oxidized.",
+    "rawStatus": "Estado devuelto",
+    "trustHostKey": "Confiar en clave SSH",
+    "trustHostKeyTitle": "¿Confiar en la clave SSH de {{name}}?",
+    "trustHostKeyDescription": "Oxidized consultará {{address}}, guardará su clave pública en known_hosts y mostrará la huella para que la verifiques. Hazlo solo si coincide con la huella del dispositivo.",
+    "trustHostKeyConfirm": "Confiar y guardar",
+    "trustHostKeySuccess": "Clave SSH guardada: {{fingerprint}}",
+    "lastError": "Último error",
+    "noErrorDetail": "Oxidized no registró un motivo detallado para este fallo. Revisa los logs del contenedor o vuelve a lanzar el backup.",
+    "testConnection": "Probar conexión",
+    "connectionOk": "Conexión correcta. Prompt: {{prompt}}",
+    "connectionFailed": "Conexión fallida: {{reason}}",
+    "history": "Historial",
+    "historySummary": "{{rate}}% de éxito en las últimas {{total}} ejecuciones.",
+    "historyEmpty": "Sin ejecuciones registradas.",
+    "historyStarted": "Inicio",
+    "trigger": "Origen",
+    "status": "Estado"
+  },
+  "groups": {
+    "title": "Grupos y credenciales",
+    "subtitle": "Comparte credenciales y variables entre nodos. Los cambios quedan en borrador hasta que un administrador los aplica.",
+    "addGroup": "Nuevo grupo",
+    "name": "Grupo",
+    "nodeCount": "Nodos",
+    "credentials": "Credenciales",
+    "vars": "Variables",
+    "models": "Overrides por modelo",
+    "applied": "Aplicado",
+    "draft": "Borrador",
+    "requiresApply": "Hay cambios pendientes de aplicar.",
+    "requiresApplyDescription": "Un administrador debe aplicar la configuración para que Oxidized use las nuevas credenciales.",
+    "applyNow": "Revisar y aplicar",
+    "emptyTitle": "Aún no hay grupos",
+    "emptyDescription": "Crea un grupo para compartir credenciales entre varios nodos.",
+    "deleteTitle": "Eliminar grupo",
+    "deleteDescription": "¿Eliminar el grupo «{{name}}»? No puede estar en uso por ningún nodo.",
+    "createTitle": "Nuevo grupo",
+    "editTitle": "Editar grupo",
+    "createDescription": "Los cambios se guardan como borrador de configuración.",
+    "editDescription": "Los secretos vacíos conservan el valor actual.",
+    "groupName": "Nombre del grupo",
+    "username": "Usuario compartido",
+    "password": "Contraseña compartida",
+    "enable": "Enable compartido",
+    "varsHelp": "Variables comunes para todos los nodos del grupo.",
+    "addVar": "Añadir variable",
+    "modelOverrides": "Credenciales por modelo",
+    "addModel": "Añadir override de modelo",
+    "model": "Modelo",
+    "noModels": "Sin overrides por modelo.",
+    "savedDraft": "Grupo guardado como borrador.",
+    "deletedDraft": "Grupo marcado para eliminar en el borrador.",
+    "save": "Guardar borrador",
+    "modelOverridesHelp": "Define credenciales específicas para un modelo dentro del grupo."
+  },
+  "config": {
+    "title": "Configuración de Oxidized",
+    "subtitle": "Edita, valida y versiona el YAML que gobierna Oxidized. Los cambios globales requieren reiniciar el contenedor.",
+    "saveDraft": "Guardar borrador",
+    "saveApply": "Guardar y aplicar",
+    "saveApplyHint": "Aplica el YAML y reinicia Oxidized.",
+    "applied": "Aplicado",
+    "draft": "Borrador",
+    "noDraft": "Sin borrador",
+    "draftBanner": "Hay cambios guardados pendientes de aplicar.",
+    "draftBannerDescription": "Revisa el diff y aplica cuando quieras. Hasta entonces Oxidized sigue usando la revisión aplicada.",
+    "applyDraft": "Aplicar borrador",
+    "driftTitle": "El fichero de configuración ha cambiado fuera del panel",
+    "driftDescription": "El checksum del volumen no coincide con la revisión aplicada. Revisa el YAML y guarda un borrador antes de sobrescribirlo.",
+    "managedTitle": "Bloques gestionados por el panel",
+    "managedDescription": "El source HTTP interno y la extensión oxidized-web se inyectan automáticamente y no son editables.",
+    "tabs": {
+      "general": "General",
+      "input": "Inputs",
+      "output": "Outputs",
+      "source": "Sources",
+      "hooks": "Hooks",
+      "models": "Modelos",
+      "rest": "REST / Extensiones",
+      "advanced": "YAML avanzado"
+    },
+    "generalDescription": "Parámetros de ejecución, credenciales por defecto y variables globales.",
+    "inputDescription": "Protocolos de conexión y opciones globales de input.",
+    "outputDescription": "Dónde y cómo se guardan las configuraciones.",
+    "sourceDescription": "El source HTTP interno es obligatorio para que el panel sea la fuente de verdad.",
+    "hooksDescription": "Automatizaciones que Oxidized ejecuta ante eventos de backup.",
+    "modelsDescription": "Credenciales y variables por modelo, y alias de modelos.",
+    "restDescription": "Extensiones de Oxidized y API web interna.",
+    "advancedDescription": "YAML completo editable. Las claves desconocidas se conservan.",
+    "varsTitle": "Variables globales",
+    "varsDescription": "Valores comunes para todos los nodos: enable, remove_secret y cualquier variable soportada por los modelos.",
+    "addVar": "Añadir variable",
+    "addHook": "Añadir hook",
+    "hookName": "Nombre del hook",
+    "hookType": "Tipo",
+    "hookEvents": "Eventos",
+    "noHooks": "No hay hooks configurados.",
+    "execWarning": "Los hooks exec ejecutan comandos dentro del contenedor de Oxidized. Configúralos solo si confías en el comando.",
+    "addModelOverride": "Añadir credenciales por modelo",
+    "username": "Usuario",
+    "password": "Contraseña",
+    "enable": "Enable",
+    "modelMap": "model_map",
+    "modelMapHelp": "Alias o expresiones regulares que mapean modelos del source a modelos de Oxidized.",
+    "addMapping": "Añadir mapeo",
+    "match": "Patrón",
+    "target": "Destino",
+    "regex": "Regex",
+    "yamlEditorTitle": "YAML editable",
+    "yamlEditorDescription": "No incluye los bloques gestionados. Al guardar, el backend valida el YAML y genera la configuración efectiva.",
+    "validate": "Validar YAML",
+    "yamlValid": "YAML válido.",
+    "yamlDirty": "Hay cambios sin validar en el editor.",
+    "previewTitle": "Vista previa del cambio",
+    "previewDescription": "Este es el diff que se guardará. El bloque source y oxidized-web se inyectan automáticamente.",
+    "noChanges": "No hay cambios respecto a la revisión aplicada.",
+    "confirmSaveTitle": "Guardar borrador de configuración",
+    "confirmSaveDescription": "Se creará una revisión cifrada. Oxidized no cambiará hasta que apliques.",
+    "confirmApplyTitle": "Aplicar configuración y reiniciar Oxidized",
+    "confirmApplyDescription": "El fichero se escribirá de forma atómica y el contenedor se reiniciará. Los backups en curso pueden verse afectados.",
+    "savedToast": "Borrador guardado.",
+    "appliedToast": "Configuración aplicada y Oxidized reiniciado.",
+    "applyFailed": "La configuración se escribió, pero el reinicio falló.",
+    "restarting": "Reiniciando Oxidized…",
+    "revisionHistory": "Historial de revisiones",
+    "revisionHistoryDescription": "Todas las revisiones se guardan cifradas e inmutables.",
+    "noRevisions": "Aún no hay revisiones.",
+    "viewDiff": "Ver diff",
+    "restore": "Restaurar",
+    "restoreTitle": "Restaurar revisión",
+    "restoreDescription": "Se creará un nuevo borrador a partir de la revisión #{{id}}. Después podrás revisarlo y aplicarlo.",
+    "restored": "Revisión restaurada como borrador.",
+    "origin": "Origen",
+    "author": "Autor",
+    "created": "Creada",
+    "appliedAt": "Aplicada",
+    "showHistory": "Ver historial",
+    "unknownUser": "Sistema",
+    "advancedFields": "Opciones avanzadas",
+    "deprecated": "Deprecado",
+    "managed": "Gestionado",
+    "sensitive": "Secreto",
+    "defaultValue": "Por defecto: {{value}}",
+    "unsavedChanges": "Cambios sin guardar",
+    "reloadToForm": "Validar y actualizar formulario",
+    "revisionDiff": "Diff de la revisión",
+    "againstApplied": "Contra la revisión aplicada",
+    "copyYaml": "Copiar YAML",
+    "downloadYaml": "Descargar YAML",
+    "jsonInvalid": "El JSON no es válido.",
+    "revisionStatus": {
+      "applied": "Aplicada",
+      "draft": "Borrador",
+      "superseded": "Sustituida",
+      "discarded": "Descartada",
+      "rolled_back": "Revertida"
+    },
+    "knownVariables": "Variables conocidas",
+    "schedule": "Programar",
+    "scheduleTitle": "Programar aplicación",
+    "scheduleDescription": "Elige cuándo aplicar el borrador. Se ejecutará desde el planificador aunque cierres el navegador.",
+    "scheduleAt": "Fecha y hora",
+    "scheduleConfirm": "Programar",
+    "scheduleCreated": "Aplicación programada.",
+    "scheduleCancelled": "Programación cancelada."
+  },
+  "logs": {
+    "title": "Estado y logs",
+    "subtitle": "Salud del contenedor, stream en vivo y trabajos lanzados desde el panel.",
+    "live": "En vivo",
+    "connecting": "Conectando…",
+    "connected": "Conectado",
+    "disconnected": "Desconectado",
+    "paused": "En pausa",
+    "pause": "Pausar",
+    "resume": "Reanudar",
+    "clear": "Limpiar vista",
+    "level": "Nivel",
+    "allLevels": "Todos los niveles",
+    "searchPlaceholder": "Filtrar líneas…",
+    "download": "Descargar logs",
+    "jobs": "Jobs",
+    "jobsDescription": "Trabajos asíncronos de esta UI.",
+    "noJobs": "No hay jobs en esta vista.",
+    "noLogs": "No hay líneas que mostrar",
+    "noLogsDescription": "El contenedor puede no estar emitiendo logs por stdout. Revisa la configuración de logger de Oxidized.",
+    "streamError": "El stream de logs se ha interrumpido.",
+    "downloadError": "No se pudieron descargar los logs.",
+    "autoScroll": "Auto-scroll",
+    "lines": "{{count}} líneas",
+    "filteredLive": "Filtros aplicados al stream",
+    "restartOxidized": "Reiniciar Oxidized",
+    "reloadNodes": "Recargar nodos",
+    "reloadDone": "Nodos recargados.",
+    "restartDone": "Reinicio solicitado.",
+    "restartConfirmTitle": "Reiniciar Oxidized",
+    "restartConfirmDescription": "Se interrumpirán los backups en curso y el stream de logs hasta que el contenedor vuelva a arrancar.",
+    "openLogs": "Abrir stream",
+    "jobProgress": "{{done}} / {{total}}",
+    "jobResult": "Resultado",
+    "jobError": "Error",
+    "queueTitle": "Cola de trabajos",
+    "tail": "Últimas líneas",
+    "timestamp": "Hora",
+    "source": "Origen",
+    "cancelJob": "Cancelar",
+    "jobCancelled": "Job cancelado.",
+    "backupSchedules": "Programación de backups",
+    "backupSchedulesDescription": "Ejecuta backups automáticos por grupo o para todos los nodos.",
+    "scheduleGroup": "Grupo",
+    "scheduleAllGroups": "Todos los grupos",
+    "scheduleInterval": "Intervalo (min)",
+    "scheduleCreate": "Programar",
+    "scheduleCreated": "Backup programado.",
+    "scheduleDeleted": "Programación eliminada.",
+    "noSchedules": "No hay programaciones."
+  },
+  "jobs": {
+    "queued": "En cola",
+    "running": "Ejecutando",
+    "succeeded": "Completado",
+    "failed": "Fallido",
+    "cancelled": "Cancelado",
+    "backup_node": "Backup de nodo",
+    "backup_all": "Backup masivo",
+    "oxidized_reload": "Recarga de Oxidized",
+    "oxidized_restart": "Reinicio de Oxidized",
+    "config_apply": "Aplicar configuración",
+    "requested": "Solicitado",
+    "finished": "Finalizado",
+    "noProgress": "Sin progreso",
+    "requestedBy": "Solicitado por",
+    "resultJson": "Detalle"
+  },
+  "users": {
+    "title": "Usuarios y roles",
+    "subtitle": "Gestiona quién puede administrar el inventario, lanzar backups o acceder en solo lectura.",
+    "addUser": "Añadir usuario",
+    "username": "Usuario",
+    "role": "Rol",
+    "active": "Activo",
+    "inactive": "Inactivo",
+    "lastLogin": "Último acceso",
+    "createdAt": "Creado",
+    "emptyTitle": "No hay usuarios",
+    "emptyDescription": "Crea el primer usuario además del administrador inicial.",
+    "createTitle": "Nuevo usuario",
+    "createDescription": "La contraseña debe tener al menos 12 caracteres.",
+    "editTitle": "Editar usuario",
+    "editDescription": "Los cambios de rol o estado se aplican inmediatamente.",
+    "passwordTitle": "Nueva contraseña",
+    "passwordDescription": "Se revocarán todas las sesiones abiertas del usuario.",
+    "newPassword": "Nueva contraseña",
+    "resetPassword": "Restablecer contraseña",
+    "resetDone": "Contraseña restablecida.",
+    "deleteTitle": "Eliminar usuario",
+    "deleteDescription": "¿Eliminar a «{{username}}»? Esta acción no se puede deshacer.",
+    "created": "Usuario creado.",
+    "updated": "Usuario actualizado.",
+    "deleted": "Usuario eliminado.",
+    "language": "Idioma",
+    "self": "Tú",
+    "rolesHelp": "El backend aplica los permisos en cada petición."
+  },
+  "audit": {
+    "title": "Auditoría",
+    "subtitle": "Quién hizo qué y cuándo, sin secretos ni contenido sensible.",
+    "actor": "Actor",
+    "action": "Acción",
+    "target": "Objetivo",
+    "when": "Fecha",
+    "ip": "IP",
+    "emptyTitle": "No hay eventos de auditoría",
+    "emptyDescription": "Las acciones relevantes aparecerán aquí.",
+    "filterActor": "Filtrar por actor",
+    "filterAction": "Filtrar por acción",
+    "from": "Desde",
+    "to": "Hasta",
+    "applyFilters": "Aplicar filtros",
+    "allTargets": "Todos los objetivos",
+    "details": "Parámetros",
+    "systemActor": "Sistema",
+    "actions": {
+      "auth": {
+        "login_succeeded": "Inicio de sesión correcto",
+        "login_failed": "Intento de inicio de sesión fallido",
+        "logout": "Cierre de sesión",
+        "password_changed": "Contraseña cambiada",
+        "session_revoked": "Sesión revocada",
+        "mfa_challenge_issued": "Verificación MFA solicitada",
+        "mfa_enabled": "MFA activado",
+        "mfa_disabled": "MFA desactivado",
+        "login_mfa_succeeded": "Acceso con MFA",
+        "token_created": "Token API creado",
+        "token_revoked": "Token API revocado",
+        "oidc_login_succeeded": "Login OIDC correcto"
+      },
+      "setup": {
+        "completed": "Configuración inicial completada",
+        "bootstrap_admin": "Administrador inicial creado por entorno"
+      },
+      "node": {
+        "created": "Nodo creado",
+        "updated": "Nodo actualizado",
+        "deleted": "Nodo eliminado",
+        "bulk_updated": "Acción masiva de nodos",
+        "imported": "Nodos importados",
+        "backup_requested": "Backup solicitado",
+        "host_key_trusted": "Clave SSH del host confiada",
+        "connection_tested": "Conexión de nodo probada"
+      },
+      "group": {
+        "created": "Grupo creado como borrador",
+        "updated": "Grupo actualizado como borrador",
+        "deleted": "Grupo marcado para eliminar"
+      },
+      "config": {
+        "draft_saved": "Borrador de configuración guardado",
+        "applied": "Configuración aplicada",
+        "apply_failed": "Fallo al aplicar configuración",
+        "apply_requested": "Aplicación de configuración solicitada",
+        "bootstrap_written": "Configuración inicial generada",
+        "external_imported": "Configuración externa adoptada",
+        "rolled_back": "Configuración revertida",
+        "apply_scheduled": "Aplicación programada",
+        "apply_schedule_cancelled": "Aplicación programada cancelada"
+      },
+      "oxidized": {
+        "reload_requested": "Recarga de nodos solicitada",
+        "restart_requested": "Reinicio de Oxidized solicitado",
+        "auto_recovered": "Recuperación automática de Oxidized"
+      },
+      "user": {
+        "created": "Usuario creado",
+        "updated": "Usuario actualizado",
+        "deleted": "Usuario eliminado",
+        "password_reset": "Contraseña restablecida"
+      },
+      "system": {
+        "settings_updated": "Ajustes del sistema actualizados",
+        "connection_test": "Prueba de conexión",
+        "export_created": "Exportación cifrada creada"
+      },
+      "job": {
+        "cancelled": "Job cancelado"
+      }
+    },
+    "export": "Exportar CSV"
+  },
+  "profile": {
+    "title": "Mi perfil",
+    "subtitle": "Idioma, apariencia y seguridad de tu cuenta.",
+    "appearance": "Apariencia e idioma",
+    "appearanceDescription": "Estas preferencias se guardan en tu usuario y te siguen en cualquier dispositivo.",
+    "language": "Idioma",
+    "theme": "Tema",
+    "savePreferences": "Guardar preferencias",
+    "preferencesSaved": "Preferencias guardadas.",
+    "security": "Seguridad",
+    "securityDescription": "Cambia tu contraseña periódicamente. Se cerrarán las demás sesiones.",
+    "currentPassword": "Contraseña actual",
+    "newPassword": "Nueva contraseña",
+    "confirmPassword": "Repite la nueva contraseña",
+    "changePassword": "Cambiar contraseña",
+    "passwordChanged": "Contraseña actualizada.",
+    "passwordMismatch": "Las contraseñas no coinciden.",
+    "account": "Cuenta",
+    "username": "Usuario",
+    "role": "Rol",
+    "lastLogin": "Último acceso",
+    "sessions": "Sesiones activas",
+    "sessionsDescription": "Dispositivos y navegadores con una sesión abierta. Revoca cualquiera que no reconozcas.",
+    "sessionsLoadFailed": "No se pudieron cargar las sesiones.",
+    "unknownIp": "IP desconocida",
+    "currentSession": "Sesión actual",
+    "unknownDevice": "Dispositivo desconocido",
+    "sessionCreated": "Creada",
+    "sessionLastSeen": "Último uso",
+    "sessionExpires": "Caduca",
+    "revokeSession": "Revocar",
+    "sessionRevoked": "Sesión revocada.",
+    "noSessions": "No hay otras sesiones activas.",
+    "mfa": "Verificación en dos pasos",
+    "mfaDescription": "Protege la cuenta de administrador con TOTP y códigos de recuperación.",
+    "mfaEnabled": "Activada",
+    "mfaDisabled": "Desactivada",
+    "mfaEnable": "Activar MFA",
+    "mfaDisable": "Desactivar MFA",
+    "mfaSetupTitle": "Configurar verificación en dos pasos",
+    "mfaSetupDescription": "Añade esta clave a tu aplicación de autenticación (Google Authenticator, 1Password, Aegis, etc.) y confirma el código generado.",
+    "mfaSecret": "Clave secreta",
+    "mfaConfirm": "Confirmar y activar",
+    "mfaRecoveryTitle": "Guarda estos códigos de recuperación",
+    "mfaRecoveryDescription": "Cada código se puede usar una sola vez. Guárdalos en un lugar seguro; no se volverán a mostrar.",
+    "mfaRecoveryRemaining": "Códigos de recuperación restantes: {{count}}",
+    "mfaClose": "He guardado los códigos",
+    "mfaDisableTitle": "Desactivar verificación en dos pasos",
+    "mfaDisableDescription": "Confirma tu contraseña y un código TOTP actual para desactivar MFA.",
+    "mfaPassword": "Contraseña actual",
+    "mfaCodeLabel": "Código TOTP",
+    "mfaEnabledToast": "Verificación en dos pasos activada.",
+    "mfaDisabledToast": "Verificación en dos pasos desactivada.",
+    "apiTokens": "Tokens de API",
+    "apiTokensDescription": "Automatización con Bearer tokens, permisos y caducidad.",
+    "tokenName": "Nombre",
+    "tokenRole": "Rol",
+    "tokenDays": "Días",
+    "createToken": "Crear token",
+    "tokenOnlyOnce": "Copia este token ahora; no se volverá a mostrar.",
+    "revokeToken": "Revocar",
+    "noTokens": "No hay tokens activos.",
+    "tokenCreated": "Token creado.",
+    "tokenRevoked": "Token revocado."
+  },
+  "system": {
+    "title": "Ajustes del sistema",
+    "subtitle": "Conexión con Oxidized, proxy de Docker y comportamiento del panel.",
+    "connection": "Conexión",
+    "connectionDescription": "Estos valores solo pueden cambiarlos los administradores. Los valores de entorno actúan como fallback.",
+    "oxidizedApiUrl": "URL de la API de Oxidized",
+    "oxidizedApiUrlHelp": "Dirección interna de oxidized-web. No se publica al exterior.",
+    "containerName": "Nombre del contenedor de Oxidized",
+    "containerNameHelp": "Contenedor que el proxy de Docker puede inspeccionar, leer y reiniciar.",
+    "dockerProxyUrl": "URL del proxy de Docker",
+    "dockerProxyUrlHelp": "Endpoint de tecnativa/docker-socket-proxy dentro de la red interna.",
+    "timezone": "Zona horaria de la interfaz",
+    "timezoneHelp": "Déjala vacía para usar la zona horaria del navegador.",
+    "behavior": "Comportamiento",
+    "behaviorDescription": "Frecuencia de observación, retención y tamaño de logs.",
+    "pollInterval": "Intervalo de observación (segundos)",
+    "activityRetention": "Retención de actividad (días)",
+    "logTail": "Líneas de log por defecto",
+    "backupKeep": "Copias YAML a conservar",
+    "save": "Guardar ajustes",
+    "saved": "Ajustes guardados.",
+    "testOxidized": "Probar Oxidized",
+    "testDocker": "Probar Docker",
+    "testSuccess": "Conexión correcta.",
+    "environmentValues": "Valores de entorno actuales",
+    "environmentNote": "La base de datos tiene prioridad sobre el entorno para la conexión.",
+    "browserTimezone": "Zona horaria del navegador",
+    "securityPolicy": "Política de seguridad",
+    "securityPolicyDescription": "Contraseñas, bloqueo de intentos y acceso por red.",
+    "passwordMinLength": "Longitud mínima de contraseña",
+    "passwordRequireComplexity": "Exigir complejidad",
+    "passwordRequireComplexityHelp": "Al menos tres de: minúscula, mayúscula, número y símbolo.",
+    "passwordHistoryCount": "Contraseñas recordadas",
+    "loginMaxFailuresUser": "Fallos por usuario",
+    "loginMaxFailuresIp": "Fallos por IP",
+    "loginWindow": "Ventana (minutos)",
+    "loginLockout": "Bloqueo (minutos)",
+    "ipAllowlist": "Allowlist de IPs y redes",
+    "ipAllowlistHelp": "Una entrada CIDR por línea. Vacío permite todas. El source interno de Oxidized está excluido. Añade tu red antes de guardar o perderás el acceso.",
+    "notifications": "Notificaciones",
+    "notificationsDescription": "Webhook para fallos de backups y trabajos.",
+    "webhookUrl": "URL del webhook",
+    "webhookHelp": "Se envía un JSON con text, event y source. Compatible con Slack/Teams y relés genéricos.",
+    "notifyOnFailure": "Notificar fallos",
+    "testNotification": "Probar",
+    "notificationSent": "Notificación enviada.",
+    "notificationNotConfigured": "No hay webhook configurado.",
+    "notifyStaleHours": "Avisar si un nodo lleva horas sin backup (0 = desactivado)",
+    "auditRetention": "Retención de auditoría (días)",
+    "exportEncrypted": "Exportar cifrado",
+    "exportPassphrase": "Passphrase (mínimo 12 caracteres)"
+  },
+  "search": {
+    "title": "Búsqueda global",
+    "placeholder": "Busca un nodo, un grupo o una página…",
+    "hint": "Escribe para buscar en el inventario y navegar.",
+    "nodes": "Nodos",
+    "groups": "Grupos",
+    "pages": "Páginas",
+    "noResults": "No hay coincidencias.",
+    "configSearch": "Buscar dentro de configuraciones",
+    "configSearchPlaceholder": "Expresión regular o texto…",
+    "configSearchHint": "La búsqueda la ejecuta oxidized-web sobre las configuraciones guardadas. Puede ser una expresión regular.",
+    "configSearchResults": "Resultados en configuraciones",
+    "configSearchEmpty": "Sin coincidencias en configuraciones.",
+    "shortcut": "Ctrl K",
+    "inventory": "Inventario"
+  },
+  "notFound": {
+    "eyebrow": "404",
+    "title": "Esta ruta no existe",
+    "description": "Puede que el recurso se haya movido o que la URL no sea correcta.",
+    "goDashboard": "Volver al dashboard"
+  },
+  "forbidden": {
+    "eyebrow": "403",
+    "title": "No tienes permisos para esta sección",
+    "description": "Tu rol actual no permite acceder a este contenido. Pide acceso a un administrador.",
+    "goDashboard": "Volver al dashboard"
+  },
+  "warnings": {
+    "title": "Avisos",
+    "dismiss": "Descartar"
+  },
+  "fileInput": {
+    "invalidType": "El archivo debe ser CSV.",
+    "tooLarge": "El archivo es demasiado grande."
+  },
+  "connection": {},
+  "table": {
+    "selectRow": "Seleccionar fila"
+  },
+  "diff": {
+    "split": "Lado a lado",
+    "unified": "Unificado"
+  },
+  "errors": {
+    "generic": "No se pudo completar la operación. Revisa los datos e inténtalo de nuevo.",
+    "title": "No se pudo completar la acción",
+    "app": {
+      "internal_error": "Error interno del panel.",
+      "not_found": "Recurso no encontrado.",
+      "payload_too_large": "La petición es demasiado grande.",
+      "rate_limited": "Demasiadas peticiones. Inténtalo de nuevo en unos segundos.",
+      "unavailable": "El panel no está disponible en este momento."
+    },
+    "audit": {
+      "not_found": "El evento de auditoría no existe."
+    },
+    "auth": {
+      "account_disabled": "La cuenta está desactivada.",
+      "csrf_failed": "La protección CSRF ha rechazado la petición. Recarga la página.",
+      "forbidden": "No tienes permisos para esta acción.",
+      "invalid_credentials": "Usuario o contraseña incorrectos.",
+      "invalid_current_password": "La contraseña actual no es correcta.",
+      "last_admin": "No se puede eliminar o degradar al último administrador.",
+      "origin_rejected": "El origen de la petición no está permitido.",
+      "session_expired": "La sesión ha caducado. Vuelve a iniciar sesión.",
+      "too_many_attempts": "Demasiados intentos fallidos. Espera unos minutos.",
+      "unauthenticated": "Debes iniciar sesión para continuar.",
+      "weak_password": "La contraseña no cumple los requisitos de seguridad.",
+      "session_not_found": "La sesión no existe o ya fue revocada.",
+      "invalid_mfa_code": "Código de verificación incorrecto.",
+      "mfa_already_enabled": "La verificación en dos pasos ya está activada.",
+      "mfa_challenge_expired": "La verificación ha caducado. Vuelve a iniciar sesión.",
+      "mfa_challenge_invalid": "La verificación no es válida. Vuelve a iniciar sesión.",
+      "mfa_not_configured": "La verificación en dos pasos no está configurada.",
+      "mfa_too_many_attempts": "Demasiados intentos de verificación. Vuelve a iniciar sesión.",
+      "password_reused": "No puedes reutilizar una de tus últimas {{count}} contraseñas.",
+      "ip_not_allowed": "Tu dirección IP no está permitida.",
+      "token_not_found": "El token no existe.",
+      "oidc_failed": "No se pudo completar el login OIDC.",
+      "oidc_disabled": "OIDC no está configurado."
+    },
+    "config": {
+      "apply_busy": "Ya hay una aplicación de configuración en curso.",
+      "apply_failed": "No se pudo aplicar la configuración.",
+      "content_too_large": "La configuración supera el tamaño máximo.",
+      "drift_detected": "El fichero de configuración cambió fuera del panel.",
+      "group_in_use": "El grupo «{{name}}» está en uso por algún nodo.",
+      "invalid_yaml": "El YAML no es válido.",
+      "managed_key_modified": "No se puede modificar la clave gestionada «{{key}}».",
+      "no_changes": "No hay cambios que guardar.",
+      "no_draft": "No hay ningún borrador que aplicar.",
+      "not_draft": "La revisión seleccionada no es un borrador.",
+      "revision_not_found": "La revisión no existe.",
+      "restart_required": "La configuración solo se puede aplicar reiniciando Oxidized.",
+      "secret_token_exposed": "El YAML incluye el token del source. Usa la clave gestionada.",
+      "stale_draft": "El borrador cambió desde que lo cargaste. Recarga antes de guardar.",
+      "unsupported_extension": "La extensión seleccionada no está soportada por esta versión.",
+      "unsupported_source": "Solo se admite el source HTTP interno.",
+      "validation_failed": "La configuración no pasó la validación.",
+      "preflight_failed": "La validación previa falló: {{models}}.",
+      "health_check_failed": "Oxidized no superó la comprobación posterior ({{reason}}). Se restauró la configuración anterior.",
+      "rollback_failed": "Falló el rollback de configuración ({{reason}}).",
+      "schedule_invalid": "La fecha debe estar al menos 30 segundos en el futuro.",
+      "schedule_conflict": "Ya existe una aplicación programada para esta revisión.",
+      "schedule_not_found": "La aplicación programada no existe."
+    },
+    "docker": {
+      "container_not_found": "No se encontró el contenedor de Oxidized.",
+      "logs_unavailable": "Los logs del contenedor no están disponibles.",
+      "restart_failed": "No se pudo reiniciar el contenedor.",
+      "unavailable": "El proxy de Docker no responde."
+    },
+    "group": {
+      "duplicate_name": "Ya existe un grupo con ese nombre.",
+      "in_use": "El grupo está en uso y no se puede eliminar.",
+      "invalid_name": "El nombre del grupo no es válido.",
+      "name_immutable": "El nombre del grupo no se puede cambiar.",
+      "not_found": "El grupo no existe.",
+      "password_change_failed": "No se pudo actualizar la contraseña del grupo."
+    },
+    "internal_source": {
+      "unauthorized": "El token del source interno no es válido."
+    },
+    "job": {
+      "already_running": "Ya hay un job en ejecución.",
+      "interrupted": "El job se interrumpió al reiniciar el panel.",
+      "not_found": "El job no existe.",
+      "not_cancellable": "El job ya terminó y no se puede cancelar."
+    },
+    "logs": {
+      "stream_failed": "El stream de logs falló.",
+      "too_large": "La descarga de logs supera el tamaño permitido."
+    },
+    "node": {
+      "backup_failed": "No se pudo solicitar el backup.",
+      "bulk_too_large": "La operación masiva supera el límite de nodos.",
+      "credentials_read_only": "Las credenciales son de solo escritura.",
+      "duplicate_name": "Ya existe un nodo con ese nombre.",
+      "export_failed": "No se pudo exportar el CSV.",
+      "group_not_applied": "El grupo seleccionado aún no está aplicado.",
+      "group_not_found": "El grupo seleccionado no existe.",
+      "import_invalid": "El CSV no se pudo procesar.",
+      "import_too_large": "El CSV supera el tamaño máximo.",
+      "invalid_address": "La dirección no es válida.",
+      "invalid_input": "El protocolo de input no es válido.",
+      "invalid_model": "El modelo no es válido.",
+      "invalid_name": "El nombre del nodo no es válido.",
+      "invalid_port": "El puerto debe estar entre 1 y 65535.",
+      "invalid_vars": "Las variables del nodo no son válidas.",
+      "not_found": "El nodo no existe.",
+      "port_ignored_for_input": "El puerto se ignora para este input.",
+      "reserved_var": "La variable «{{name}}» es reservada.",
+      "host_key_invalid": "La clave SSH del host no es válida.",
+      "host_key_not_ssh": "Este nodo no usa SSH; no se puede confiar en una clave SSH.",
+      "host_key_unreachable": "No se pudo obtener la clave SSH de {{address}}:{{port}}.",
+      "auth_failed": "El dispositivo rechazó las credenciales del usuario {{user}}.",
+      "host_key_unknown": "La clave SSH del dispositivo no está confiada.",
+      "connection_timeout": "El dispositivo no respondió antes del timeout.",
+      "connection_refused": "El dispositivo rechazó la conexión.",
+      "dns_error": "No se pudo resolver la dirección del dispositivo.",
+      "connection_error": "No se pudo conectar con el dispositivo ({{class}})."
+    },
+    "oxidized": {
+      "auto_recovery_failed": "Oxidized no arrancó tras crear el primer nodo.",
+      "bad_response": "Oxidized devolvió una respuesta no válida.",
+      "next_adds_job_disabled": "El backup manual está desactivado en la configuración de Oxidized.",
+      "output_unsupported": "El output no soporta historial de versiones.",
+      "reload_failed": "Oxidized no recargó los nodos.",
+      "restart_failed": "No se pudo reiniciar Oxidized.",
+      "timeout": "Oxidized no respondió a tiempo.",
+      "unavailable": "Oxidized no está disponible."
+    },
+    "search": {
+      "query_invalid": "La búsqueda no es válida.",
+      "upstream_failed": "La búsqueda en configuraciones falló."
+    },
+    "setup": {
+      "completed": "La configuración inicial ya se completó.",
+      "invalid_language": "El idioma seleccionado no está disponible.",
+      "rate_limited": "Demasiados intentos de configuración inicial."
+    },
+    "system": {
+      "connection_failed": "La prueba de conexión falló.",
+      "invalid_setting": "El valor de «{{key}}» no es válido.",
+      "unavailable": "La configuración del sistema no está disponible."
+    },
+    "user": {
+      "duplicate_username": "Ya existe un usuario con ese nombre.",
+      "last_admin": "No se puede eliminar o desactivar al último administrador.",
+      "not_found": "El usuario no existe.",
+      "password_reset_failed": "No se pudo restablecer la contraseña.",
+      "self_delete": "No puedes eliminar tu propia cuenta."
+    },
+    "validation": {
+      "duplicate": "Hay un valor duplicado.",
+      "failed": "La validación de los datos ha fallado.",
+      "invalid_choice": "La opción seleccionada no es válida.",
+      "invalid_format": "El formato de «{{field}}» no es válido.",
+      "invalid_type": "El tipo de dato no es válido.",
+      "max": "El valor supera el máximo permitido.",
+      "min": "El valor está por debajo del mínimo permitido.",
+      "required": "El campo «{{field}}» es obligatorio.",
+      "too_long": "El valor es demasiado largo.",
+      "range": "El valor debe estar entre {{min}} y {{max}}."
+    }
+  },
+  "validation": {
+    "required": "Este campo es obligatorio.",
+    "usernameLength": "El usuario debe tener entre 3 y 64 caracteres.",
+    "usernameFormat": "Usa letras, números, punto, guion o guion bajo; debe empezar por letra o número.",
+    "passwordLength": "La contraseña debe tener al menos 12 caracteres.",
+    "passwordComplexity": "Combina al menos tres de estos grupos: minúsculas, mayúsculas, números y símbolos.",
+    "passwordSameAsUsername": "La contraseña no puede ser igual al usuario.",
+    "nodeNameFormat": "El nombre solo admite letras, números, punto, guion y guion bajo.",
+    "modelFormat": "El modelo solo admite letras, números, punto, guion y guion bajo.",
+    "groupNameFormat": "El grupo solo admite letras, números, punto, guion y guion bajo.",
+    "url": "Introduce una URL http o https válida.",
+    "containerName": "Introduce un nombre de contenedor válido.",
+    "number": "Introduce un número válido.",
+    "range": "El valor debe estar entre {{min}} y {{max}}."
+  },
+  "oxidized": {
+    "fields": {
+      "username": {
+        "label": "Usuario por defecto",
+        "help": "Usuario usado cuando un nodo o grupo no define uno propio."
+      },
+      "password": {
+        "label": "Contraseña por defecto",
+        "help": "Contraseña usada cuando un nodo o grupo no define una propia."
+      },
+      "model": {
+        "label": "Modelo por defecto",
+        "help": "Modelo que Oxidized usa cuando el nodo no especifica otro."
+      },
+      "interval": {
+        "label": "Intervalo de backup",
+        "help": "Segundos entre ciclos de backup programados."
+      },
+      "threads": {
+        "label": "Hilos de trabajo",
+        "help": "Número de nodos que Oxidized puede procesar en paralelo."
+      },
+      "use_max_threads": {
+        "label": "Usar todos los hilos",
+        "help": "Permite aprovechar el máximo de slots de trabajo configurado."
+      },
+      "timeout": {
+        "label": "Timeout de conexión",
+        "help": "Segundos máximos para conectar y leer del dispositivo."
+      },
+      "timelimit": {
+        "label": "Tiempo máximo por backup",
+        "help": "Límite total en segundos para completar un backup."
+      },
+      "retries": {
+        "label": "Reintentos",
+        "help": "Número de reintentos antes de marcar un nodo como fallido."
+      },
+      "prompt": {
+        "label": "Prompt global",
+        "help": "Expresión regular que reconoce el prompt de los dispositivos."
+      },
+      "next_adds_job": {
+        "label": "Backup manual usa la cola",
+        "help": "Si está activo, /node/next encola el nodo en lugar de esperar bloqueado."
+      },
+      "resolve_dns": {
+        "label": "Resolver DNS",
+        "help": "Resuelve los nombres de nodo antes de conectar."
+      },
+      "debug": {
+        "label": "Modo debug",
+        "help": "Aumenta el detalle de los logs de Oxidized."
+      },
+      "run_once": {
+        "label": "Ejecutar una vez",
+        "help": "Ejecuta un único ciclo de backup y termina."
+      },
+      "pid": {
+        "label": "Fichero PID",
+        "help": "Ruta donde Oxidized escribe su PID si se ejecuta como daemon."
+      },
+      "use_syslog": {
+        "label": "Usar syslog",
+        "help": "Opción heredada para enviar logs a syslog."
+      },
+      "log": {
+        "label": "Fichero de log",
+        "help": "Ruta del log de Oxidized. Normalmente se deja vacío para usar stdout."
+      },
+      "logger_level": {
+        "label": "Nivel de log",
+        "help": "Nivel mínimo que se escribe en el log."
+      },
+      "logger_appenders": {
+        "label": "Appenders de log",
+        "help": "Array JSON con appenders del logger de Oxidized."
+      },
+      "crash_directory": {
+        "label": "Directorio de crashes",
+        "help": "Directorio donde se guardan los volcados de error."
+      },
+      "crash_hostnames": {
+        "label": "Hostnames en crashes",
+        "help": "Incluye hostnames en el nombre de los volcados."
+      },
+      "stats_history_size": {
+        "label": "Historial de estadísticas",
+        "help": "Número de muestras que conserva el contador interno."
+      },
+      "vars": {
+        "label": "Variables globales",
+        "help": "Variables comunes a todos los nodos, como enable o remove_secret."
+      },
+      "group_map": {
+        "label": "Mapa de grupos",
+        "help": "Alias o regex que traducen grupos del source a grupos de configuración."
+      },
+      "model_map": {
+        "label": "Mapa de modelos",
+        "help": "Alias o regex que traducen modelos del source a modelos de Oxidized."
+      },
+      "input_default": {
+        "label": "Inputs por defecto",
+        "help": "Protocolos que se prueban cuando el nodo no define input."
+      },
+      "input_debug": {
+        "label": "Debug de inputs",
+        "help": "Activa trazas de los protocolos de conexión."
+      },
+      "input_ssh_secure": {
+        "label": "SSH seguro",
+        "help": "Fuerza algoritmos SSH más estrictos cuando el equipo lo permite."
+      },
+      "input_ftp_passive": {
+        "label": "FTP pasivo",
+        "help": "Usa modo pasivo para transferencias FTP."
+      },
+      "input_http_scheme": {
+        "label": "Esquema HTTP",
+        "help": "Esquema usado por el input HTTP."
+      },
+      "input_http_ssl_verify": {
+        "label": "Verificación TLS del input",
+        "help": "Verifica el certificado del dispositivo en inputs HTTP."
+      },
+      "input_http_timeout": {
+        "label": "Timeout HTTP del input",
+        "help": "Timeout en segundos para el input HTTP."
+      },
+      "input_utf8_encoded": {
+        "label": "Codificación UTF-8",
+        "help": "Fuerza codificación UTF-8 en la salida del dispositivo."
+      },
+      "output_default": {
+        "label": "Output por defecto",
+        "help": "Destino donde se guardan las configuraciones."
+      },
+      "output_clean_obsolete_nodes": {
+        "label": "Limpiar nodos obsoletos",
+        "help": "Elimina del output los nodos que ya no existen en el inventario."
+      },
+      "output_file_directory": {
+        "label": "Directorio de ficheros",
+        "help": "Directorio del output file."
+      },
+      "output_git_user": {
+        "label": "Usuario git",
+        "help": "Nombre de autor usado en los commits."
+      },
+      "output_git_email": {
+        "label": "Email git",
+        "help": "Email de autor usado en los commits."
+      },
+      "output_git_repo": {
+        "label": "Repositorio git",
+        "help": "Ruta del repositorio git de configuraciones."
+      },
+      "output_git_single_repo": {
+        "label": "Repositorio único",
+        "help": "Guarda todos los nodos en un único repositorio."
+      },
+      "output_git_type_as_directory": {
+        "label": "Separar por tipo",
+        "help": "Usa el tipo de dispositivo como directorio dentro del repositorio."
+      },
+      "output_gitcrypt_user": {
+        "label": "Usuario git-crypt",
+        "help": "Autor de los commits del output gitcrypt."
+      },
+      "output_gitcrypt_email": {
+        "label": "Email git-crypt",
+        "help": "Email del autor de commits gitcrypt."
+      },
+      "output_gitcrypt_repo": {
+        "label": "Repositorio gitcrypt",
+        "help": "Ruta del repositorio cifrado."
+      },
+      "output_gitcrypt_users": {
+        "label": "Usuarios git-crypt",
+        "help": "Usuarios autorizados del repositorio git-crypt."
+      },
+      "output_gitcrypt_single_repo": {
+        "label": "Repositorio gitcrypt único",
+        "help": "Guarda todos los nodos en un único repositorio cifrado."
+      },
+      "output_http_url": {
+        "label": "URL del output HTTP",
+        "help": "Endpoint que recibe las configuraciones."
+      },
+      "output_http_user": {
+        "label": "Usuario del output HTTP",
+        "help": "Usuario para autenticación básica."
+      },
+      "output_http_password": {
+        "label": "Contraseña del output HTTP",
+        "help": "Contraseña para autenticación básica."
+      },
+      "output_http_ssl_verify": {
+        "label": "Verificación TLS del output",
+        "help": "Verifica el certificado del endpoint HTTP."
+      },
+      "output_http_headers": {
+        "label": "Cabeceras del output HTTP",
+        "help": "Cabeceras adicionales enviadas al endpoint."
+      },
+      "source_http_read_timeout": {
+        "label": "Timeout de lectura del source",
+        "help": "Segundos que oxidized-web espera la respuesta del source HTTP interno."
+      },
+      "source_default": {
+        "label": "Source por defecto",
+        "help": "El panel fija el source HTTP interno."
+      },
+      "source_http_url": {
+        "label": "URL del source HTTP",
+        "help": "Endpoint interno que sirve el inventario."
+      },
+      "source_http_headers": {
+        "label": "Cabeceras del source",
+        "help": "Cabeceras internas, incluido el token del source."
+      },
+      "source_http_map": {
+        "label": "Mapa del source",
+        "help": "Campos del JSON que Oxidized mapea al nodo."
+      },
+      "source_http_vars_map": {
+        "label": "Mapa de variables",
+        "help": "Mapeo adicional de variables del source."
+      },
+      "extensions_oxidized-web_load": {
+        "label": "Cargar oxidized-web",
+        "help": "Activa la API web interna de Oxidized."
+      },
+      "extensions_oxidized-web_listen": {
+        "label": "Escucha de oxidized-web",
+        "help": "Interfaz interna donde escucha la API web."
+      },
+      "extensions_oxidized-web_port": {
+        "label": "Puerto de oxidized-web",
+        "help": "Puerto interno de la API web."
+      },
+      "extensions_oxidized-web_url_prefix": {
+        "label": "Prefijo de URL",
+        "help": "Prefijo opcional de las rutas web."
+      },
+      "extensions_oxidized-web_vhosts": {
+        "label": "Virtual hosts",
+        "help": "Hosts permitidos por oxidized-web."
+      },
+      "extensions_oxidized-web_hide_node_vars": {
+        "label": "Ocultar variables",
+        "help": "Variables que oxidized-web no devuelve en /nodes.json."
+      },
+      "cmd": {
+        "label": "Comando",
+        "help": "Comando ejecutado por el hook."
+      },
+      "async": {
+        "label": "Asíncrono",
+        "help": "Ejecuta el hook sin bloquear el ciclo de backup."
+      },
+      "remote_repo": {
+        "label": "Repositorio remoto",
+        "help": "URL del repositorio de GitHub."
+      },
+      "privatekey": {
+        "label": "Clave privada",
+        "help": "Ruta o contenido de la clave privada."
+      },
+      "publickey": {
+        "label": "Clave pública",
+        "help": "Ruta o contenido de la clave pública."
+      },
+      "region": {
+        "label": "Región AWS",
+        "help": "Región donde está el topic SNS."
+      },
+      "topic_arn": {
+        "label": "ARN del topic SNS",
+        "help": "Topic SNS que recibe los eventos."
+      },
+      "token": {
+        "label": "Token",
+        "help": "Token de autenticación del servicio."
+      },
+      "channel": {
+        "label": "Canal",
+        "help": "Canal o sala donde se publica el evento."
+      },
+      "diff": {
+        "label": "Incluir diff",
+        "help": "Adjunta el diff de configuración al mensaje."
+      },
+      "message": {
+        "label": "Mensaje",
+        "help": "Plantilla del mensaje enviado."
+      },
+      "proxy": {
+        "label": "Proxy",
+        "help": "URL de proxy para la conexión."
+      },
+      "accesskey": {
+        "label": "Access key",
+        "help": "Clave de acceso del servicio."
+      },
+      "space": {
+        "label": "Espacio",
+        "help": "Espacio de Webex donde publicar."
+      },
+      "jid": {
+        "label": "JID",
+        "help": "Jabber ID usado por el hook XMPP."
+      },
+      "nick": {
+        "label": "Nick",
+        "help": "Nick visible en la sala XMPP."
+      },
+      "hooks_exec_cmd": {
+        "label": "Comando del hook",
+        "help": "Comando que ejecuta el hook exec dentro del contenedor."
+      }
+    },
+    "vars": {
+      "enable": {
+        "label": "Enable",
+        "help": "Contraseña de modo privilegiado por defecto."
+      },
+      "remove_secret": {
+        "label": "Eliminar secretos",
+        "help": "Elimina secretos de las configuraciones antes de guardarlas."
+      },
+      "metadata": {
+        "label": "Metadatos",
+        "help": "Incluye metadatos de backup en el contenido guardado."
+      },
+      "metadata_top": {
+        "label": "Metadatos arriba",
+        "help": "Coloca los metadatos al inicio del fichero."
+      },
+      "metadata_bottom": {
+        "label": "Metadatos abajo",
+        "help": "Coloca los metadatos al final del fichero."
+      },
+      "output_store_mode": {
+        "label": "Modo de almacenamiento",
+        "help": "Modo de almacenamiento del output para este nodo."
+      },
+      "ssh_no_exec": {
+        "label": "SSH sin exec",
+        "help": "Abre una shell SSH sin canal exec."
+      },
+      "ssh_no_keepalive": {
+        "label": "SSH sin keepalive",
+        "help": "Desactiva los paquetes keepalive de SSH."
+      },
+      "ssh_keys": {
+        "label": "Claves SSH",
+        "help": "Rutas de claves privadas SSH."
+      },
+      "auth_methods": {
+        "label": "Métodos de autenticación",
+        "help": "Orden de métodos de autenticación SSH."
+      },
+      "ssh_proxy": {
+        "label": "Proxy SSH",
+        "help": "Host jump usado para llegar al equipo."
+      },
+      "ssh_proxy_port": {
+        "label": "Puerto del proxy SSH",
+        "help": "Puerto del host jump."
+      },
+      "ssh_kex": {
+        "label": "KEX SSH",
+        "help": "Algoritmos de intercambio de claves permitidos."
+      },
+      "ssh_host_key": {
+        "label": "Host key SSH",
+        "help": "Algoritmos de host key permitidos."
+      },
+      "ssh_hmac": {
+        "label": "HMAC SSH",
+        "help": "Algoritmos HMAC permitidos."
+      },
+      "ssh_encryption": {
+        "label": "Cifrado SSH",
+        "help": "Algoritmos de cifrado permitidos."
+      },
+      "ssh_pubkey_algorithms": {
+        "label": "Algoritmos de clave pública",
+        "help": "Algoritmos de clave pública SSH permitidos."
+      },
+      "ssh_port": {
+        "label": "Puerto SSH",
+        "help": "Puerto SSH del nodo."
+      },
+      "telnet_port": {
+        "label": "Puerto telnet",
+        "help": "Puerto telnet del nodo."
+      },
+      "comware_cmdline": {
+        "label": "Línea de comandos Comware",
+        "help": "Ajuste de la línea de comandos para modelos Comware."
+      },
+      "cumulus_use_nclu": {
+        "label": "Cumulus NCLU",
+        "help": "Usa NCLU para obtener la configuración Cumulus."
+      },
+      "cumulus_use_nvue": {
+        "label": "Cumulus NVUE",
+        "help": "Usa NVUE para obtener la configuración Cumulus."
+      },
+      "cumulus_routing_daemon": {
+        "label": "Daemon de routing Cumulus",
+        "help": "Daemon de routing consultado en Cumulus."
+      },
+      "ftd_api_endpoint": {
+        "label": "Endpoint API FTD",
+        "help": "Endpoint de la API de Cisco FTD."
+      },
+      "ftd_api_port": {
+        "label": "Puerto API FTD",
+        "help": "Puerto de la API de Cisco FTD."
+      },
+      "ftd_polls": {
+        "label": "Sondeos FTD",
+        "help": "Número de sondeos de la API FTD."
+      },
+      "ftd_poll_wait": {
+        "label": "Espera entre sondeos FTD",
+        "help": "Segundos entre sondeos de la API FTD."
+      },
+      "ftd_config_filename": {
+        "label": "Fichero de configuración FTD",
+        "help": "Nombre del fichero de configuración solicitado a FTD."
+      },
+      "fortios_autoupdate": {
+        "label": "Autoupdate FortiOS",
+        "help": "Activa la actualización automática de FortiOS."
+      },
+      "fortigate_autoupdate": {
+        "label": "Autoupdate FortiGate",
+        "help": "Activa la actualización automática de FortiGate."
+      },
+      "fullconfig": {
+        "label": "Configuración completa",
+        "help": "Solicita la configuración completa cuando el modelo lo permite."
+      },
+      "ios_rbac": {
+        "label": "IOS RBAC",
+        "help": "Ajusta la recolección para IOS con RBAC."
+      },
+      "lenovonos_remove_unstable_lines": {
+        "label": "LenovoNOS líneas inestables",
+        "help": "Elimina líneas volátiles de LenovoNOS."
+      },
+      "openwrt_binary_files": {
+        "label": "OpenWrt binarios",
+        "help": "Incluye ficheros binarios de OpenWrt."
+      },
+      "openwrt_non_sensitive_files": {
+        "label": "OpenWrt no sensibles",
+        "help": "Incluye ficheros no sensibles de OpenWrt."
+      },
+      "openwrt_partitions_to_backup": {
+        "label": "Particiones OpenWrt",
+        "help": "Particiones que se incluyen en el backup."
+      },
+      "openwrt_backup_partitions": {
+        "label": "Backup de particiones",
+        "help": "Activa el backup de particiones OpenWrt."
+      },
+      "realm": {
+        "label": "Realm",
+        "help": "Realm de autenticación del equipo."
+      },
+      "admin": {
+        "label": "Admin",
+        "help": "Usuario administrador específico del modelo."
+      }
+    },
+    "hooks": {
+      "exec": {
+        "label": "Ejecutar comando",
+        "help": "Ejecuta un comando local cuando ocurre un evento."
+      },
+      "githubrepo": {
+        "label": "Repositorio GitHub",
+        "help": "Publica los cambios en un repositorio de GitHub."
+      },
+      "awssns": {
+        "label": "AWS SNS",
+        "help": "Publica eventos en un topic de Amazon SNS."
+      },
+      "slackdiff": {
+        "label": "Slack diff",
+        "help": "Envía el diff de configuración a Slack."
+      },
+      "ciscosparkdiff": {
+        "label": "Webex diff",
+        "help": "Envía el diff de configuración a Webex."
+      },
+      "xmppdiff": {
+        "label": "XMPP diff",
+        "help": "Envía el diff de configuración a una sala XMPP."
+      }
+    },
+    "events": {
+      "node_success": "Nodo correcto",
+      "node_fail": "Nodo fallido",
+      "post_store": "Tras guardar",
+      "nodes_done": "Ciclo completado"
+    },
+    "tabs": {
+      "general": "General",
+      "input": "Inputs",
+      "output": "Outputs",
+      "source": "Sources",
+      "hooks": "Hooks",
+      "models": "Modelos",
+      "rest": "REST / Extensiones",
+      "advanced": "YAML avanzado"
+    }
+  }
+}
