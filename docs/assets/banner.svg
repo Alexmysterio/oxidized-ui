@@ -1,0 +1,86 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="360" viewBox="0 0 1280 360" role="img" aria-labelledby="title desc">
+  <title id="title">Oxidized UI</title>
+  <desc id="desc">Oxidized UI: network configuration backups, under control.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#050b1f"/>
+      <stop offset="0.55" stop-color="#081634"/>
+      <stop offset="1" stop-color="#0b2447"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#4f7cff"/>
+      <stop offset="0.55" stop-color="#42d5ff"/>
+      <stop offset="1" stop-color="#7af0c7"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.82" cy="0.35" r="0.65">
+      <stop offset="0" stop-color="#2f7dff" stop-opacity="0.35"/>
+      <stop offset="1" stop-color="#2f7dff" stop-opacity="0"/>
+    </radialGradient>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M40 0H0V40" fill="none" stroke="#7fa8ff" stroke-opacity="0.07" stroke-width="1"/>
+    </pattern>
+    <filter id="soft" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="7"/>
+    </filter>
+  </defs>
+
+  <rect width="1280" height="360" fill="url(#bg)"/>
+  <rect width="1280" height="360" fill="url(#grid)"/>
+  <rect width="1280" height="360" fill="url(#glow)"/>
+
+  <!-- network constellation -->
+  <g stroke="#66b4ff" stroke-opacity="0.35" fill="none">
+    <path d="M940 180 L1030 112 L1120 166 L1180 92"/>
+    <path d="M940 180 L1010 246 L1108 226 L1180 268"/>
+    <path d="M1030 112 L1010 246"/>
+    <path d="M1120 166 L1108 226"/>
+    <path d="M940 180 L1108 226"/>
+  </g>
+  <g fill="#07162f" stroke="#54c8ff" stroke-width="2">
+    <circle cx="940" cy="180" r="16"/>
+    <circle cx="1030" cy="112" r="11"/>
+    <circle cx="1120" cy="166" r="11"/>
+    <circle cx="1180" cy="92" r="9"/>
+    <circle cx="1010" cy="246" r="11"/>
+    <circle cx="1108" cy="226" r="11"/>
+    <circle cx="1180" cy="268" r="9"/>
+  </g>
+  <g fill="url(#accent)">
+    <circle cx="940" cy="180" r="7"/>
+    <circle cx="1030" cy="112" r="4"/>
+    <circle cx="1120" cy="166" r="4"/>
+    <circle cx="1180" cy="92" r="3"/>
+    <circle cx="1010" cy="246" r="4"/>
+    <circle cx="1108" cy="226" r="4"/>
+    <circle cx="1180" cy="268" r="3"/>
+  </g>
+  <circle cx="940" cy="180" r="48" fill="#2f7dff" opacity="0.13" filter="url(#soft)"/>
+
+  <!-- logo mark -->
+  <g transform="translate(72 62)">
+    <rect x="0" y="0" width="58" height="58" rx="16" fill="#244ed8"/>
+    <g fill="none" stroke="#9ec5ff" stroke-width="3">
+      <circle cx="29" cy="29" r="5"/>
+      <circle cx="29" cy="12" r="4"/>
+      <circle cx="44" cy="20" r="4"/>
+      <circle cx="14" cy="20" r="4"/>
+      <circle cx="14" cy="39" r="4"/>
+      <circle cx="44" cy="39" r="4"/>
+      <path d="M29 17V12M33 25L41 21M25 25L17 21M25 33L17 38M33 33L41 38"/>
+    </g>
+  </g>
+
+  <text x="150" y="88" fill="#ffffff" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="28" font-weight="700" letter-spacing="0.4">Oxidized UI</text>
+  <text x="151" y="112" fill="#8fb7ff" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="12" font-weight="600" letter-spacing="3.2">BACKUP CONTROL PLANE</text>
+
+  <text x="72" y="198" fill="#ffffff" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="52" font-weight="750" letter-spacing="-1.2">Network configuration backups,</text>
+  <text x="72" y="252" fill="url(#accent)" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="52" font-weight="750" letter-spacing="-1.2">under control.</text>
+
+  <text x="74" y="295" fill="#91a9cc" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="14" font-weight="500" letter-spacing="2.4">INVENTORY  /  CONFIG  /  HISTORY  /  METRICS  /  AUTOMATION</text>
+
+  <g transform="translate(72 318)">
+    <rect width="86" height="3" rx="1.5" fill="#4f7cff"/>
+    <rect x="94" width="34" height="3" rx="1.5" fill="#42d5ff"/>
+    <rect x="136" width="18" height="3" rx="1.5" fill="#7af0c7"/>
+  </g>
+</svg>

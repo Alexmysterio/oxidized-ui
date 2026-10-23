@@ -1,20 +1,55 @@
-# Oxidized UI
+<p align="center">
+  <img src="docs/assets/banner.svg" alt="Oxidized UI - network configuration backups, under control" width="100%">
+</p>
 
-A self-hosted web interface for [Oxidized](https://github.com/ytti/oxidized), the
-configuration backup tool for network devices.
+<h1 align="center">Oxidized UI</h1>
 
-Oxidized UI adds users and roles, a node inventory, configuration management,
-backup scheduling, history, audit logs, metrics, notifications, API tokens, and
-optional OIDC login. The default distribution runs **Oxidized, the web UI, and
-Caddy in one Docker container**, so there is no multi-service setup to assemble.
+<p align="center">
+  <strong>A clean, self-hosted control plane for Oxidized network configuration backups.</strong>
+</p>
+
+<p align="center">
+  <a href="https://github.com/Alexmysterio/oxidized-ui/actions/workflows/ci.yml"><img src="https://github.com/Alexmysterio/oxidized-ui/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="https://github.com/Alexmysterio/oxidized-ui/actions/workflows/contract.yml"><img src="https://github.com/Alexmysterio/oxidized-ui/actions/workflows/contract.yml/badge.svg" alt="Oxidized contract"></a>
+  <img src="https://img.shields.io/badge/Docker-single%20image-2496ED?logo=docker&logoColor=white" alt="Docker">
+  <img src="https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white" alt="Python 3.12">
+  <img src="https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=111111" alt="React 19">
+  <img src="https://img.shields.io/badge/Oxidized-0.37.0-6E4AFF" alt="Oxidized 0.37.0">
+</p>
+
+<p align="center">
+  <a href="#quick-start"><strong>Quick start</strong></a> ·
+  <a href="#what-you-get"><strong>Features</strong></a> ·
+  <a href="#configuration-reference"><strong>Configuration</strong></a> ·
+  <a href="#troubleshooting"><strong>Troubleshooting</strong></a>
+</p>
+
+Oxidized UI turns [Oxidized](https://github.com/ytti/oxidized) into a complete
+backup workspace: inventory, encrypted credentials, configuration history,
+diff and rollback, scheduling, audit, metrics, and notifications. The default
+distribution runs **Oxidized, the web UI, and Caddy in one Docker container**.
 
 It uses a private local certificate authority, so no public certificate or
 external certificate service is required. It is intended for a home lab, a small
 office, or a trusted internal network.
 
-> **New to Docker?** Follow the Quick start section step by step. Every command
-> is shown explicitly. You do not need to understand the internals to get a
-> working installation.
+<p align="center">
+  <img src="docs/assets/login.png" alt="Oxidized UI login screen" width="920">
+  <br>
+  <em>Login screen. The interface is available in English and Spanish.</em>
+</p>
+
+## At a glance
+
+| 🗂️ Inventory | 🔐 Security | 📊 Operations |
+|---|---|---|
+| Nodes, groups, models, credentials, CSV import/export, bulk edit, saved filters, and node-to-node diff. | Argon2id passwords, TOTP, recovery codes, session revocation, IP allowlist, API tokens, OIDC, and encrypted secrets. | Backups by node or group, persistent jobs, live logs, SLA, history, audit, Prometheus, webhooks, and encrypted export. |
+| **⚙️ Configuration** | **🧭 Visibility** | **🐳 Deployment** |
+| YAML editor, validation, preflight, apply, health check, rollback, and scheduled maintenance windows. | Dashboard, per-node status, version history, diffs, backup timeline, and group-level success rate. | One image by default. A four-container hardened mode is available for stricter isolation. |
+
+> **New to Docker?** Follow the [Quick start](#quick-start) step by step. Every
+> command is shown explicitly. You do not need to understand the internals to get
+> a working installation.
 
 ---
 
@@ -84,6 +119,17 @@ The container runs three processes under `supervisord`:
 |                                                              |
 |  Data: ./data/ui, ./data/config, ./data/oxidized             |
 +--------------------------------------------------------------+
+```
+
+```mermaid
+flowchart LR
+    U[Browser] -->|HTTPS 443| C[Caddy]
+    C -->|127.0.0.1:8080| UI[Oxidized UI]
+    UI -->|local supervisor| S[supervisord]
+    S --> O[Oxidized]
+    O -->|Git + YAML| D[(./data)]
+    UI -->|SQLite| D
+    UI -->|HTTP source| O
 ```
 
 Only ports `80` and `443` are published to the host. The UI and Oxidized API
