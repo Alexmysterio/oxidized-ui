@@ -15,7 +15,7 @@ multi-stage y la guía de despliegue están en el [README](../README.md).
 - Inter Variable como tipografía de interfaz y JetBrains Mono para datos
   técnicos, código, fechas y cifras.
 - `pnpm` con `node-linker=hoisted` para resolver correctamente las dependencias
-  nativas de Vite en Windows y Linux.
+  nativas de Vite.
 
 ## Dirección visual
 
@@ -102,7 +102,7 @@ todos los códigos de `error_codes.json` y todas las acciones de
 
 ## Verificación local
 
-```powershell
+```bash
 cd frontend
 pnpm install
 pnpm test
@@ -117,10 +117,8 @@ usadas/no usadas.
 
 El backend puede servir el build directamente:
 
-```powershell
-$env:STATIC_DIR = "$PWD\frontend\dist"
-$env:LOCALES_DIR = "$PWD\frontend\dist\locales"
-```
+Configura `STATIC_DIR` y `LOCALES_DIR` apuntando a `frontend/dist` y
+`frontend/dist/locales` en el entorno del backend.
 
 y la SPA queda disponible en `http://127.0.0.1:8000`. En desarrollo, `pnpm dev`
 usa el proxy `/api` hacia `127.0.0.1:8000`.

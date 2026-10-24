@@ -151,8 +151,6 @@ requires more resources and the Docker socket proxy. See
 
 - A computer that is always on (mini PC, server, or desktop).
 - Docker Engine with Docker Compose v2.
-  - Windows/macOS: Docker Desktop.
-  - Linux: Docker Engine and the Compose plugin.
 - At least 2 GB of free RAM and about 2 GB of free disk space.
 - A hostname or IP address for the service.
 - TCP ports `80` and `443` available on the host.
@@ -177,26 +175,18 @@ Replace it with a name you control, such as `oxidized.home.arpa`,
 
 ### 1. Install Docker
 
-**Windows/macOS:** install
-[Docker Desktop](https://www.docker.com/products/docker-desktop/), start it, and
-wait until it says **Engine running**. Use PowerShell (Windows) or Terminal
-(macOS).
+Install Docker Engine or Docker environment for your platform, including the Compose
+v2 plugin. Follow the official Docker installation instructions for your system.
 
-**Linux:** follow the official instructions at
-<https://docs.docker.com/engine/install/>.
-
-Check:
+Check that both commands work:
 
 ```bash
 docker --version
 docker compose version
 ```
 
-On Linux, allow your user to use Docker, then log out and back in:
-
-```bash
-sudo usermod -aG docker "$USER"
-```
+Your user must have permission to run Docker. If `docker` requires elevated
+privileges on your system, configure access according to your Docker installation.
 
 ### 2. Download the project
 
@@ -209,49 +199,31 @@ If you downloaded a ZIP, open a terminal in the extracted directory instead.
 
 ### 3. Create the environment file
 
-**Windows PowerShell:**
-
-```powershell
-Copy-Item .env.example .env
-notepad .env
-```
-
-**Linux/macOS:**
-
 ```bash
 cp .env.example .env
 ```
 
+Open `.env` in any text editor and set the values below.
+
 ### 4. Generate the secrets
 
-Three values must be random and secret: `SECRET_KEY`, `FERNET_KEY`, and
-`OXIDIZED_SOURCE_TOKEN`. Never commit `.env` or reuse passwords.
+Three values must be random and secret:
 
-**Windows PowerShell, with Python installed:**
+- `SECRET_KEY`
+- `FERNET_KEY`
+- `OXIDIZED_SOURCE_TOKEN`
 
-```powershell
-python -c "import secrets; print(secrets.token_urlsafe(48))"
-python -c "import secrets; print(secrets.token_urlsafe(48))"
-python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
-```
+Do not reuse passwords and do not commit `.env` to Git. Generate all three with
+a temporary Docker container:
 
-**Windows without Python:** use a temporary container:
-
-```powershell
+```bash
 docker run --rm python:3.12-slim python -c "import secrets; print(secrets.token_urlsafe(48))"
 docker run --rm python:3.12-slim python -c "import secrets; print(secrets.token_urlsafe(48))"
 docker run --rm python:3.12-slim python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
 ```
 
-**Linux/macOS:**
-
-```bash
-python3 -c "import secrets; print(secrets.token_urlsafe(48))"
-python3 -c "import secrets; print(secrets.token_urlsafe(48))"
-python3 -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
-```
-
-Put the values in `.env`:
+Use the first output for `SECRET_KEY`, the second for
+`OXIDIZED_SOURCE_TOKEN`, and the third for `FERNET_KEY`.
 
 ```env
 SECRET_KEY=PASTE_FIRST_VALUE_HERE
@@ -259,18 +231,18 @@ FERNET_KEY=PASTE_FERNET_VALUE_HERE
 OXIDIZED_SOURCE_TOKEN=PASTE_SECOND_VALUE_HERE
 ```
 
-`FERNET_KEY` must remain stable: it decrypts stored device credentials. If you
+`FERNET_KEY` must remain stable. It decrypts stored device credentials. If you
 lose it, existing credentials cannot be recovered.
 
 ### 5. Choose the hostname
 
-Set the name clients will use:
+Set `UI_HOSTNAME` to the DNS name or IP address clients will use:
 
 ```env
 UI_HOSTNAME=oxidized.example.com
 ```
 
-`UI_DOMAIN` is an optional second hostname Caddy will also serve:
+`UI_DOMAIN` is an optional second hostname that Caddy will also serve:
 
 ```env
 UI_DOMAIN=oxidized.local
@@ -279,54 +251,19 @@ UI_DOMAIN=oxidized.local
 Use two different names, as above, so the certificates are distinct. The name
 must resolve to the Docker host.
 
-**Same computer only:** use a loopback name and edit the hosts file.
+Configure a DNS record for the name, or add it to the hosts file of the clients
+that will access the UI. The exact location and tools depend on your operating
+environment. For same-computer access, point the name to loopback; for LAN
+access, point it to the Docker host's LAN address.
 
-Windows, in Notepad opened as Administrator:
-
-```text
-C:\Windows\System32\drivers\etc\hosts
-```
-
-Add:
-
-```text
-127.0.0.1 oxidized.local
-```
-
-Then flush DNS:
-
-```powershell
-ipconfig /flushdns
-```
-
-Linux/macOS:
+Verify resolution with:
 
 ```bash
-sudo sh -c 'echo "127.0.0.1 oxidized.local" >> /etc/hosts'
+nslookup oxidized.example.com
 ```
 
-**From other devices on the LAN:** point the name to the server's LAN IP, for
-example:
-
-```text
-192.168.1.50 oxidized.example.com
-```
-
-Add this to your router's DNS, Pi-hole, local DNS server, or each client's hosts
-file. The IP must be the Docker host, not the container.
-
-Check resolution:
-
-```powershell
-Resolve-DnsName oxidized.example.com
-```
-
-```bash
-getent hosts oxidized.example.com
-```
-
-If the name resolves to a public IP and you are not forwarding ports, the browser
-will not reach Caddy.
+The result must be the Docker host. If it is a public address and you are not
+forwarding ports, the browser will not reach Caddy.
 
 ### 6. Start the service
 
@@ -374,80 +311,22 @@ a wrong certificate.
 
 Export the public CA:
 
-**Windows:**
-
-```powershell
-docker cp oxidized-ui:/data/caddy/caddy/pki/authorities/local/root.crt .\oxidized-ui-ca.crt
-```
-
-**Linux/macOS:**
-
 ```bash
 docker cp oxidized-ui:/data/caddy/caddy/pki/authorities/local/root.crt ./oxidized-ui-ca.crt
 ```
 
-You can also read it from:
+It is also available on the host at:
 
 ```text
 data/ui/caddy/caddy/pki/authorities/local/root.crt
 ```
 
-#### Windows
+Install `oxidized-ui-ca.crt` as a trusted root CA in the certificate store used
+by your browser or operating environment. The exact menu and command depend on
+your platform. If your browser has its own certificate store, import it there as
+well.
 
-1. Double-click `oxidized-ui-ca.crt`.
-2. **Install Certificate**.
-3. **Local Machine**.
-4. **Place all certificates in the following store**.
-5. **Trusted Root Certification Authorities**.
-6. Finish, confirm, and restart the browser.
-
-Or, in an elevated PowerShell:
-
-```powershell
-certutil -addstore -f Root .\oxidized-ui-ca.crt
-```
-
-Chrome and Edge use the Windows store. Firefox has its own store.
-
-#### macOS
-
-1. Double-click the `.crt`; Keychain Access opens.
-2. Add it to the **System** keychain.
-3. Open the certificate, expand **Trust**.
-4. Set **When using this certificate** to **Always Trust**.
-
-#### Linux
-
-```bash
-sudo cp oxidized-ui-ca.crt /usr/local/share/ca-certificates/oxidized-ui.crt
-sudo update-ca-certificates
-```
-
-#### Firefox
-
-```text
-Settings -> Privacy & Security -> Certificates
--> View Certificates -> Authorities -> Import
-```
-
-Enable trust for websites.
-
-#### Android
-
-```text
-Settings -> Security -> Encryption & credentials
--> Install a certificate -> CA certificate
-```
-
-#### iOS/iPadOS
-
-Install the profile, then enable full trust in:
-
-```text
-Settings -> General -> About -> Certificate Trust Settings
-```
-
-#### Quick test
+For a quick test only:
 
 ```bash
 curl -k https://oxidized.example.com/api/health
@@ -529,7 +408,7 @@ All values go in `.env`; never commit it.
 | `UI_DOMAIN` | `oxidized.local` | Optional second hostname served by Caddy. |
 | `UI_HTTP_PORT` | `80` | Host HTTP port, redirects to HTTPS. |
 | `UI_HTTPS_PORT` | `443` | Host HTTPS port. |
-| `TZ` | `Europe/Madrid` | IANA timezone. |
+| `TZ` | `UTC` | IANA timezone. |
 | `DEFAULT_LANGUAGE` | `es` | Initial language. |
 | `SESSION_COOKIE_SECURE` | `true` | Keep true with HTTPS. |
 | `TRUST_PROXY_HEADERS` | `true` | Trust Caddy forwarded headers. |
@@ -597,14 +476,6 @@ tar -czf oxidized-ui-backup-$(date +%F).tar.gz data .env
 docker compose start oxidized-ui
 ```
 
-Windows:
-
-```powershell
-docker compose stop oxidized-ui
-Compress-Archive -Path data,.env -DestinationPath "oxidized-ui-backup-$(Get-Date -Format yyyy-MM-dd).zip"
-docker compose start oxidized-ui
-```
-
 Store `.env` and the backup securely: they contain the Fernet key and encrypted
 credentials.
 
@@ -660,14 +531,6 @@ rm -rf data
 docker compose up -d
 ```
 
-Windows:
-
-```powershell
-docker compose down
-Remove-Item -Recurse -Force data
-docker compose up -d
-```
-
 After a reset, a new CA is generated and must be trusted again.
 
 ---
@@ -716,22 +579,6 @@ IP will not match. Do not copy the CA private key; only export `root.crt`. The
 private key remains in `data/ui/caddy`.
 
 Deleting `data/` creates a new CA; every client must trust it again.
-
-### LAN IP timeouts on Docker Desktop
-
-Some Docker Desktop installations publish ports only on Windows loopback. In
-that case localhost works but the LAN IP does not. For LAN access, use an
-elevated PowerShell port proxy:
-
-```powershell
-netsh interface portproxy add v4tov4 listenaddress=<LAN-IP> listenport=80 connectaddress=127.0.0.1 connectport=80
-netsh interface portproxy add v4tov4 listenaddress=<LAN-IP> listenport=443 connectaddress=127.0.0.1 connectport=443
-New-NetFirewallRule -DisplayName "Oxidized UI HTTPS" -Direction Inbound -Protocol TCP -LocalPort 80,443 -Action Allow -Profile Domain,Private
-```
-
-This is a Docker Desktop networking limitation, not a certificate problem.
-
----
 
 ## Notifications
 
@@ -821,10 +668,10 @@ backup counts/ratio, job counts, and stale-node count.
 docker compose ps
 ```
 
-2. Hostname resolves to the server?
+2. Hostname resolves to the Docker host?
 
-```powershell
-Resolve-DnsName oxidized.example.com
+```bash
+nslookup oxidized.example.com
 ```
 
 3. Internal health okay?
@@ -839,13 +686,13 @@ docker compose exec oxidized-ui python3 -c "import urllib.request; print(urllib.
 curl -k https://oxidized.example.com/api/health
 ```
 
-If loopback works but LAN IP does not, use the Docker Desktop port proxy above.
+If loopback works but LAN IP does not, use the Docker environment port proxy above.
 
 ### Certificate warning
 
 - Use `https://`, not `http://`.
 - The hostname must match `UI_HOSTNAME` or `UI_DOMAIN`.
-- Import the CA; Firefox has a separate store.
+- Import the CA into the certificate store used by the client.
 - After deleting `data/`, re-import the new CA.
 
 ### `setup_required` remains true
@@ -873,13 +720,9 @@ All three programs should be `RUNNING`: `ui`, `oxidized`, `caddy`.
 
 ### Permission denied on `data/`
 
-The UI and Oxidized use UID/GID `30000`. On Linux bind mounts:
-
-```bash
-sudo chown -R 30000:30000 data
-```
-
-Do not use `chmod 777`.
+The UI and Oxidized use UID/GID `30000`. The host directories must be writable
+by that UID/GID. If they are not, correct ownership using your platform's file
+management tools. Do not use world-writable permissions.
 
 ### Forgot the admin password
 
@@ -1010,4 +853,4 @@ More documentation:
 - `gitcrypt` requires a derived image with `git-crypt`.
 - OIDC has not been validated against every provider; test yours.
 - Device backups depend on reachability and correct credentials.
-- Docker Desktop may expose ports only on loopback; see the port-proxy section.
+- Docker environment may expose ports only on loopback; see the port-proxy section.

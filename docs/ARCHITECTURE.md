@@ -69,8 +69,7 @@ Características de la topología:
 - La imagen de la UI debe crear `/data` y `/oxidized-config` con owner 30000 en
   el Dockerfile. Docker inicializa los named volumes copiando el owner del
   directorio de la imagen; si el path no existe, el volumen nace root y la UI no
-  podría escribir. Si se usan bind mounts en su lugar, el README indicará
-  `chown 30000:30000` en el host.
+  podría escribir. Si se usan bind mounts, el propietario debe ser 30000:30000.
 
 ### Arranque
 

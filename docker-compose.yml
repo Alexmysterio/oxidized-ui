@@ -18,7 +18,7 @@ services:
       - "${UI_HTTPS_PORT:-443}:443"
       - "${UI_HTTPS_PORT:-443}:443/udp"
     environment:
-      TZ: ${TZ:-Europe/Madrid}
+      TZ: ${TZ:-UTC}
       DEFAULT_LANGUAGE: ${DEFAULT_LANGUAGE:-es}
       SECRET_KEY: ${SECRET_KEY:?SECRET_KEY is required}
       FERNET_KEY: ${FERNET_KEY:?FERNET_KEY is required}

@@ -63,33 +63,26 @@ backend/
 
 ## Ejecutar en local
 
-Requisitos: Python 3.12 y dependencias del `pyproject.toml`.
+Requisitos: Python 3.12 y dependencias del `pyproject.toml`. Crea y activa un
+entorno virtual con las herramientas de tu sistema; después instala el proyecto:
 
-```powershell
-cd backend
+```bash
 python -m venv .venv
-.\.venv\Scripts\python.exe -m pip install -e ".[dev]"
+python -m pip install -e ".[dev]"
 ```
 
 Configura las variables de entorno obligatorias (`SECRET_KEY`, `FERNET_KEY`,
-`OXIDIZED_SOURCE_TOKEN`) y las rutas de datos. Para desarrollo:
+`OXIDIZED_SOURCE_TOKEN`) y las rutas de datos en tu entorno de desarrollo. Para
+levantar la API:
 
-```powershell
-$env:APP_ENV = "development"
-$env:SECRET_KEY = "..."
-$env:FERNET_KEY = "..."        # Fernet.generate_key()
-$env:OXIDIZED_SOURCE_TOKEN = "..."
-$env:DATA_DIR = "$PWD\.local\data"
-$env:OXIDIZED_CONFIG_DIR = "$PWD\.local\config"
-$env:OXIDIZED_API_URL = "http://127.0.0.1:8888"
-$env:DOCKER_PROXY_URL = "http://127.0.0.1:2375"
+```bash
 uvicorn app.main:app --host 127.0.0.1 --port 8000
 ```
 
 `AUTO_MIGRATE=true` (por defecto) aplica Alembic al arrancar. Para hacerlo
 manualmente:
 
-```powershell
+```bash
 alembic upgrade head
 ```
 
@@ -99,11 +92,11 @@ fase 3 copie el build del frontend.
 
 ## Tests y lint
 
-```powershell
+```bash
 cd backend
-..\.venv\Scripts\python.exe -m pytest
-..\.venv\Scripts\ruff.exe check app tests
-..\.venv\Scripts\ruff.exe format --check app tests
+python -m pytest
+ruff check app tests
+ruff format --check app tests
 ```
 
 Cobertura actual: **31 tests unitarios/de integración simulada**, más un test
