@@ -817,15 +817,8 @@ docs/                     Technical documentation
 
 More documentation:
 
-- [Architecture](docs/ARCHITECTURE.md)
-- [Data model](docs/DATA-MODEL.md)
-- [API contract](docs/API-CONTRACT.md)
-- [Oxidized integration](docs/OXIDIZED-INTEGRATION.md)
-- [Configuration coverage](docs/CONFIGURATION-COVERAGE.md)
-- [Backend](docs/BACKEND.md)
-- [Frontend](docs/FRONTEND.md)
-- [Security audit](docs/SECURITY-AUDIT.md)
 - [Security policy](SECURITY.md)
+- [Security audit](docs/SECURITY-AUDIT.md)
 
 ---
 
