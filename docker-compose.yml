@@ -3,7 +3,7 @@ name: oxidized-ui
 # Standalone installation.
 #
 #   mkdir oxidized-ui && cd oxidized-ui
-#   curl -fsSLO https://raw.githubusercontent.com/Alexmysterio/oxidized-ui/main/compose.yaml
+#   curl -fsSLO https://raw.githubusercontent.com/Alexmysterio/oxidized-ui/main/docker-compose.yml
 #   docker compose up -d
 #
 # Optional settings can be placed in .env (copy .env.example) or edited here.

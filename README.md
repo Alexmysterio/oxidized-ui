@@ -196,11 +196,11 @@ single compose file:
 ```bash
 mkdir oxidized-ui
 cd oxidized-ui
-curl -fsSLO https://raw.githubusercontent.com/Alexmysterio/oxidized-ui/main/compose.yaml
+curl -fsSLO https://raw.githubusercontent.com/Alexmysterio/oxidized-ui/main/docker-compose.yml
 ```
 
 If `curl` is not available, open that URL in a browser and save the file as
-`compose.yaml` in the new directory.
+`docker-compose.yml` in the new directory.
 
 The image is pulled from:
 
@@ -216,7 +216,7 @@ ghcr.io/alexmysterio/oxidized-ui:latest
 
 ### 3. Configure the hostname
 
-All settings can be placed in a `.env` file next to `compose.yaml`. Copy the
+All settings can be placed in a `.env` file next to `docker-compose.yml`. Copy the
 example:
 
 ```bash
@@ -224,7 +224,7 @@ curl -fsSLO https://raw.githubusercontent.com/Alexmysterio/oxidized-ui/main/.env
 mv .env.example .env
 ```
 
-Or edit the values directly in `compose.yaml`.
+Or edit the values directly in `docker-compose.yml`.
 
 At minimum, change:
 
@@ -808,7 +808,7 @@ frontend/                 React application, tests, e2e
 docker/                   Caddy and single-container supervisor files
 scripts/                  Restore/helper scripts
 tests/contract/           Disposable Oxidized fixture for CI
-compose.yaml              Standalone image deployment
+docker-compose.yml              Standalone image deployment
 docker-compose.secure.yml Four-container deployment
 Dockerfile                Single-image build
 Dockerfile.secure         Multi-container UI image
