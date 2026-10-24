@@ -538,6 +538,7 @@ These are normally set by the image and should only be changed if you know why.
 | `SUPERVISOR_PROGRAM` | `oxidized` | Process controlled by the UI. |
 | `SUPERVISOR_LOGFILE` | `/var/log/supervisor/oxidized.log` | Oxidized log file. |
 | `APP_ENV` | `production` | Enables production behavior. |
+| `APP_VERSION` | `0.1.0` | Read-only application version. |
 | `AUTO_MIGRATE` | `true` | Run Alembic migrations at startup. |
 | `DISABLE_BACKGROUND_TASKS` | `false` | Disable poller/background workers. |
 | `DATABASE_URL` | empty | Override SQLite with another SQLAlchemy URL. |
