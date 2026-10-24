@@ -399,9 +399,9 @@ services:
       # Public hostname(s). Change UI_HOSTNAME before first start.
       UI_HOSTNAME: ${UI_HOSTNAME:-oxidized.example.com}
       UI_DOMAIN: ${UI_DOMAIN:-oxidized.local}
-      SESSION_COOKIE_SECURE: "true"
-      TRUST_PROXY_HEADERS: "true"
-      TRUSTED_ORIGINS: https://${UI_HOSTNAME:-oxidized.example.com},https://${UI_DOMAIN:-oxidized.local}
+      SESSION_COOKIE_SECURE: ${SESSION_COOKIE_SECURE:-true}
+      TRUST_PROXY_HEADERS: ${TRUST_PROXY_HEADERS:-true}
+      TRUSTED_ORIGINS: ${TRUSTED_ORIGINS:-https://${UI_HOSTNAME:-oxidized.example.com},https://${UI_DOMAIN:-oxidized.local}}
 
       # Generated automatically when empty. Set them explicitly to reuse an
       # existing database or to migrate an installation.
