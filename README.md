@@ -255,6 +255,40 @@ The secrets are optional:
   `data/ui/.runtime-secrets`;
 - set them explicitly when reusing an existing database or restoring a backup.
 
+#### Using an IP address and non-standard ports
+
+If the server is `192.168.1.111`, you do not need a domain. Use:
+
+```env
+UI_HOSTNAME=192.168.1.111
+UI_HTTP_PORT=8888
+UI_HTTPS_PORT=4433
+TRUSTED_ORIGINS=https://192.168.1.111:4433
+```
+
+The port mapping becomes:
+
+```text
+host 8888 -> container 80   (HTTP, redirects to HTTPS)
+host 4433 -> container 443  (HTTPS)
+```
+
+Allow TCP `8888` and `4433` in the host firewall. Ports `80` and `443` on the
+host are not used.
+
+Open:
+
+```text
+https://192.168.1.111:4433
+```
+
+`http://192.168.1.111:8888` redirects to the HTTPS URL with port `4433`.
+
+The certificate is issued for the IP address. Import the exported CA into the
+client trust store, or accept the browser warning while testing. `UI_DOMAIN` is
+only an optional second hostname; it can be left at its default when using an
+IP.
+
 ### 4. Start the service
 
 ```bash
@@ -401,7 +435,7 @@ services:
       UI_DOMAIN: ${UI_DOMAIN:-oxidized.local}
       SESSION_COOKIE_SECURE: ${SESSION_COOKIE_SECURE:-true}
       TRUST_PROXY_HEADERS: ${TRUST_PROXY_HEADERS:-true}
-      TRUSTED_ORIGINS: ${TRUSTED_ORIGINS:-https://${UI_HOSTNAME:-oxidized.example.com},https://${UI_DOMAIN:-oxidized.local}}
+      TRUSTED_ORIGINS: ${TRUSTED_ORIGINS:-https://${UI_HOSTNAME:-oxidized.example.com},https://${UI_HOSTNAME:-oxidized.example.com}:${UI_HTTPS_PORT:-443},https://${UI_DOMAIN:-oxidized.local},https://${UI_DOMAIN:-oxidized.local}:${UI_HTTPS_PORT:-443}}
 
       # Generated automatically when empty. Set them explicitly to reuse an
       # existing database or to migrate an installation.
@@ -497,7 +531,7 @@ database or restoring a backup.
 | `UI_HOSTNAME` | `oxidized.example.com` | Yes | Primary hostname or IP; must match the certificate. |
 | `UI_DOMAIN` | `oxidized.local` | No | Optional second hostname served by Caddy. |
 | `UI_HTTP_PORT` | `80` | No | Host port for HTTP; redirects to HTTPS. |
-| `UI_HTTPS_PORT` | `443` | No | Host port for HTTPS. |
+| `UI_HTTPS_PORT` | `443` | No | Host port for HTTPS; also used in the HTTP redirect and trusted origins. |
 | `TZ` | `UTC` | No | IANA timezone for the container. |
 | `DEFAULT_LANGUAGE` | `en` | No | Initial UI language (`en` or `es`). |
 | `UI_LOG_LEVEL` | `INFO` | No | UI log level. |

@@ -20,5 +20,5 @@ https://{$UI_HOSTNAME}, https://{$UI_DOMAIN} {
 }
 
 http://{$UI_HOSTNAME}, http://{$UI_DOMAIN} {
-	redir https://{host}{uri} permanent
+	redir https://{host}:{$UI_HTTPS_PORT}{uri} permanent
 }

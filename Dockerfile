@@ -31,6 +31,7 @@ ENV PATH="/opt/venv/bin:${PATH}" \
     PYTHONUNBUFFERED=1 \
     APP_ENV=production \
     UI_DOMAIN=oxidized.local \
+    UI_HTTPS_PORT=443 \
     STATIC_DIR=/app/static \
     LOCALES_DIR=/app/locales \
     DATA_DIR=/data \
