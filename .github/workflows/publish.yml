@@ -41,10 +41,3 @@ jobs:
             org.opencontainers.image.title=Oxidized UI
             org.opencontainers.image.description=Self-hosted control plane for Oxidized
             org.opencontainers.image.source=https://github.com/Alexmysterio/oxidized-ui
-
-      - name: Make package public
-        continue-on-error: true
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          gh api --method PATCH /users/Alexmysterio/packages/container/oxidized-ui -f visibility=public

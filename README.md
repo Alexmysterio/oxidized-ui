@@ -208,6 +208,12 @@ The image is pulled from:
 ghcr.io/alexmysterio/oxidized-ui:latest
 ```
 
+> **One-time GitHub Packages setting:** the image is published at
+> `ghcr.io/alexmysterio/oxidized-ui:latest`. If a pull is denied, open
+> [Package settings](https://github.com/users/Alexmysterio/packages/container/package/oxidized-ui/settings)
+> once and set visibility to **Public**. GitHub does not expose an API to change
+> container package visibility automatically.
+
 ### 3. Configure the hostname
 
 All settings can be placed in a `.env` file next to `compose.yaml`. Copy the
