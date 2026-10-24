@@ -47,4 +47,4 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh api --method PATCH /user/packages/container/oxidized-ui -f visibility=public
+          gh api --method PATCH /users/Alexmysterio/packages/container/oxidized-ui -f visibility=public
