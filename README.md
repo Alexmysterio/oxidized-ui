@@ -357,6 +357,110 @@ easier and safer.
 
 The device must be reachable from the container, not only from your desktop.
 
+
+---
+
+## Full compose file
+
+This is the exact `docker-compose.yml` used by the standalone installation. If
+you downloaded it with `curl`, you do not need to copy it again.
+
+```yaml
+name: oxidized-ui
+
+# Standalone installation.
+#
+#   mkdir oxidized-ui && cd oxidized-ui
+#   curl -fsSLO https://raw.githubusercontent.com/Alexmysterio/oxidized-ui/main/docker-compose.yml
+#   docker compose up -d
+#
+# Optional settings can be placed in .env (copy .env.example) or edited here.
+# SECRET_KEY, FERNET_KEY and OXIDIZED_SOURCE_TOKEN are generated automatically
+# on first start and stored in ./data/ui/.runtime-secrets.
+
+services:
+  oxidized-ui:
+    image: ghcr.io/alexmysterio/oxidized-ui:latest
+    container_name: oxidized-ui
+    restart: unless-stopped
+    init: true
+    stop_grace_period: 40s
+    ports:
+      - "${UI_HTTP_PORT:-80}:80"
+      - "${UI_HTTPS_PORT:-443}:443"
+      - "${UI_HTTPS_PORT:-443}:443/udp"
+    environment:
+      # General
+      TZ: ${TZ:-UTC}
+      DEFAULT_LANGUAGE: ${DEFAULT_LANGUAGE:-en}
+      UI_LOG_LEVEL: ${UI_LOG_LEVEL:-INFO}
+      CONFIG_BACKUP_KEEP: ${CONFIG_BACKUP_KEEP:-0}
+
+      # Public hostname(s). Change UI_HOSTNAME before first start.
+      UI_HOSTNAME: ${UI_HOSTNAME:-oxidized.example.com}
+      UI_DOMAIN: ${UI_DOMAIN:-oxidized.local}
+      SESSION_COOKIE_SECURE: "true"
+      TRUST_PROXY_HEADERS: "true"
+      TRUSTED_ORIGINS: https://${UI_HOSTNAME:-oxidized.example.com},https://${UI_DOMAIN:-oxidized.local}
+
+      # Generated automatically when empty. Set them explicitly to reuse an
+      # existing database or to migrate an installation.
+      SECRET_KEY: ${SECRET_KEY:-}
+      FERNET_KEY: ${FERNET_KEY:-}
+      OXIDIZED_SOURCE_TOKEN: ${OXIDIZED_SOURCE_TOKEN:-}
+
+      # First-run administrator (optional; the setup wizard is preferred).
+      BOOTSTRAP_ADMIN_USERNAME: ${BOOTSTRAP_ADMIN_USERNAME:-}
+      BOOTSTRAP_ADMIN_PASSWORD: ${BOOTSTRAP_ADMIN_PASSWORD:-}
+      BOOTSTRAP_ADMIN_LANGUAGE: ${BOOTSTRAP_ADMIN_LANGUAGE:-en}
+
+      # Internal paths (normally do not change).
+      DATA_DIR: /data
+      OXIDIZED_CONFIG_DIR: /oxidized-config
+      OXIDIZED_API_URL: http://127.0.0.1:8888
+      UI_INTERNAL_URL: http://127.0.0.1:8080
+      SUPERVISOR_URL: http://127.0.0.1:9001/RPC2
+      SUPERVISOR_PROGRAM: oxidized
+      SUPERVISOR_LOGFILE: /var/log/supervisor/oxidized.log
+
+      # Optional integrations.
+      METRICS_TOKEN: ${METRICS_TOKEN:-}
+      INBOUND_WEBHOOK_TOKEN: ${INBOUND_WEBHOOK_TOKEN:-}
+
+      # Optional OIDC.
+      OIDC_ENABLED: ${OIDC_ENABLED:-false}
+      OIDC_ISSUER: ${OIDC_ISSUER:-}
+      OIDC_CLIENT_ID: ${OIDC_CLIENT_ID:-}
+      OIDC_CLIENT_SECRET: ${OIDC_CLIENT_SECRET:-}
+      OIDC_REDIRECT_URI: ${OIDC_REDIRECT_URI:-}
+      OIDC_SCOPES: ${OIDC_SCOPES:-openid profile email}
+      OIDC_DEFAULT_ROLE: ${OIDC_DEFAULT_ROLE:-viewer}
+      OIDC_AUTO_CREATE: ${OIDC_AUTO_CREATE:-true}
+    volumes:
+      - ./data/ui:/data
+      - ./data/config:/oxidized-config
+      - ./data/oxidized:/var/lib/oxidized
+    healthcheck:
+      test:
+        - CMD
+        - python3
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/api/health', timeout=3).read()"
+      interval: 20s
+      timeout: 5s
+      retries: 5
+      start_period: 45s
+    security_opt:
+      - no-new-privileges:true
+    logging:
+      driver: json-file
+      options:
+        max-size: "20m"
+        max-file: "5"
+```
+
+---
+
 ---
 
 ## Everyday use
@@ -377,68 +481,114 @@ The device must be reachable from the container, not only from your desktop.
 
 ## Configuration reference
 
-All values go in `.env`; never commit it.
+Everything user-facing is configured in `docker-compose.yml` or in a `.env` file
+next to it. The compose file sets safe defaults, so a new installation only
+needs `UI_HOSTNAME`.
 
-### Required
+Secrets are optional on a fresh installation: if `SECRET_KEY`, `FERNET_KEY`, and
+`OXIDIZED_SOURCE_TOKEN` are empty, the container generates them and stores them
+in `data/ui/.runtime-secrets`. Set them explicitly when reusing an existing
+database or restoring a backup.
 
-| Variable | Purpose |
-|---|---|
-| `SECRET_KEY` | Signs session/CSRF material. |
-| `FERNET_KEY` | Encrypts stored credentials; keep it safe. |
-| `OXIDIZED_SOURCE_TOKEN` | Shared token for the internal node source. |
-| `UI_HOSTNAME` | Primary hostname or IP; must match the certificate. |
+### Compose variables
 
-### Networking and UI
+| Variable | Default | Required | Purpose |
+|---|---|---|---|
+| `UI_HOSTNAME` | `oxidized.example.com` | Yes | Primary hostname or IP; must match the certificate. |
+| `UI_DOMAIN` | `oxidized.local` | No | Optional second hostname served by Caddy. |
+| `UI_HTTP_PORT` | `80` | No | Host port for HTTP; redirects to HTTPS. |
+| `UI_HTTPS_PORT` | `443` | No | Host port for HTTPS. |
+| `TZ` | `UTC` | No | IANA timezone for the container. |
+| `DEFAULT_LANGUAGE` | `en` | No | Initial UI language (`en` or `es`). |
+| `UI_LOG_LEVEL` | `INFO` | No | UI log level. |
+| `SECRET_KEY` | generated | No | Session/CSRF signing key. |
+| `FERNET_KEY` | generated | No | Key for encrypted credentials. |
+| `OXIDIZED_SOURCE_TOKEN` | generated | No | Shared token for the internal Oxidized source. |
+| `BOOTSTRAP_ADMIN_USERNAME` | empty | No | Optional first administrator. |
+| `BOOTSTRAP_ADMIN_PASSWORD` | empty | No | Optional first administrator password. |
+| `BOOTSTRAP_ADMIN_LANGUAGE` | `en` | No | Language for the bootstrap administrator. |
+| `METRICS_TOKEN` | empty | No | Bearer token for `/api/metrics`; empty means no token check. |
+| `INBOUND_WEBHOOK_TOKEN` | empty | No | Token for `POST /api/hooks/backup`. |
+| `OIDC_ENABLED` | `false` | No | Show the OIDC login button. |
+| `OIDC_ISSUER` | empty | OIDC only | Issuer URL with a discovery document. |
+| `OIDC_CLIENT_ID` | empty | OIDC only | OIDC client ID. |
+| `OIDC_CLIENT_SECRET` | empty | OIDC only | OIDC client secret. |
+| `OIDC_REDIRECT_URI` | empty | OIDC only | Exact callback URL. |
+| `OIDC_SCOPES` | `openid profile email` | No | OIDC scopes. |
+| `OIDC_DEFAULT_ROLE` | `viewer` | No | Role for auto-created OIDC users. |
+| `OIDC_AUTO_CREATE` | `true` | No | Create unknown OIDC users. |
+| `CONFIG_BACKUP_KEEP` | `0` | No | YAML backup count; `0` keeps all. |
+
+### Container and advanced variables
+
+These are normally set by the image and should only be changed if you know why.
 
 | Variable | Default | Purpose |
 |---|---|---|
-| `UI_DOMAIN` | `oxidized.local` | Optional second hostname served by Caddy. |
-| `UI_HTTP_PORT` | `80` | Host HTTP port, redirects to HTTPS. |
-| `UI_HTTPS_PORT` | `443` | Host HTTPS port. |
-| `TZ` | `UTC` | IANA timezone. |
-| `DEFAULT_LANGUAGE` | `es` | Initial language. |
-| `SESSION_COOKIE_SECURE` | `true` | Keep true with HTTPS. |
+| `SESSION_COOKIE_SECURE` | `true` | HTTPS-only session cookie. |
 | `TRUST_PROXY_HEADERS` | `true` | Trust Caddy forwarded headers. |
 | `TRUSTED_ORIGINS` | derived | Comma-separated allowed origins. |
+| `DATA_DIR` | `/data` | SQLite, sessions, audit, Caddy state. |
+| `OXIDIZED_CONFIG_DIR` | `/oxidized-config` | Oxidized config and `known_hosts`. |
+| `STATIC_DIR` | `/app/static` | Built frontend files. |
+| `LOCALES_DIR` | `/app/locales` | Translation files. |
+| `OXIDIZED_API_URL` | `http://127.0.0.1:8888` | Internal Oxidized API. |
+| `UI_INTERNAL_URL` | `http://127.0.0.1:8080` | Internal UI source URL. |
+| `SUPERVISOR_URL` | `http://127.0.0.1:9001/RPC2` | Local supervisor RPC. |
+| `SUPERVISOR_PROGRAM` | `oxidized` | Process controlled by the UI. |
+| `SUPERVISOR_LOGFILE` | `/var/log/supervisor/oxidized.log` | Oxidized log file. |
+| `APP_ENV` | `production` | Enables production behavior. |
+| `AUTO_MIGRATE` | `true` | Run Alembic migrations at startup. |
+| `DISABLE_BACKGROUND_TASKS` | `false` | Disable poller/background workers. |
+| `DATABASE_URL` | empty | Override SQLite with another SQLAlchemy URL. |
+| `POLL_INTERVAL_SECONDS` | `30` | Oxidized polling interval. |
+| `SESSION_ABSOLUTE_HOURS` | `12` | Maximum session lifetime. |
+| `SESSION_IDLE_MINUTES` | `30` | Idle session timeout. |
+| `SESSION_COOKIE_NAME` | `oxidized_ui_session` | Session cookie name. |
+| `LOGIN_MAX_FAILURES_PER_USER` | `5` | Login failures before user lockout. |
+| `LOGIN_MAX_FAILURES_PER_IP` | `20` | Login failures before IP lockout. |
+| `LOGIN_WINDOW_MINUTES` | `15` | Failure-count window. |
+| `OXIDIZED_CONNECT_TIMEOUT` | `4` | Oxidized connect timeout in seconds. |
+| `OXIDIZED_READ_TIMEOUT` | `60` | Oxidized read timeout in seconds. |
+| `DOCKER_CONNECT_TIMEOUT` | `3` | Docker API connect timeout. |
+| `DOCKER_READ_TIMEOUT` | `60` | Docker API read timeout. |
+| `MAX_CONFIG_BYTES` | `1000000` | Maximum config revision size. |
+| `MAX_CSV_BYTES` | `5000000` | Maximum CSV import size. |
+| `MAX_CSV_ROWS` | `25000` | Maximum CSV import rows. |
+| `MAX_LOG_LINES` | `5000` | Maximum log snapshot lines. |
+| `OXIDIZED_CONTAINER_NAME` | `oxidized` | Container name in secure mode. |
+| `DOCKER_PROXY_URL` | `http://docker-socket-proxy:2375` | Docker proxy in secure mode. |
 
-### First-run administrator
+### Secure-mode-only variables
 
-| Variable | Purpose |
-|---|---|
-| `BOOTSTRAP_ADMIN_USERNAME` | Optional first admin. |
-| `BOOTSTRAP_ADMIN_PASSWORD` | Optional first password; remove after start. |
-| `BOOTSTRAP_ADMIN_LANGUAGE` | `es` or `en`. |
+These belong to `docker-compose.secure.yml` and `.env.secure.example`:
 
-### Metrics and webhooks
+| Variable | Default | Purpose |
+|---|---|---|
+| `UI_BIND_ADDRESS` | `127.0.0.1` | Host address for the internal UI port. |
+| `UI_PORT` | `8080` | Host port for the internal UI. |
+| `OXIDIZED_IMAGE` | `oxidized/oxidized:0.37.0` | Oxidized image tag. |
+| `SOCKET_PROXY_IMAGE` | `tecnativa/docker-socket-proxy:v0.5.0` | Docker socket proxy image tag. |
 
-| Variable | Purpose |
-|---|---|
-| `METRICS_TOKEN` | Optional bearer token for `/api/metrics`. |
-| `INBOUND_WEBHOOK_TOKEN` | Optional token for `POST /api/hooks/backup`. |
+### Settings managed from the UI
 
-### OIDC
+These are stored in SQLite and changed under **System settings** or **Profile**,
+not in `.env`:
 
-| Variable | Purpose |
-|---|---|
-| `OIDC_ENABLED` | `true` shows the OIDC button. |
-| `OIDC_ISSUER` | Issuer URL with `/.well-known/openid-configuration`. |
-| `OIDC_CLIENT_ID` | Client ID. |
-| `OIDC_CLIENT_SECRET` | Client secret. |
-| `OIDC_REDIRECT_URI` | Exactly `https://<host>/api/auth/oidc/callback`. |
-| `OIDC_SCOPES` | Default `openid profile email`. |
-| `OIDC_DEFAULT_ROLE` | `viewer`, `operator`, or `admin`. |
-| `OIDC_AUTO_CREATE` | Create unknown users automatically. |
-
-### History
-
-```env
-CONFIG_BACKUP_KEEP=0
-```
-
-`0` means keep all YAML backups. In the UI, set **Activity retention (days)** to
-`0` to keep all backup runs. Git history is never rewritten or pruned.
-
----
+| Setting | Default | Where |
+|---|---|---|
+| Activity retention | `0` (keep all) | System settings |
+| Audit retention | `180` days | System settings |
+| Password minimum length | `12` | System settings |
+| Password complexity | enabled | System settings |
+| Password history | `5` | System settings |
+| IP allowlist | empty (allow all) | System settings |
+| Poll interval | `30` seconds | System settings |
+| Log tail default | `500` lines | System settings |
+| YAML backup retention | `0` (keep all) | System settings |
+| Notification webhook | empty | System settings |
+| Stale-backup threshold | `0` (disabled) | System settings |
+| User language/theme | per user | Profile |
 
 ## Persistent data and backups
 
