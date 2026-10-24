@@ -2,7 +2,7 @@
 	default_sni {$UI_HOSTNAME}
 }
 
-https://{$UI_HOSTNAME}, https://{$UI_DOMAIN} {
+https://{$UI_HOSTNAME} {
 	tls internal
 	header {
 		Strict-Transport-Security "max-age=31536000; includeSubDomains"
@@ -19,6 +19,6 @@ https://{$UI_HOSTNAME}, https://{$UI_DOMAIN} {
     }
 }
 
-http://{$UI_HOSTNAME}, http://{$UI_DOMAIN} {
+http://{$UI_HOSTNAME} {
 	redir https://{host}:{$UI_HTTPS_PORT}{uri} permanent
 }

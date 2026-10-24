@@ -232,8 +232,8 @@ At minimum, change:
 UI_HOSTNAME=oxidized.example.com
 ```
 
-`UI_DOMAIN` is an optional second hostname served by Caddy; use a different name
-from `UI_HOSTNAME` or leave it as the example.
+The basic deployment serves one hostname. Use `UI_HOSTNAME` for either a DNS
+name or the server IP; a second hostname is not required.
 
 The name must resolve to the Docker host. Configure a DNS record, or add it to
 the hosts file of the clients that will access the UI. For same-computer access,
@@ -285,9 +285,7 @@ https://192.168.1.111:4433
 `http://192.168.1.111:8888` redirects to the HTTPS URL with port `4433`.
 
 The certificate is issued for the IP address. Import the exported CA into the
-client trust store, or accept the browser warning while testing. `UI_DOMAIN` is
-only an optional second hostname; it can be left at its default when using an
-IP.
+client trust store, or accept the browser warning while testing.
 
 ### 4. Start the service
 
@@ -402,13 +400,14 @@ you downloaded it with `curl`, you do not need to copy it again.
 ```yaml
 name: oxidized-ui
 
-# Standalone installation.
+# Minimal standalone installation.
 #
 #   mkdir oxidized-ui && cd oxidized-ui
 #   curl -fsSLO https://raw.githubusercontent.com/Alexmysterio/oxidized-ui/main/docker-compose.yml
+#   # set UI_HOSTNAME below, or create .env
 #   docker compose up -d
 #
-# Optional settings can be placed in .env (copy .env.example) or edited here.
+# Optional advanced variables can be added to .env. See the README table.
 # SECRET_KEY, FERNET_KEY and OXIDIZED_SOURCE_TOKEN are generated automatically
 # on first start and stored in ./data/ui/.runtime-secrets.
 
@@ -419,36 +418,18 @@ services:
     restart: unless-stopped
     init: true
     stop_grace_period: 40s
+    env_file:
+      - path: .env
+        required: false
     ports:
       - "${UI_HTTP_PORT:-80}:80"
       - "${UI_HTTPS_PORT:-443}:443"
       - "${UI_HTTPS_PORT:-443}:443/udp"
     environment:
-      # General
-      TZ: ${TZ:-UTC}
-      DEFAULT_LANGUAGE: ${DEFAULT_LANGUAGE:-en}
-      UI_LOG_LEVEL: ${UI_LOG_LEVEL:-INFO}
-      CONFIG_BACKUP_KEEP: ${CONFIG_BACKUP_KEEP:-0}
-
-      # Public hostname(s). Change UI_HOSTNAME before first start.
+      # Change this to the server IP or domain.
       UI_HOSTNAME: ${UI_HOSTNAME:-oxidized.example.com}
-      UI_DOMAIN: ${UI_DOMAIN:-oxidized.local}
-      SESSION_COOKIE_SECURE: ${SESSION_COOKIE_SECURE:-true}
-      TRUST_PROXY_HEADERS: ${TRUST_PROXY_HEADERS:-true}
-      TRUSTED_ORIGINS: ${TRUSTED_ORIGINS:-https://${UI_HOSTNAME:-oxidized.example.com},https://${UI_HOSTNAME:-oxidized.example.com}:${UI_HTTPS_PORT:-443},https://${UI_DOMAIN:-oxidized.local},https://${UI_DOMAIN:-oxidized.local}:${UI_HTTPS_PORT:-443}}
 
-      # Generated automatically when empty. Set them explicitly to reuse an
-      # existing database or to migrate an installation.
-      SECRET_KEY: ${SECRET_KEY:-}
-      FERNET_KEY: ${FERNET_KEY:-}
-      OXIDIZED_SOURCE_TOKEN: ${OXIDIZED_SOURCE_TOKEN:-}
-
-      # First-run administrator (optional; the setup wizard is preferred).
-      BOOTSTRAP_ADMIN_USERNAME: ${BOOTSTRAP_ADMIN_USERNAME:-}
-      BOOTSTRAP_ADMIN_PASSWORD: ${BOOTSTRAP_ADMIN_PASSWORD:-}
-      BOOTSTRAP_ADMIN_LANGUAGE: ${BOOTSTRAP_ADMIN_LANGUAGE:-en}
-
-      # Internal paths (normally do not change).
+      # Required by the internal single-container topology.
       DATA_DIR: /data
       OXIDIZED_CONFIG_DIR: /oxidized-config
       OXIDIZED_API_URL: http://127.0.0.1:8888
@@ -456,20 +437,15 @@ services:
       SUPERVISOR_URL: http://127.0.0.1:9001/RPC2
       SUPERVISOR_PROGRAM: oxidized
       SUPERVISOR_LOGFILE: /var/log/supervisor/oxidized.log
+      UI_HTTPS_PORT: ${UI_HTTPS_PORT:-443}
 
-      # Optional integrations.
-      METRICS_TOKEN: ${METRICS_TOKEN:-}
-      INBOUND_WEBHOOK_TOKEN: ${INBOUND_WEBHOOK_TOKEN:-}
-
-      # Optional OIDC.
-      OIDC_ENABLED: ${OIDC_ENABLED:-false}
-      OIDC_ISSUER: ${OIDC_ISSUER:-}
-      OIDC_CLIENT_ID: ${OIDC_CLIENT_ID:-}
-      OIDC_CLIENT_SECRET: ${OIDC_CLIENT_SECRET:-}
-      OIDC_REDIRECT_URI: ${OIDC_REDIRECT_URI:-}
-      OIDC_SCOPES: ${OIDC_SCOPES:-openid profile email}
-      OIDC_DEFAULT_ROLE: ${OIDC_DEFAULT_ROLE:-viewer}
-      OIDC_AUTO_CREATE: ${OIDC_AUTO_CREATE:-true}
+      # Secure defaults.
+      SESSION_COOKIE_SECURE: "true"
+      TRUST_PROXY_HEADERS: "true"
+      TRUSTED_ORIGINS: https://${UI_HOSTNAME:-oxidized.example.com},https://${UI_HOSTNAME:-oxidized.example.com}:${UI_HTTPS_PORT:-443}
+    extra_hosts:
+      - "oxidized-ui:127.0.0.1"
+      - "oxidized:127.0.0.1"
     volumes:
       - ./data/ui:/data
       - ./data/config:/oxidized-config
@@ -529,11 +505,10 @@ database or restoring a backup.
 | Variable | Default | Required | Purpose |
 |---|---|---|---|
 | `UI_HOSTNAME` | `oxidized.example.com` | Yes | Primary hostname or IP; must match the certificate. |
-| `UI_DOMAIN` | `oxidized.local` | No | Optional second hostname served by Caddy. |
 | `UI_HTTP_PORT` | `80` | No | Host port for HTTP; redirects to HTTPS. |
 | `UI_HTTPS_PORT` | `443` | No | Host port for HTTPS; also used in the HTTP redirect and trusted origins. |
 | `TZ` | `UTC` | No | IANA timezone for the container. |
-| `DEFAULT_LANGUAGE` | `en` | No | Initial UI language (`en` or `es`). |
+| `DEFAULT_LANGUAGE` | `es` | No | Initial UI language (`en` or `es`). |
 | `UI_LOG_LEVEL` | `INFO` | No | UI log level. |
 | `SECRET_KEY` | generated | No | Session/CSRF signing key. |
 | `FERNET_KEY` | generated | No | Key for encrypted credentials. |
@@ -740,7 +715,7 @@ See `docker-compose.secure.yml` and `.env.secure.example`.
 ## Certificates explained
 
 Caddy creates a private root CA, a server certificate for `UI_HOSTNAME` and
-`UI_DOMAIN` signed by that CA, and renews the server certificate automatically.
+`UI_HOSTNAME` signed by that CA, and renews the server certificate automatically.
 Clients trust the root CA once.
 
 If the CA is not imported, the browser warns, but TLS still encrypts traffic. On
@@ -863,7 +838,7 @@ If loopback works but LAN IP does not, use the Docker environment port proxy abo
 ### Certificate warning
 
 - Use `https://`, not `http://`.
-- The hostname must match `UI_HOSTNAME` or `UI_DOMAIN`.
+- The hostname must match `UI_HOSTNAME`.
 - Import the CA into the certificate store used by the client.
 - After deleting `data/`, re-import the new CA.
 
