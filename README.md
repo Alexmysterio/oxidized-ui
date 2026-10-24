@@ -188,75 +188,52 @@ docker compose version
 Your user must have permission to run Docker. If `docker` requires elevated
 privileges on your system, configure access according to your Docker installation.
 
-### 2. Download the project
+### 2. Download only the compose file
+
+You do not need to clone the repository. Create a directory and download the
+single compose file:
 
 ```bash
-git clone https://github.com/Alexmysterio/oxidized-ui.git
+mkdir oxidized-ui
 cd oxidized-ui
+curl -fsSLO https://raw.githubusercontent.com/Alexmysterio/oxidized-ui/main/compose.yaml
 ```
 
-If you downloaded a ZIP, open a terminal in the extracted directory instead.
+If `curl` is not available, open that URL in a browser and save the file as
+`compose.yaml` in the new directory.
 
-### 3. Create the environment file
+The image is pulled from:
+
+```text
+ghcr.io/alexmysterio/oxidized-ui:latest
+```
+
+### 3. Configure the hostname
+
+All settings can be placed in a `.env` file next to `compose.yaml`. Copy the
+example:
 
 ```bash
-cp .env.example .env
+curl -fsSLO https://raw.githubusercontent.com/Alexmysterio/oxidized-ui/main/.env.example
+mv .env.example .env
 ```
 
-Open `.env` in any text editor and set the values below.
+Or edit the values directly in `compose.yaml`.
 
-### 4. Generate the secrets
-
-Three values must be random and secret:
-
-- `SECRET_KEY`
-- `FERNET_KEY`
-- `OXIDIZED_SOURCE_TOKEN`
-
-Do not reuse passwords and do not commit `.env` to Git. Generate all three with
-a temporary Docker container:
-
-```bash
-docker run --rm python:3.12-slim python -c "import secrets; print(secrets.token_urlsafe(48))"
-docker run --rm python:3.12-slim python -c "import secrets; print(secrets.token_urlsafe(48))"
-docker run --rm python:3.12-slim python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
-```
-
-Use the first output for `SECRET_KEY`, the second for
-`OXIDIZED_SOURCE_TOKEN`, and the third for `FERNET_KEY`.
-
-```env
-SECRET_KEY=PASTE_FIRST_VALUE_HERE
-FERNET_KEY=PASTE_FERNET_VALUE_HERE
-OXIDIZED_SOURCE_TOKEN=PASTE_SECOND_VALUE_HERE
-```
-
-`FERNET_KEY` must remain stable. It decrypts stored device credentials. If you
-lose it, existing credentials cannot be recovered.
-
-### 5. Choose the hostname
-
-Set `UI_HOSTNAME` to the DNS name or IP address clients will use:
+At minimum, change:
 
 ```env
 UI_HOSTNAME=oxidized.example.com
 ```
 
-`UI_DOMAIN` is an optional second hostname that Caddy will also serve:
+`UI_DOMAIN` is an optional second hostname served by Caddy; use a different name
+from `UI_HOSTNAME` or leave it as the example.
 
-```env
-UI_DOMAIN=oxidized.local
-```
+The name must resolve to the Docker host. Configure a DNS record, or add it to
+the hosts file of the clients that will access the UI. For same-computer access,
+point it to loopback; for LAN access, point it to the host's LAN address.
 
-Use two different names, as above, so the certificates are distinct. The name
-must resolve to the Docker host.
-
-Configure a DNS record for the name, or add it to the hosts file of the clients
-that will access the UI. The exact location and tools depend on your operating
-environment. For same-computer access, point the name to loopback; for LAN
-access, point it to the Docker host's LAN address.
-
-Verify resolution with:
+Verify resolution:
 
 ```bash
 nslookup oxidized.example.com
@@ -265,16 +242,20 @@ nslookup oxidized.example.com
 The result must be the Docker host. If it is a public address and you are not
 forwarding ports, the browser will not reach Caddy.
 
-### 6. Start the service
+The secrets are optional:
 
-From the project directory:
+- leave `SECRET_KEY`, `FERNET_KEY`, and `OXIDIZED_SOURCE_TOKEN` empty on a new
+  installation; they are generated automatically and stored in
+  `data/ui/.runtime-secrets`;
+- set them explicitly when reusing an existing database or restoring a backup.
+
+### 4. Start the service
 
 ```bash
-docker compose up -d --build
+docker compose up -d
 ```
 
-The first build downloads Oxidized and builds the frontend, so it can take several
-minutes. Check:
+Docker pulls the published image and starts one container. Check:
 
 ```bash
 docker compose ps
@@ -287,7 +268,7 @@ Wait for `healthy`. Test the internal health endpoint:
 docker compose exec oxidized-ui python3 -c "import urllib.request; print(urllib.request.urlopen('http://127.0.0.1:8080/api/health').read().decode())"
 ```
 
-Expected result includes:
+Expected:
 
 ```json
 {"status":"ok","database":"ok","config_writable":true,"setup_required":true}
@@ -303,7 +284,7 @@ https://oxidized.example.com
 
 Use `https://`, not `http://`. Port `8080` is not published.
 
-### 7. Trust the local certificate
+### 5. Trust the local certificate
 
 Caddy creates a private CA. Browsers warn until that CA is trusted. Traffic is
 still encrypted, but importing the CA removes the warning and prevents accepting
@@ -334,7 +315,7 @@ curl -k https://oxidized.example.com/api/health
 
 Do not use `-k` for normal operation.
 
-### 8. Create the first administrator
+### 6. Create the first administrator
 
 Open `https://oxidized.example.com` and complete the setup wizard: username,
 password, language. The password policy is enforced. After setup,
@@ -351,7 +332,7 @@ BOOTSTRAP_ADMIN_LANGUAGE=en
 Remove the password from `.env` after the first start. The wizard is usually
 easier and safer.
 
-### 9. Add your first device
+### 7. Add your first device
 
 1. Open **Nodes -> Add node**.
 2. Fill in:
@@ -515,8 +496,8 @@ There is intentionally no live HTTP import.
 ### Update
 
 ```bash
-git pull
-docker compose up -d --build
+docker compose pull
+docker compose up -d
 ```
 
 Data stays in `./data`; database migrations run automatically. Back up first.
@@ -821,7 +802,7 @@ frontend/                 React application, tests, e2e
 docker/                   Caddy and single-container supervisor files
 scripts/                  Restore/helper scripts
 tests/contract/           Disposable Oxidized fixture for CI
-docker-compose.yml        Default single-image deployment
+compose.yaml              Standalone image deployment
 docker-compose.secure.yml Four-container deployment
 Dockerfile                Single-image build
 Dockerfile.secure         Multi-container UI image

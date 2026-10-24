@@ -558,7 +558,7 @@ cambios. Detalle y justificación en
 ├── .gitignore
 ├── Dockerfile                         # multi-stage: frontend + Python 3.12
 ├── README.md                          # guía de despliegue y operación
-├── docker-compose.yml
+├── compose.yaml
 ├── docs/
 │   ├── API-CONTRACT.md
 │   ├── ARCHITECTURE.md

@@ -1,0 +1,91 @@
+name: oxidized-ui
+
+# Standalone installation.
+#
+#   mkdir oxidized-ui && cd oxidized-ui
+#   curl -fsSLO https://raw.githubusercontent.com/Alexmysterio/oxidized-ui/main/compose.yaml
+#   docker compose up -d
+#
+# Optional settings can be placed in .env (copy .env.example) or edited here.
+# SECRET_KEY, FERNET_KEY and OXIDIZED_SOURCE_TOKEN are generated automatically
+# on first start and stored in ./data/ui/.runtime-secrets.
+
+services:
+  oxidized-ui:
+    image: ghcr.io/alexmysterio/oxidized-ui:latest
+    container_name: oxidized-ui
+    restart: unless-stopped
+    init: true
+    stop_grace_period: 40s
+    ports:
+      - "${UI_HTTP_PORT:-80}:80"
+      - "${UI_HTTPS_PORT:-443}:443"
+      - "${UI_HTTPS_PORT:-443}:443/udp"
+    environment:
+      # General
+      TZ: ${TZ:-UTC}
+      DEFAULT_LANGUAGE: ${DEFAULT_LANGUAGE:-en}
+      UI_LOG_LEVEL: ${UI_LOG_LEVEL:-INFO}
+      CONFIG_BACKUP_KEEP: ${CONFIG_BACKUP_KEEP:-0}
+
+      # Public hostname(s). Change UI_HOSTNAME before first start.
+      UI_HOSTNAME: ${UI_HOSTNAME:-oxidized.example.com}
+      UI_DOMAIN: ${UI_DOMAIN:-oxidized.local}
+      SESSION_COOKIE_SECURE: "true"
+      TRUST_PROXY_HEADERS: "true"
+      TRUSTED_ORIGINS: https://${UI_HOSTNAME:-oxidized.example.com},https://${UI_DOMAIN:-oxidized.local}
+
+      # Generated automatically when empty. Set them explicitly to reuse an
+      # existing database or to migrate an installation.
+      SECRET_KEY: ${SECRET_KEY:-}
+      FERNET_KEY: ${FERNET_KEY:-}
+      OXIDIZED_SOURCE_TOKEN: ${OXIDIZED_SOURCE_TOKEN:-}
+
+      # First-run administrator (optional; the setup wizard is preferred).
+      BOOTSTRAP_ADMIN_USERNAME: ${BOOTSTRAP_ADMIN_USERNAME:-}
+      BOOTSTRAP_ADMIN_PASSWORD: ${BOOTSTRAP_ADMIN_PASSWORD:-}
+      BOOTSTRAP_ADMIN_LANGUAGE: ${BOOTSTRAP_ADMIN_LANGUAGE:-en}
+
+      # Internal paths (normally do not change).
+      DATA_DIR: /data
+      OXIDIZED_CONFIG_DIR: /oxidized-config
+      OXIDIZED_API_URL: http://127.0.0.1:8888
+      UI_INTERNAL_URL: http://127.0.0.1:8080
+      SUPERVISOR_URL: http://127.0.0.1:9001/RPC2
+      SUPERVISOR_PROGRAM: oxidized
+      SUPERVISOR_LOGFILE: /var/log/supervisor/oxidized.log
+
+      # Optional integrations.
+      METRICS_TOKEN: ${METRICS_TOKEN:-}
+      INBOUND_WEBHOOK_TOKEN: ${INBOUND_WEBHOOK_TOKEN:-}
+
+      # Optional OIDC.
+      OIDC_ENABLED: ${OIDC_ENABLED:-false}
+      OIDC_ISSUER: ${OIDC_ISSUER:-}
+      OIDC_CLIENT_ID: ${OIDC_CLIENT_ID:-}
+      OIDC_CLIENT_SECRET: ${OIDC_CLIENT_SECRET:-}
+      OIDC_REDIRECT_URI: ${OIDC_REDIRECT_URI:-}
+      OIDC_SCOPES: ${OIDC_SCOPES:-openid profile email}
+      OIDC_DEFAULT_ROLE: ${OIDC_DEFAULT_ROLE:-viewer}
+      OIDC_AUTO_CREATE: ${OIDC_AUTO_CREATE:-true}
+    volumes:
+      - ./data/ui:/data
+      - ./data/config:/oxidized-config
+      - ./data/oxidized:/var/lib/oxidized
+    healthcheck:
+      test:
+        - CMD
+        - python3
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/api/health', timeout=3).read()"
+      interval: 20s
+      timeout: 5s
+      retries: 5
+      start_period: 45s
+    security_opt:
+      - no-new-privileges:true
+    logging:
+      driver: json-file
+      options:
+        max-size: "20m"
+        max-file: "5"

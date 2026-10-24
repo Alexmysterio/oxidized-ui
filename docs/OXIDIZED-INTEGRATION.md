@@ -14,7 +14,7 @@ de la versión fijada. Lo que no está documentado se señala explícitamente.
 
 La imagen oficial de Oxidized está documentada como `oxidized/oxidized` (no
 `ytti/oxidized`) en [docs/Docker.md](https://github.com/ytti/oxidized/blob/master/docs/Docker.md).
-Se fija la etiqueta `0.37.0` en `docker-compose.yml` y `.env.example` en lugar de
+Se fija la etiqueta `0.37.0` en el `Dockerfile` y en la imagen publicada en lugar de
 `latest` para que el contrato no cambie por una actualización silenciosa.
 
 ## Hechos verificados de la imagen oficial
@@ -323,7 +323,7 @@ Solo estas tres llamadas, a través del proxy:
 | Leer logs (follow/no follow) | `GET /containers/{OXIDIZED_CONTAINER_NAME}/logs?...` |
 | Reiniciar | `POST /containers/{OXIDIZED_CONTAINER_NAME}/restart` |
 
-`docker-compose.yml` habilita en el proxy `CONTAINERS=1`, `POST=1` y
+`docker-compose.secure.yml` habilita en el proxy `CONTAINERS=1`, `POST=1` y
 `ALLOW_RESTARTS=1`, y desactiva el resto de secciones. El proxy no se publica y
 solo está en la red interna `docker_api`, compartida únicamente con la UI.
 
