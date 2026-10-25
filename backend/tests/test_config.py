@@ -272,3 +272,9 @@ def test_schedule_config_apply(client: TestClient, admin):
     assert any(item["revision_id"] == revision_id for item in listed.json()["items"])
     cancelled = admin.delete(f"/api/config/schedule/{scheduled.json()['id']}")
     assert cancelled.status_code == 204
+
+
+def test_group_can_be_created_without_credentials(client: TestClient, admin, fake_clients):
+    created = admin.post("/api/groups", json={"name": "empty-group"})
+    assert created.status_code == 201, created.text
+    assert created.json()["group"]["name"] == "empty-group"

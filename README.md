@@ -902,6 +902,25 @@ docker exec oxidized-ui supervisorctl -s http://127.0.0.1:9001 status
 
 All three programs should be `RUNNING`: `ui`, `oxidized`, `caddy`.
 
+### Creating a group fails or Oxidized stops
+
+Creating a group only saves a **draft**; it does not write the Oxidized config and
+does not restart Oxidized. If Oxidized stopped, check whether the draft was
+applied and whether the apply job failed:
+
+```bash
+docker compose logs --tail=200 oxidized-ui
+docker exec oxidized-ui supervisorctl -s http://127.0.0.1:9001 status
+docker exec oxidized-ui tail -n 100 /var/log/supervisor/oxidized.log
+```
+
+In the UI, open **Configuration -> History** and check the job/revision status.
+A failed apply should roll back to the previous configuration.
+
+Also confirm that the group name is valid and that you are not applying a draft
+that references a group not present in the applied config. The API returns a
+specific error code; the group form displays it.
+
 ### Test connection says `host_key_unknown`
 
 A successful backup does not always mean the SSH host key was verified:
