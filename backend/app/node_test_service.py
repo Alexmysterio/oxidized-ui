@@ -14,6 +14,8 @@ from .crypto import decrypt_optional
 from .models import Node
 from .settings import settings
 
+ANSI_ESCAPE = re.compile(r"\x1B(?:\[[0-?]*[ -/]*[@-~]|[@-_])")
+
 
 def test_connection(db: Session, node: Node) -> dict[str, Any]:
     result: dict[str, Any] = {
@@ -83,8 +85,9 @@ def test_connection(db: Session, node: Node) -> dict[str, Any]:
         chunks: list[str] = []
         while shell.recv_ready():
             chunks.append(shell.recv(4096).decode("utf-8", errors="replace"))
-        text = "".join(chunks).strip()
-        prompt = text.splitlines()[-1].strip() if text.splitlines() else None
+        text = ANSI_ESCAPE.sub("", "".join(chunks)).replace("\r", "")
+        lines = [line.strip() for line in text.splitlines() if line.strip()]
+        prompt = lines[-1] if lines else None
         result["prompt"] = prompt[:200] if prompt else None
         if node.prompt and prompt:
             try:

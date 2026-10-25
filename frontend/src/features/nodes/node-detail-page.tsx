@@ -140,7 +140,7 @@ export function NodeDetailPage() {
     queryKey: ["node-status", nodeId],
     queryFn: () => api.nodeStatus(nodeId, true),
     enabled: Number.isFinite(nodeId),
-    refetchInterval: 30_000,
+    refetchInterval: (query) => (query.state.data?.active_job_id ? 3_000 : 15_000),
   });
   const configQuery = useQuery({
     queryKey: ["node-config", nodeId],
@@ -197,7 +197,7 @@ export function NodeDetailPage() {
     mutationFn: () => api.testNodeConnection(nodeId),
     onSuccess: (result) => {
       if (result.authenticated) {
-        toast.success(t("nodeDetail.connectionOk", { prompt: result.prompt ?? "—" }));
+        toast.success(t("nodeDetail.connectionOk"));
       } else {
         toast.error(t("nodeDetail.connectionFailed", { reason: result.message ?? "unknown" }));
       }
@@ -263,7 +263,7 @@ export function NodeDetailPage() {
           </div>
           <div className="flex flex-wrap items-center gap-3">
             <h1 className="text-2xl font-semibold tracking-[-0.025em] md:text-[30px]">{node.name}</h1>
-            <NodeStatusBadge status={node.status} />
+            <NodeStatusBadge status={status?.status ?? node.status} />
           </div>
           <p className="mt-1 font-mono text-xs text-muted-foreground">
             {node.address ?? "—"} · {t("common.updatedAt")} {intl.relative(node.updated_at)}
@@ -386,7 +386,7 @@ export function NodeDetailPage() {
               <CardContent className="pt-0">
                 <InfoRow label={t("common.status")}><NodeStatusBadge status={node.status} /></InfoRow>
                 <InfoRow label={t("nodeDetail.lastAttempt")}>{status?.last_finished_at ? intl.dateTime(status.last_finished_at) : node.last_attempt_at ? intl.dateTime(node.last_attempt_at) : t("common.never")}</InfoRow>
-                <InfoRow label={t("nodeDetail.lastSuccess")}>{node.last_backup_at ? intl.dateTime(node.last_backup_at) : t("common.never")}</InfoRow>
+                <InfoRow label={t("nodeDetail.lastSuccess")}>{status?.last_success_at ? intl.dateTime(status.last_success_at) : node.last_backup_at ? intl.dateTime(node.last_backup_at) : t("common.never")}</InfoRow>
                 {duration !== null ? (
                   <InfoRow label={t("nodeDetail.duration")} mono>{new Intl.NumberFormat(intl.language, { style: "unit", unit: "second", unitDisplay: "short" }).format(duration)}</InfoRow>
                 ) : null}

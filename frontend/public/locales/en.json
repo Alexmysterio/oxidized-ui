@@ -407,7 +407,7 @@
     "lastError": "Last error",
     "noErrorDetail": "Oxidized did not record a detailed reason for this failure. Check the container logs or run the backup again.",
     "testConnection": "Test connection",
-    "connectionOk": "Connection OK. Prompt: {{prompt}}",
+    "connectionOk": "Connection OK.",
     "connectionFailed": "Connection failed: {{reason}}",
     "history": "History",
     "historySummary": "{{rate}}% success in the last {{total}} runs.",

@@ -407,7 +407,7 @@
     "lastError": "Último error",
     "noErrorDetail": "Oxidized no registró un motivo detallado para este fallo. Revisa los logs del contenedor o vuelve a lanzar el backup.",
     "testConnection": "Probar conexión",
-    "connectionOk": "Conexión correcta. Prompt: {{prompt}}",
+    "connectionOk": "Conexión correcta.",
     "connectionFailed": "Conexión fallida: {{reason}}",
     "history": "Historial",
     "historySummary": "{{rate}}% de éxito en las últimas {{total}} ejecuciones.",
