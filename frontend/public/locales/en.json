@@ -467,8 +467,6 @@
     "applyDraft": "Apply draft",
     "driftTitle": "The configuration file changed outside the console",
     "driftDescription": "The volume checksum does not match the applied revision. Review the YAML and save a draft before overwriting it.",
-    "managedTitle": "Blocks managed by the console",
-    "managedDescription": "These blocks connect Oxidized to the UI inventory and API. They are injected automatically on every apply, so editing them would break node loading, status, versions, or restarts.",
     "tabs": {
       "general": "General",
       "input": "Inputs",
@@ -562,7 +560,8 @@
     "scheduleAt": "Date and time",
     "scheduleConfirm": "Schedule",
     "scheduleCreated": "Apply scheduled.",
-    "scheduleCancelled": "Schedule cancelled."
+    "scheduleCancelled": "Schedule cancelled.",
+    "configDate": "Configuration date"
   },
   "logs": {
     "title": "Status & logs",

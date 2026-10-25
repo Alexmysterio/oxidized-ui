@@ -8,7 +8,6 @@ import {
   FileCode2,
   GitBranch,
   History,
-  LockKeyhole,
   Save,
   ShieldCheck,
   Sparkles,
@@ -182,7 +181,6 @@ export function ConfigPage() {
         field.path === "output.clean_obsolete_nodes" ||
         field.path.startsWith(`output.${outputDefault}.`)),
   );
-  const sourceManaged = sourceFields.filter((field) => field.managed);
   const sourceReadTimeout = sourceFields.find((field) => field.path === "source.http.read_timeout");
 
   const setValue = (path: string, value: unknown) => {
@@ -536,13 +534,6 @@ export function ConfigPage() {
               </TabsContent>
 
               <TabsContent value="source" className="mt-0 space-y-5">
-                <div className="flex items-start gap-2 rounded-lg border border-primary/20 bg-primary/[0.035] p-3 text-xs">
-                  <LockKeyhole className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                  <div>
-                    <p className="font-medium text-primary">{t("config.managedTitle")}</p>
-                    <p className="mt-0.5 text-muted-foreground">{t("config.managedDescription")}</p>
-                  </div>
-                </div>
                 {sourceReadTimeout ? (
                   <div className="max-w-sm">
                     <ConfigField
@@ -553,18 +544,6 @@ export function ConfigPage() {
                     />
                   </div>
                 ) : null}
-                <div className="space-y-2">
-                  <p className="eyebrow">{t("config.managedTitle")}</p>
-                  {sourceManaged.map((field) => (
-                    <ConfigField
-                      key={field.path}
-                      field={field}
-                      value={getPath(config, field.path)}
-                      onChange={() => undefined}
-                      models={catalog.models}
-                    />
-                  ))}
-                </div>
               </TabsContent>
 
               <TabsContent value="hooks" className="mt-0">
@@ -639,7 +618,7 @@ export function ConfigPage() {
       <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-dashed bg-card/50 px-3 py-2 text-[11px] text-muted-foreground">
         <span className="inline-flex items-center gap-2">
           <GitBranch className="h-3.5 w-3.5" />
-          {t("config.managedTitle")}: {data.managed_keys.length}
+          {t("config.configDate")}
         </span>
         <span className="font-mono">{intl.dateTime(data.applied?.applied_at ?? data.draft?.created_at)}</span>
       </div>

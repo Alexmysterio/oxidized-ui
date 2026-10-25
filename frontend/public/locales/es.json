@@ -467,8 +467,6 @@
     "applyDraft": "Aplicar borrador",
     "driftTitle": "El fichero de configuración ha cambiado fuera del panel",
     "driftDescription": "El checksum del volumen no coincide con la revisión aplicada. Revisa el YAML y guarda un borrador antes de sobrescribirlo.",
-    "managedTitle": "Bloques gestionados por el panel",
-    "managedDescription": "Estos bloques conectan Oxidized con el inventario y la API de la interfaz. Se inyectan automáticamente en cada aplicación; editarlos rompería la carga de nodos, el estado, las versiones o los reinicios.",
     "tabs": {
       "general": "General",
       "input": "Inputs",
@@ -562,7 +560,8 @@
     "scheduleAt": "Fecha y hora",
     "scheduleConfirm": "Programar",
     "scheduleCreated": "Aplicación programada.",
-    "scheduleCancelled": "Programación cancelada."
+    "scheduleCancelled": "Programación cancelada.",
+    "configDate": "Fecha de configuración"
   },
   "logs": {
     "title": "Estado y logs",
