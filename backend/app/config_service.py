@@ -833,6 +833,33 @@ def run_config_apply_job(db: Session, job: Job) -> dict[str, Any]:
         job.progress_done = 2
         db.commit()
 
+        if not expected_names and settings.app_env == "production":
+            user = db.get(User, job.created_by_id) if job.created_by_id else None
+            add_audit(
+                db,
+                actor=None,
+                actor_username=user.username if user else "system",
+                actor_role=user.role if user else "system",
+                action_code="config.applied",
+                action_params={
+                    "revision_id": revision.id,
+                    "restarted": False,
+                    "health_check": "skipped",
+                    "warnings": [*warnings, "config.no_nodes"],
+                },
+                target_type="config",
+                target_id=revision.id,
+            )
+            db.commit()
+            job.progress_done = 3
+            db.commit()
+            return {
+                "revision_id": revision.id,
+                "restarted": False,
+                "warnings": [*warnings, "config.no_nodes"],
+                "health_check": "skipped",
+            }
+
         docker = docker_client_for(db)
         restarted = False
         try:

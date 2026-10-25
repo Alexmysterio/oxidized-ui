@@ -550,6 +550,11 @@ These belong to `docker-compose.secure.yml` and `.env.secure.example`:
 | `OXIDIZED_IMAGE` | `oxidized/oxidized:latest` | Oxidized image tag. |
 | `SOCKET_PROXY_IMAGE` | `tecnativa/docker-socket-proxy:latest` | Docker socket proxy image tag. |
 
+Applying a configuration while the inventory is empty now saves the revision
+without restarting Oxidized. Oxidized starts automatically when the first node is
+added and loads the already-applied configuration. This makes it possible to
+create and apply a group before adding nodes.
+
 ### Managed configuration blocks
 
 The configuration form hides fields that are owned by the console. They are not
