@@ -124,7 +124,8 @@ def trust_host_key(
     actor: AuthContext,
     request: Request | None = None,
 ) -> dict[str, Any]:
-    if node.input and node.input != "ssh":
+    input_parts = {part.strip() for part in (node.input or "").split(",") if part.strip()}
+    if input_parts and not input_parts.intersection({"ssh", "scp"}):
         raise AppError("node.host_key_not_ssh", params={"input": node.input})
     address = _validate_address(node.address)
     port = int(node.port or 22)

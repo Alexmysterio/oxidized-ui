@@ -871,6 +871,22 @@ docker exec oxidized-ui supervisorctl -s http://127.0.0.1:9001 status
 
 All three programs should be `RUNNING`: `ui`, `oxidized`, `caddy`.
 
+### Test connection says `host_key_unknown`
+
+A successful backup does not always mean the SSH host key was verified:
+Oxidized can be configured with `input.ssh.secure: false`, in which case it
+accepts an unknown key. **Test connection always requires a trusted host key.**
+
+1. Open the node.
+2. Open its menu and select **Trust host key**.
+3. Compare the displayed fingerprint with the device's SSH fingerprint.
+4. Confirm.
+5. Run **Test connection** again.
+
+The trusted key is stored in `/oxidized-config/.ssh/known_hosts`. To make
+backups verify the host key too, set `input.ssh.secure: true` in the Oxidized
+configuration and apply it.
+
 ### SSH authentication fails
 
 - Test credentials from the Docker host.
