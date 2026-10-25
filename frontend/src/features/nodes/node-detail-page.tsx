@@ -161,10 +161,8 @@ export function NodeDetailPage() {
 
   const versions = versionsQuery.data?.versions ?? [];
   useEffect(() => {
-    if (selected.length === 0 && versions.length > 0) {
-      setSelected(versions.slice(0, 2).map((version) => version.oid));
-    }
-  }, [versions, selected.length]);
+    setSelected(versions.length > 1 ? [versions[1].oid, versions[0].oid] : []);
+  }, [versions]);
 
   const diffQuery = useQuery({
     queryKey: ["node-diff", nodeId, ...selected],
@@ -199,7 +197,15 @@ export function NodeDetailPage() {
       if (result.authenticated) {
         toast.success(t("nodeDetail.connectionOk"));
       } else {
-        toast.error(t("nodeDetail.connectionFailed", { reason: result.message ?? "unknown" }));
+        const reason =
+          result.message === "host_key_unknown"
+            ? t("errors.node.host_key_unknown")
+            : result.message === "authentication_failed"
+              ? t("errors.node.auth_failed", { user: node.username ?? "?" })
+              : result.message === "missing_credentials"
+                ? t("errors.node.missing_credentials")
+                : result.message ?? t("errors.generic");
+        toast.error(t("nodeDetail.connectionFailed", { reason }));
       }
     },
     onError: (error) => notifyError(t, error),
@@ -379,12 +385,12 @@ export function NodeDetailPage() {
                   <CardTitle>{t("common.status")}</CardTitle>
                   <CardDescription>{status ? intl.relative(status.observed_at) : "—"}</CardDescription>
                 </div>
-                <Button variant="ghost" size="icon-xs" onClick={() => void statusQuery.refetch()} aria-label={t("common.refresh")}>
+                <Button variant="ghost" size="icon-xs" onClick={() => { void nodeQuery.refetch(); void statusQuery.refetch(); }} aria-label={t("common.refresh")}>
                   {statusQuery.isFetching ? <Spinner /> : <RefreshCw />}
                 </Button>
               </CardHeader>
               <CardContent className="pt-0">
-                <InfoRow label={t("common.status")}><NodeStatusBadge status={node.status} /></InfoRow>
+                <InfoRow label={t("common.status")}><NodeStatusBadge status={status?.status ?? node.status} /></InfoRow>
                 <InfoRow label={t("nodeDetail.lastAttempt")}>{status?.last_finished_at ? intl.dateTime(status.last_finished_at) : node.last_attempt_at ? intl.dateTime(node.last_attempt_at) : t("common.never")}</InfoRow>
                 <InfoRow label={t("nodeDetail.lastSuccess")}>{status?.last_success_at ? intl.dateTime(status.last_success_at) : node.last_backup_at ? intl.dateTime(node.last_backup_at) : t("common.never")}</InfoRow>
                 {duration !== null ? (

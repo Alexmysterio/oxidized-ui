@@ -1024,7 +1024,8 @@
       "connection_timeout": "The device did not respond before the timeout.",
       "connection_refused": "The device refused the connection.",
       "dns_error": "The device address could not be resolved.",
-      "connection_error": "Could not connect to the device ({{class}})."
+      "connection_error": "Could not connect to the device ({{class}}).",
+      "missing_credentials": "The node has no username or password configured."
     },
     "oxidized": {
       "auto_recovery_failed": "Oxidized did not start after creating the first node.",
