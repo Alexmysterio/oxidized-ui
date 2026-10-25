@@ -208,12 +208,6 @@ The image is pulled from:
 ghcr.io/alexmysterio/oxidized-ui:latest
 ```
 
-> **One-time GitHub Packages setting:** the image is published at
-> `ghcr.io/alexmysterio/oxidized-ui:latest`. If a pull is denied, open
-> [Package settings](https://github.com/users/Alexmysterio/packages/container/package/oxidized-ui/settings)
-> once and set visibility to **Public**. GitHub does not expose an API to change
-> container package visibility automatically.
-
 ### 3. Configure the hostname
 
 All settings can be placed in a `.env` file next to `docker-compose.yml`. Copy the
@@ -807,6 +801,19 @@ backup counts/ratio, job counts, and stale-node count.
 
 ## Troubleshooting
 
+### Docker pull returns unauthorized
+
+The Git repository and the GitHub Container Registry package have separate
+visibility settings. If `docker compose up` reports `unauthorized`, open the
+container package settings and set the package visibility to **Public**:
+
+```text
+https://github.com/users/Alexmysterio/packages/container/package/oxidized-ui/settings
+```
+
+GitHub does not provide an API to change container package visibility. This is
+a one-time repository administration step, not a configuration value.
+
 ### Browser cannot connect
 
 1. Container healthy?
@@ -833,7 +840,7 @@ docker compose exec oxidized-ui python3 -c "import urllib.request; print(urllib.
 curl -k https://oxidized.example.com/api/health
 ```
 
-If loopback works but LAN IP does not, use the Docker environment port proxy above.
+If loopback works but the LAN address does not, check Docker port publishing and the host firewall.
 
 ### Certificate warning
 
