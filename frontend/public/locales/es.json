@@ -468,7 +468,7 @@
     "driftTitle": "El fichero de configuración ha cambiado fuera del panel",
     "driftDescription": "El checksum del volumen no coincide con la revisión aplicada. Revisa el YAML y guarda un borrador antes de sobrescribirlo.",
     "managedTitle": "Bloques gestionados por el panel",
-    "managedDescription": "El source HTTP interno y la extensión oxidized-web se inyectan automáticamente y no son editables.",
+    "managedDescription": "Estos bloques conectan Oxidized con el inventario y la API de la interfaz. Se inyectan automáticamente en cada aplicación; editarlos rompería la carga de nodos, el estado, las versiones o los reinicios.",
     "tabs": {
       "general": "General",
       "input": "Inputs",

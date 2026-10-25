@@ -468,7 +468,7 @@
     "driftTitle": "The configuration file changed outside the console",
     "driftDescription": "The volume checksum does not match the applied revision. Review the YAML and save a draft before overwriting it.",
     "managedTitle": "Blocks managed by the console",
-    "managedDescription": "The internal HTTP source and the oxidized-web extension are injected automatically and cannot be edited.",
+    "managedDescription": "These blocks connect Oxidized to the UI inventory and API. They are injected automatically on every apply, so editing them would break node loading, status, versions, or restarts.",
     "tabs": {
       "general": "General",
       "input": "Inputs",
