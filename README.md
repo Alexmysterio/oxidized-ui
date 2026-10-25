@@ -436,7 +436,6 @@ services:
       # Secure defaults.
       SESSION_COOKIE_SECURE: "true"
       TRUST_PROXY_HEADERS: "true"
-      TRUSTED_ORIGINS: https://${UI_HOSTNAME:-oxidized.example.com},https://${UI_HOSTNAME:-oxidized.example.com}:${UI_HTTPS_PORT:-443}
     extra_hosts:
       - "oxidized-ui:127.0.0.1"
       - "oxidized:127.0.0.1"

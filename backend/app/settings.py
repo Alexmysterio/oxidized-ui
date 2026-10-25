@@ -34,6 +34,8 @@ class Settings(BaseSettings):
     supervisor_program: str = "oxidized"
     supervisor_logfile: str = "/var/log/supervisor/oxidized.log"
     ui_internal_url: str = "http://oxidized-ui:8080"
+    ui_hostname: str = ""
+    ui_https_port: int = 443
 
     data_dir: Path = Path("/data")
     oxidized_config_dir: Path = Path("/oxidized-config")
@@ -144,7 +146,11 @@ class Settings(BaseSettings):
 
     @property
     def trusted_origin_list(self) -> list[str]:
-        return [part.strip().rstrip("/") for part in self.trusted_origins.split(",") if part.strip()]
+        origins = [part.strip().rstrip("/") for part in self.trusted_origins.split(",") if part.strip()]
+        host = self.ui_hostname.strip().rstrip("/")
+        if host:
+            origins.extend((f"https://{host}", f"https://{host}:{self.ui_https_port}"))
+        return list(dict.fromkeys(origins))
 
     @property
     def available_languages(self) -> list[str]:
