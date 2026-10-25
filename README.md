@@ -366,6 +366,15 @@ BOOTSTRAP_ADMIN_LANGUAGE=en
 Remove the password from `.env` after the first start. The wizard is usually
 easier and safer.
 
+On a brand-new installation the dashboard reports:
+
+```text
+Oxidized is waiting for its first node. Add a node to start the engine.
+```
+
+Oxidized stays stopped until the inventory has at least one node. This is
+expected; use **Nodes -> Add node**, then **Backup now**.
+
 ### 7. Add your first device
 
 1. Open **Nodes -> Add node**.

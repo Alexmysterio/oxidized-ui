@@ -89,7 +89,9 @@ def build_status(db: Session) -> dict[str, Any]:
         oxidized_state = "offline"
 
     warnings: list[str] = []
-    if not api_online:
+    if not nodes:
+        warnings.append("oxidized.no_nodes")
+    if not api_online and nodes:
         warnings.append(api_error or "oxidized.unavailable")
     if docker_error:
         warnings.append(docker_error)

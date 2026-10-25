@@ -167,7 +167,6 @@
     "passwordHint": "At least 12 characters and three of: lowercase, uppercase, numbers and symbols.",
     "createAdmin": "Create administrator",
     "creatingAdmin": "Creating administrator…",
-    "setupError": "Could not complete the setup.",
     "setupDone": "Administrator created. You can use the console now.",
     "accountStep": "Administrator account",
     "accountStepDescription": "This user will have full access to the system.",
@@ -1036,7 +1035,8 @@
       "reload_failed": "Oxidized did not reload nodes.",
       "restart_failed": "Oxidized could not be restarted.",
       "timeout": "Oxidized did not respond in time.",
-      "unavailable": "Oxidized is unavailable."
+      "unavailable": "Oxidized is unavailable.",
+      "no_nodes": "Oxidized is waiting for its first node. Add a node to start the engine."
     },
     "search": {
       "query_invalid": "The search is invalid.",

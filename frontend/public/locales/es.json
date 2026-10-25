@@ -167,7 +167,6 @@
     "passwordHint": "Mínimo 12 caracteres y al menos tres de: minúsculas, mayúsculas, números y símbolos.",
     "createAdmin": "Crear administrador",
     "creatingAdmin": "Creando administrador…",
-    "setupError": "No se pudo completar la configuración.",
     "setupDone": "Administrador creado. Ya puedes usar el panel.",
     "accountStep": "Cuenta de administración",
     "accountStepDescription": "Este usuario tendrá acceso completo al sistema.",
@@ -1036,7 +1035,8 @@
       "reload_failed": "Oxidized no recargó los nodos.",
       "restart_failed": "No se pudo reiniciar Oxidized.",
       "timeout": "Oxidized no respondió a tiempo.",
-      "unavailable": "Oxidized no está disponible."
+      "unavailable": "Oxidized no está disponible.",
+      "no_nodes": "Oxidized está esperando su primer nodo. Añade un nodo para arrancar el motor."
     },
     "search": {
       "query_invalid": "La búsqueda no es válida.",
