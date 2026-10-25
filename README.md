@@ -257,8 +257,10 @@ If the server is `192.168.1.111`, you do not need a domain. Use:
 UI_HOSTNAME=192.168.1.111
 UI_HTTP_PORT=8888
 UI_HTTPS_PORT=4433
-TRUSTED_ORIGINS=https://192.168.1.111:4433
 ```
+
+You do not need `TRUSTED_ORIGINS`: the current image derives the allowed origins
+from `UI_HOSTNAME` and `UI_HTTPS_PORT`.
 
 The port mapping becomes:
 
@@ -529,7 +531,7 @@ These are normally set by the image and should only be changed if you know why.
 |---|---|---|
 | `SESSION_COOKIE_SECURE` | `true` | HTTPS-only session cookie. |
 | `TRUST_PROXY_HEADERS` | `true` | Trust Caddy forwarded headers. |
-| `TRUSTED_ORIGINS` | derived | Comma-separated allowed origins. |
+| `TRUSTED_ORIGINS` | derived | Optional override; normally derived from `UI_HOSTNAME` and `UI_HTTPS_PORT`. Only needed behind a different reverse proxy. |
 | `DATA_DIR` | `/data` | SQLite, sessions, audit, Caddy state. |
 | `OXIDIZED_CONFIG_DIR` | `/oxidized-config` | Oxidized config and `known_hosts`. |
 | `STATIC_DIR` | `/app/static` | Built frontend files. |
@@ -837,8 +839,11 @@ https://192.168.2.25:3443
 ```
 
 Changing only the `ports` mapping is not enough: `UI_HTTPS_PORT` also controls the
-HTTP redirect and the trusted origin. Use `docker compose config` to confirm the
-resulting `TRUSTED_ORIGINS`.
+HTTP redirect and the derived origin. Use `docker compose config` to confirm
+`UI_HOSTNAME` and `UI_HTTPS_PORT`.
+
+Current images derive `TRUSTED_ORIGINS` automatically. Older images may still
+require an explicit `TRUSTED_ORIGINS=https://192.168.2.25,https://192.168.2.25:3443`.
 
 ### Browser cannot connect
 
