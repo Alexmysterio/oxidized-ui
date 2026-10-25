@@ -814,6 +814,33 @@ https://github.com/users/Alexmysterio/packages/container/package/oxidized-ui/set
 GitHub does not provide an API to change container package visibility. This is
 a one-time repository administration step, not a configuration value.
 
+### Setup fails with `auth.origin_rejected`
+
+This happens when the browser origin does not match the configured HTTPS
+hostname and port. For a server at `192.168.2.25` exposed on host port `3443`,
+set both:
+
+```env
+UI_HOSTNAME=192.168.2.25
+UI_HTTPS_PORT=3443
+```
+
+and recreate the container:
+
+```bash
+docker compose up -d --force-recreate
+```
+
+Open the UI at the exact URL:
+
+```text
+https://192.168.2.25:3443
+```
+
+Changing only the `ports` mapping is not enough: `UI_HTTPS_PORT` also controls the
+HTTP redirect and the trusted origin. Use `docker compose config` to confirm the
+resulting `TRUSTED_ORIGINS`.
+
 ### Browser cannot connect
 
 1. Container healthy?

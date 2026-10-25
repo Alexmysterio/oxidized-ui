@@ -17,6 +17,7 @@ import { useAuth } from "@/lib/auth";
 import { changeLanguage, currentLanguage } from "@/lib/i18n";
 import { useTheme } from "@/lib/theme";
 import { setupSchema } from "@/lib/validation";
+import { errorMessage } from "@/lib/errors";
 import { cn } from "@/lib/utils";
 import type { Theme } from "@/types/api";
 
@@ -69,8 +70,8 @@ export function SetupPage() {
       });
       toast.success(t("auth.setupDone"));
       navigate("/", { replace: true });
-    } catch {
-      setServerError(t("auth.setupError"));
+    } catch (error) {
+      setServerError(errorMessage(t, error));
     } finally {
       setSubmitting(false);
     }
