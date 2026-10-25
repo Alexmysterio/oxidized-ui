@@ -399,8 +399,10 @@ The device must be reachable from the container, not only from your desktop.
 
 ## Full compose file
 
-This is the exact `docker-compose.yml` used by the standalone installation. If
-you downloaded it with `curl`, you do not need to copy it again.
+This is the exact, minimal `docker-compose.yml` used by the standalone
+installation. If you downloaded it with `curl`, you do not need to copy it again.
+Only `UI_HOSTNAME` and the optional ports need changing; secrets and internal
+paths are handled by the image.
 
 ```yaml
 name: oxidized-ui
@@ -413,64 +415,28 @@ name: oxidized-ui
 #   docker compose up -d
 #
 # Optional advanced variables can be added to .env. See the README table.
-# SECRET_KEY, FERNET_KEY and OXIDIZED_SOURCE_TOKEN are generated automatically
-# on first start and stored in ./data/ui/.runtime-secrets.
+# Secrets are generated automatically under ./data/ui/.runtime-secrets.
 
 services:
   oxidized-ui:
     image: ghcr.io/alexmysterio/oxidized-ui:latest
     container_name: oxidized-ui
     restart: unless-stopped
-    init: true
-    stop_grace_period: 40s
     env_file:
       - path: .env
         required: false
     ports:
       - "${UI_HTTP_PORT:-80}:80"
       - "${UI_HTTPS_PORT:-443}:443"
-      - "${UI_HTTPS_PORT:-443}:443/udp"
     environment:
-      # Change this to the server IP or domain.
       UI_HOSTNAME: ${UI_HOSTNAME:-oxidized.example.com}
-
-      # Required by the internal single-container topology.
-      DATA_DIR: /data
-      OXIDIZED_CONFIG_DIR: /oxidized-config
-      OXIDIZED_API_URL: http://127.0.0.1:8888
-      UI_INTERNAL_URL: http://127.0.0.1:8080
-      SUPERVISOR_URL: http://127.0.0.1:9001/RPC2
-      SUPERVISOR_PROGRAM: oxidized
-      SUPERVISOR_LOGFILE: /var/log/supervisor/oxidized.log
       UI_HTTPS_PORT: ${UI_HTTPS_PORT:-443}
-
-      # Secure defaults.
-      SESSION_COOKIE_SECURE: "true"
-      TRUST_PROXY_HEADERS: "true"
-    extra_hosts:
-      - "oxidized-ui:127.0.0.1"
-      - "oxidized:127.0.0.1"
     volumes:
       - ./data/ui:/data
       - ./data/config:/oxidized-config
       - ./data/oxidized:/var/lib/oxidized
-    healthcheck:
-      test:
-        - CMD
-        - python3
-        - -c
-        - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/api/health', timeout=3).read()"
-      interval: 20s
-      timeout: 5s
-      retries: 5
-      start_period: 45s
     security_opt:
       - no-new-privileges:true
-    logging:
-      driver: json-file
-      options:
-        max-size: "20m"
-        max-file: "5"
 ```
 
 ---
