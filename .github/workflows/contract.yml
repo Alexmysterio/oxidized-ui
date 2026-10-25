@@ -15,7 +15,7 @@ jobs:
           docker run -d --name oxidized-contract -p 8888:8888 \
             -v "$PWD/tests/contract/home:/home/oxidized/.config/oxidized" \
             -v "$PWD/tests/contract/router.db:/tmp/router.db:ro" \
-            oxidized/oxidized:0.37.0
+            oxidized/oxidized:latest
           for i in $(seq 1 30); do
             if curl -fsS http://127.0.0.1:8888/nodes.json; then exit 0; fi
             sleep 2

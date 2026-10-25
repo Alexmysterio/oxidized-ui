@@ -14,7 +14,7 @@
   <img src="https://img.shields.io/badge/Docker-single%20image-2496ED?logo=docker&logoColor=white" alt="Docker">
   <img src="https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white" alt="Python 3.12">
   <img src="https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=111111" alt="React 19">
-  <img src="https://img.shields.io/badge/Oxidized-0.37.0-6E4AFF" alt="Oxidized 0.37.0">
+  <img src="https://img.shields.io/badge/Oxidized-latest-6E4AFF" alt="Oxidized latest">
 </p>
 
 <p align="center">
@@ -156,7 +156,7 @@ requires more resources and the Docker socket proxy. See
 - TCP ports `80` and `443` available on the host.
 - Network access from the container to your devices (SSH/Telnet).
 
-The default image is based on `oxidized/oxidized:0.37.0` and includes Caddy and
+The default image is based on `oxidized/oxidized:latest` and includes Caddy and
 `supervisord`. The UI uses Python/FastAPI; the frontend is React/TypeScript.
 
 ---
@@ -577,8 +577,8 @@ These belong to `docker-compose.secure.yml` and `.env.secure.example`:
 |---|---|---|
 | `UI_BIND_ADDRESS` | `127.0.0.1` | Host address for the internal UI port. |
 | `UI_PORT` | `8080` | Host port for the internal UI. |
-| `OXIDIZED_IMAGE` | `oxidized/oxidized:0.37.0` | Oxidized image tag. |
-| `SOCKET_PROXY_IMAGE` | `tecnativa/docker-socket-proxy:v0.5.0` | Docker socket proxy image tag. |
+| `OXIDIZED_IMAGE` | `oxidized/oxidized:latest` | Oxidized image tag. |
+| `SOCKET_PROXY_IMAGE` | `tecnativa/docker-socket-proxy:latest` | Docker socket proxy image tag. |
 
 ### Settings managed from the UI
 

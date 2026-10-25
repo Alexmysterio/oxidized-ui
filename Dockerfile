@@ -2,7 +2,7 @@
 # Single image: Oxidized + Oxidized UI + Caddy + supervisord.
 # The multi-container Dockerfile remains available as the hardened deployment.
 
-FROM node:22-alpine AS frontend
+FROM node:latest AS frontend
 
 RUN npm install --global pnpm@10.33.0
 WORKDIR /build
@@ -12,7 +12,7 @@ RUN pnpm rebuild esbuild
 COPY frontend/ ./
 RUN pnpm build
 
-FROM oxidized/oxidized:0.37.0 AS python-deps
+FROM oxidized/oxidized:latest AS python-deps
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends python3 python3-venv python3-pip build-essential libffi-dev libssl-dev \
@@ -23,7 +23,7 @@ COPY backend/pyproject.toml ./
 COPY backend/app ./app
 RUN /opt/venv/bin/pip install --no-cache-dir .
 
-FROM oxidized/oxidized:0.37.0
+FROM oxidized/oxidized:latest
 
 ENV PATH="/opt/venv/bin:${PATH}" \
     PYTHONPATH="/app" \
