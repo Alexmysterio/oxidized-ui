@@ -63,6 +63,7 @@ def ensure_system_settings(db: Session) -> SystemSettings:
             notify_webhook_url="",
             notify_on_failure=True,
             notify_stale_hours=0,
+            site_name="Oxidized UI",
         )
         db.add(row)
         db.commit()
@@ -126,6 +127,9 @@ def update_system_settings(db: Session, patch: dict) -> SystemSettings:
         row.notify_on_failure = bool(patch["notify_on_failure"])
     if "notify_stale_hours" in patch and patch["notify_stale_hours"] is not None:
         row.notify_stale_hours = int(patch["notify_stale_hours"])
+    if "site_name" in patch and patch["site_name"] is not None:
+        site_name = str(patch["site_name"]).strip()
+        row.site_name = site_name[:100] or "Oxidized UI"
     row.updated_at = utcnow()
     db.commit()
     db.refresh(row)
@@ -154,6 +158,8 @@ def settings_public(row: SystemSettings) -> dict:
         "notify_webhook_url": row.notify_webhook_url,
         "notify_on_failure": row.notify_on_failure,
         "notify_stale_hours": row.notify_stale_hours,
+        "site_name": row.site_name,
+        "has_logo": bool(row.logo_filename),
         "environment": {
             "oxidized_api_url": settings.oxidized_api_url,
             "oxidized_container_name": settings.oxidized_container_name,

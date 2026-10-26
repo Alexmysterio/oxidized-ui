@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient, keepPreviousData } from "@tanstack/react-query";
-import { ArrowDown, ArrowUp, ArrowUpDown, ChevronDown, Download, Filter, MoreHorizontal, Network, Pencil, Plus, RefreshCw, Search, ServerCog, Trash2, Upload, UsersRound } from "lucide-react";
+import { ArrowDown, ArrowUp, ArrowUpDown, ChevronDown, Download, Fingerprint, Filter, MoreHorizontal, Network, Pencil, Plus, RefreshCw, Search, ServerCog, Trash2, Upload, UsersRound } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useSearchParams } from "react-router-dom";
@@ -82,6 +82,7 @@ export function NodesPage() {
   const [importOpen, setImportOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<Node | null>(null);
   const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
+  const [bulkTrustOpen, setBulkTrustOpen] = useState(false);
   const [groupDialogOpen, setGroupDialogOpen] = useState(false);
   const [bulkGroup, setBulkGroup] = useState("");
   const [bulkEditOpen, setBulkEditOpen] = useState(false);
@@ -246,6 +247,23 @@ export function NodesPage() {
       toast.success(t("nodes.bulkGroupSuccess", { count: selected.size }));
       setGroupDialogOpen(false);
       setBulkGroup("");
+      setSelected(new Set());
+      void invalidate();
+    },
+    onError: (error) => notifyError(t, error),
+  });
+
+  const bulkTrust = useMutation({
+    mutationFn: () => api.bulkNodes({ action: "trust_host_key", ids: Array.from(selected) }),
+    onSuccess: (result) => {
+      const failed = result.failed?.length ?? 0;
+      const trusted = result.trusted ?? 0;
+      if (failed) {
+        toast.warning(t("nodes.bulkTrustPartial", { trusted, failed }));
+      } else {
+        toast.success(t("nodes.bulkTrustSuccess", { count: trusted }));
+      }
+      setBulkTrustOpen(false);
       setSelected(new Set());
       void invalidate();
     },
@@ -443,6 +461,12 @@ export function NodesPage() {
               <Button variant="outline" size="xs" onClick={() => setGroupDialogOpen(true)}>
                 <UsersRound />
                 {t("nodes.bulkGroup")}
+              </Button>
+            ) : null}
+            {can("nodes.write") ? (
+              <Button variant="outline" size="xs" onClick={() => setBulkTrustOpen(true)}>
+                <Fingerprint />
+                {t("nodes.bulkTrust")}
               </Button>
             ) : null}
             {can("nodes.write") ? (
@@ -657,6 +681,17 @@ export function NodesPage() {
         confirmLabel={t("common.delete")}
         loading={bulkDelete.isPending}
         onConfirm={() => bulkDelete.mutate()}
+      />
+
+      <ConfirmDialog
+        open={bulkTrustOpen}
+        onOpenChange={setBulkTrustOpen}
+        title={t("nodes.bulkTrustTitle")}
+        description={t("nodes.bulkTrustDescription", { count: selected.size })}
+        confirmLabel={t("nodes.bulkTrust")}
+        destructive={false}
+        loading={bulkTrust.isPending}
+        onConfirm={() => bulkTrust.mutate()}
       />
 
       <Dialog open={compareOpen} onOpenChange={setCompareOpen}>

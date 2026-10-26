@@ -66,13 +66,13 @@ function SourceBadge({ source, detail }: { source?: string | null; detail?: stri
   const { t } = useTranslation();
   if (!source || source === "missing") return null;
   return (
-    <Badge
-      variant="outline"
-      className="shrink-0 px-1.5 py-0 text-[9px] font-normal tracking-normal"
+    <span
+      className="inline-flex shrink-0 items-center gap-1 rounded-full bg-muted/60 px-2 py-0.5 text-[9px] font-medium leading-4 text-muted-foreground ring-1 ring-inset ring-border/60"
       title={detail ?? undefined}
     >
+      <span className="h-1 w-1 rounded-full bg-primary/70" />
       {t(`nodeDetail.sources.${source}`, { defaultValue: source })}
-    </Badge>
+    </span>
   );
 }
 

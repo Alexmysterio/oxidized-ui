@@ -89,6 +89,7 @@
   "node.not_found": 404,
   "node.port_ignored_for_input": 422,
   "node.reserved_var": 422,
+  "notification.not_found": 404,
   "oxidized.auto_recovery_failed": 502,
   "oxidized.bad_response": 502,
   "oxidized.next_adds_job_disabled": 409,

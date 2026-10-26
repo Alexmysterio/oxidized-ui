@@ -41,6 +41,8 @@ interface CreateValues {
   password: string;
   role: Role;
   language: string;
+  full_name: string;
+  email: string;
 }
 
 function UserDialog({
@@ -61,20 +63,24 @@ function UserDialog({
 
   const createForm = useForm<CreateValues>({
     resolver: zodResolver(userSchema(t)),
-    defaultValues: { username: "", password: "", role: "operator", language: "es" },
+    defaultValues: { username: "", password: "", role: "operator", language: "es", full_name: "", email: "" },
   });
 
   const editSchema = z.object({
     role: z.enum(["admin", "operator", "viewer"]),
     language: z.string().min(1),
     is_active: z.boolean(),
+    full_name: z.string().max(128),
+    email: z.string().max(254),
   });
-  const editForm = useForm<{ role: Role; language: string; is_active: boolean }>({
+  const editForm = useForm<{ role: Role; language: string; is_active: boolean; full_name: string; email: string }>({
     resolver: zodResolver(editSchema),
     defaultValues: {
       role: user?.role ?? "operator",
       language: user?.language ?? "es",
       is_active: user?.is_active ?? true,
+      full_name: user?.full_name ?? "",
+      email: user?.email ?? "",
     },
   });
 
@@ -86,6 +92,8 @@ function UserDialog({
         role: user.role,
         language: user.language,
         is_active: user.is_active ?? true,
+        full_name: user.full_name ?? "",
+        email: user.email ?? "",
       });
     } else {
       createForm.reset({
@@ -93,6 +101,8 @@ function UserDialog({
         password: "",
         role: "operator",
         language: meta?.default_language ?? "es",
+        full_name: "",
+        email: "",
       });
     }
   }, [open, user, meta?.default_language, createForm, editForm]);
@@ -144,6 +154,16 @@ function UserDialog({
               </div>
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="space-y-2">
+                  <Label>{t("users.fullName")}</Label>
+                  <Input {...editForm.register("full_name")} />
+                </div>
+                <div className="space-y-2">
+                  <Label>{t("users.email")}</Label>
+                  <Input type="email" {...editForm.register("email")} />
+                </div>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="space-y-2">
                   <Label>{t("users.role")}</Label>
                   <Select value={editForm.watch("role")} onValueChange={(value) => editForm.setValue("role", value as Role)}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
@@ -186,6 +206,17 @@ function UserDialog({
                 <Label htmlFor="user-username">{t("users.username")}</Label>
                 <Input id="user-username" autoComplete="off" {...createForm.register("username")} />
                 {createForm.formState.errors.username ? <p className="text-xs text-destructive">{createForm.formState.errors.username.message}</p> : null}
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="user-full-name">{t("users.fullName")}</Label>
+                  <Input id="user-full-name" {...createForm.register("full_name")} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="user-email">{t("users.email")}</Label>
+                  <Input id="user-email" type="email" {...createForm.register("email")} />
+                  {createForm.formState.errors.email ? <p className="text-xs text-destructive">{createForm.formState.errors.email.message}</p> : null}
+                </div>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="user-password">{t("auth.password")}</Label>
@@ -363,11 +394,17 @@ export function UsersPage() {
                 <TableRow key={user.id}>
                   <TableCell>
                     <div className="flex items-center gap-2.5">
-                      <span className="flex h-7 w-7 items-center justify-center rounded-md border bg-primary/[0.04] font-mono text-[10px] text-primary">
-                        {user.username.slice(0, 2).toUpperCase()}
+                      <span className="flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-md border bg-primary/[0.04] font-mono text-[10px] text-primary">
+                        {user.avatar_url ? (
+                          <img src={user.avatar_url} alt="" className="h-full w-full object-cover" />
+                        ) : (
+                          (user.full_name || user.username).slice(0, 2).toUpperCase()
+                        )}
                       </span>
-                      <div>
-                        <span className="block text-[13px] font-medium">{user.username}</span>
+                      <div className="min-w-0">
+                        <span className="block truncate text-[13px] font-medium">{user.full_name || user.username}</span>
+                        {user.full_name ? <span className="block font-mono text-[10px] text-muted-foreground">@{user.username}</span> : null}
+                        {user.email ? <span className="block truncate text-[10px] text-muted-foreground">{user.email}</span> : null}
                         {currentUser?.id === user.id ? <span className="text-[10px] text-muted-foreground">{t("users.self")}</span> : null}
                       </div>
                     </div>

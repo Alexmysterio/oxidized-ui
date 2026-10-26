@@ -10,6 +10,25 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator, model_valida
 ROLE = Literal["admin", "operator", "viewer"]
 THEME = Literal["light", "dark", "system"]
 KNOWN_INPUTS = ("ssh", "telnet", "scp", "ftp", "http", "tftp", "exec")
+EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+
+
+def normalize_full_name(value: str | None) -> str | None:
+    if value is None:
+        return None
+    text = " ".join(value.split())
+    return text or None
+
+
+def normalize_email(value: str | None) -> str | None:
+    if value is None:
+        return None
+    text = value.strip().casefold()
+    if not text:
+        return None
+    if not EMAIL_RE.fullmatch(text):
+        raise ValueError("invalid email address")
+    return text
 RESERVED_VARS = {"enable", "password", "username", "name", "ip", "model", "group"}
 NODE_NAME_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,252}$")
 MODEL_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$")
@@ -45,6 +64,18 @@ class SessionUser(BaseModel):
 class ProfileUpdate(StrictModel):
     language: str | None = Field(default=None, max_length=16)
     theme: THEME | None = None
+    full_name: str | None = Field(default=None, max_length=128)
+    email: str | None = Field(default=None, max_length=254)
+
+    @field_validator("full_name")
+    @classmethod
+    def _full_name(cls, value: str | None) -> str | None:
+        return normalize_full_name(value)
+
+    @field_validator("email")
+    @classmethod
+    def _email(cls, value: str | None) -> str | None:
+        return normalize_email(value)
 
 
 class PasswordChangeRequest(StrictModel):
@@ -81,12 +112,36 @@ class UserCreate(StrictModel):
     password: str = Field(min_length=1, max_length=512)
     role: ROLE = "viewer"
     language: str = Field(default="es", max_length=16)
+    full_name: str | None = Field(default=None, max_length=128)
+    email: str | None = Field(default=None, max_length=254)
+
+    @field_validator("full_name")
+    @classmethod
+    def _full_name(cls, value: str | None) -> str | None:
+        return normalize_full_name(value)
+
+    @field_validator("email")
+    @classmethod
+    def _email(cls, value: str | None) -> str | None:
+        return normalize_email(value)
 
 
 class UserUpdate(StrictModel):
     role: ROLE | None = None
     is_active: bool | None = None
     language: str | None = Field(default=None, max_length=16)
+    full_name: str | None = Field(default=None, max_length=128)
+    email: str | None = Field(default=None, max_length=254)
+
+    @field_validator("full_name")
+    @classmethod
+    def _full_name(cls, value: str | None) -> str | None:
+        return normalize_full_name(value)
+
+    @field_validator("email")
+    @classmethod
+    def _email(cls, value: str | None) -> str | None:
+        return normalize_email(value)
 
 
 class UserPasswordReset(StrictModel):
@@ -349,7 +404,7 @@ class NodeUpdate(StrictModel):
 
 
 class NodeBulkRequest(StrictModel):
-    action: Literal["backup", "change_group", "delete", "update"]
+    action: Literal["backup", "change_group", "delete", "update", "trust_host_key"]
     ids: list[int] = Field(min_length=1, max_length=1000)
     group_name: str | None = None
     model: str | None = Field(default=None, max_length=64)
@@ -469,6 +524,27 @@ class SystemSettingsUpdate(StrictModel):
     notify_webhook_url: str | None = Field(default=None, max_length=2048)
     notify_on_failure: bool | None = None
     notify_stale_hours: int | None = Field(default=None, ge=0, le=720)
+    site_name: str | None = Field(default=None, max_length=100)
+
+
+NOTIFICATION_KINDS = ("webhook", "slack", "discord", "telegram")
+NOTIFICATION_EVENTS = ("job.failed", "backup.stale")
+
+
+class NotificationChannelCreate(StrictModel):
+    name: str = Field(min_length=1, max_length=100)
+    kind: Literal["webhook", "slack", "discord", "telegram"]
+    enabled: bool = True
+    events: list[str] = Field(default_factory=lambda: list(NOTIFICATION_EVENTS), max_length=10)
+    config: dict[str, Any] = Field(default_factory=dict)
+
+
+class NotificationChannelUpdate(StrictModel):
+    name: str | None = Field(default=None, min_length=1, max_length=100)
+    kind: Literal["webhook", "slack", "discord", "telegram"] | None = None
+    enabled: bool | None = None
+    events: list[str] | None = Field(default=None, max_length=10)
+    config: dict[str, Any] | None = None
 
 
 class ConnectionTestRequest(StrictModel):

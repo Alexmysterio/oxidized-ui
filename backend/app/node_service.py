@@ -398,6 +398,28 @@ def bulk_action(
 
         job = create_backup_all_job(db, actor=actor, node_ids=[node.id for node in nodes], request=request)
         return {"job_id": job.id, "requested": len(nodes), "failed": failed}
+    if action == "trust_host_key":
+        from .hostkey_service import trust_host_key
+
+        results = []
+        for node in nodes:
+            try:
+                info = trust_host_key(db, node, actor=actor, request=request)
+                results.append(
+                    {"id": node.id, "name": node.name, "ok": True, "fingerprints": info["fingerprints"]}
+                )
+            except AppError as exc:
+                results.append(
+                    {
+                        "id": node.id,
+                        "name": node.name,
+                        "ok": False,
+                        "code": exc.code,
+                        "params": exc.params,
+                    }
+                )
+        trusted = sum(1 for item in results if item["ok"])
+        return {"trusted": trusted, "failed": failed + [item for item in results if not item["ok"]]}
     if action == "change_group":
         validated = _validate_group_for_node(db, group_name)
         for node in nodes:

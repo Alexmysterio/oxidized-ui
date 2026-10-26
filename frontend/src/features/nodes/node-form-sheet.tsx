@@ -12,6 +12,7 @@ import { ModelCombobox } from "@/components/shared/model-combobox";
 import { PasswordInput } from "@/components/shared/password-input";
 import { Spinner } from "@/components/shared/loaders";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -149,6 +150,7 @@ function NodeForm({
   const [enableMode, setEnableMode] = useState<SecretMode>(node ? "keep" : "replace");
   const [password, setPassword] = useState("");
   const [enable, setEnable] = useState("");
+  const [trustFirstKey, setTrustFirstKey] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const isEdit = Boolean(node);
@@ -193,6 +195,17 @@ function NodeForm({
       const result = node
         ? await api.updateNode(node.id, payload)
         : await api.createNode({ ...payload, name: values.name.trim() });
+
+      if (!node && trustFirstKey) {
+        try {
+          const trusted = await api.trustHostKey(result.node.id);
+          toast.success(t("nodeForm.hostKeyTrusted", { fingerprint: trusted.fingerprints[0] ?? "—" }));
+        } catch (error) {
+          toast.warning(t("nodeForm.hostKeyTrustFailed"), {
+            description: errorMessage(t, error),
+          });
+        }
+      }
 
       if (result.reload_status !== "ok" && result.reload_status !== "recovered") {
         toast.warning(t("nodes.reloadFailed"), {
@@ -320,6 +333,22 @@ function NodeForm({
               <p className="text-[11px] leading-relaxed text-muted-foreground">{t("nodeForm.portHelp")}</p>
             </div>
           </div>
+          {!node ? (
+            <div className="flex items-start gap-2.5 rounded-md border bg-muted/20 p-3">
+              <Checkbox
+                id="trust-first-key"
+                checked={trustFirstKey}
+                onCheckedChange={(value) => setTrustFirstKey(value === true)}
+                className="mt-0.5"
+              />
+              <label htmlFor="trust-first-key" className="min-w-0 cursor-pointer">
+                <span className="block text-xs font-medium">{t("nodeForm.trustFirstKey")}</span>
+                <span className="mt-0.5 block text-[11px] leading-relaxed text-muted-foreground">
+                  {t("nodeForm.trustFirstKeyHelp")}
+                </span>
+              </label>
+            </div>
+          ) : null}
         </section>
 
         <section className="space-y-4 border-t pt-6">

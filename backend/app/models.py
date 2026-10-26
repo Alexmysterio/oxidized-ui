@@ -44,6 +44,9 @@ class User(Base):
     username: Mapped[str] = mapped_column(String(64), nullable=False)
     username_key: Mapped[str] = mapped_column(String(64), nullable=False, unique=True)
     password_hash: Mapped[str] = mapped_column(Text, nullable=False)
+    full_name: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    email: Mapped[str | None] = mapped_column(String(254), nullable=True)
+    avatar_filename: Mapped[str | None] = mapped_column(String(255), nullable=True)
     role: Mapped[str] = mapped_column(String(16), nullable=False, default="viewer")
     language: Mapped[str] = mapped_column(String(16), nullable=False, default="es")
     theme: Mapped[str] = mapped_column(String(16), nullable=False, default="system")
@@ -345,7 +348,23 @@ class SystemSettings(Base):
     notify_webhook_url: Mapped[str] = mapped_column(Text, nullable=False, default="")
     notify_on_failure: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
     notify_stale_hours: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    site_name: Mapped[str] = mapped_column(String(100), nullable=False, default="Oxidized UI")
+    logo_filename: Mapped[str | None] = mapped_column(String(255), nullable=True)
     updated_by_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    updated_at: Mapped[Any] = mapped_column(UTCDateTime, nullable=False, default=utcnow, onupdate=utcnow)
+
+
+class NotificationChannel(Base):
+    __tablename__ = "notification_channels"
+    __table_args__ = (Index("ix_notification_channels_enabled", "enabled"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    name: Mapped[str] = mapped_column(String(100), nullable=False)
+    kind: Mapped[str] = mapped_column(String(32), nullable=False)
+    enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    config_ciphertext: Mapped[str] = mapped_column(Text, nullable=False)
+    events: Mapped[list[str]] = mapped_column(JSON, nullable=False, default=list)
+    created_at: Mapped[Any] = mapped_column(UTCDateTime, nullable=False, default=utcnow)
     updated_at: Mapped[Any] = mapped_column(UTCDateTime, nullable=False, default=utcnow, onupdate=utcnow)
 
 

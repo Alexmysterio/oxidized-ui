@@ -61,6 +61,13 @@ def main() -> int:
         if name in names:
             dest.parent.mkdir(parents=True, exist_ok=True)
             dest.write_bytes(zipfile.ZipFile(io.BytesIO(raw)).read(name))
+    with zipfile.ZipFile(io.BytesIO(raw)) as archive:
+        for name in sorted(names):
+            if not name.startswith(("branding/", "avatars/")):
+                continue
+            dest = args.data_dir / "ui" / name
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            dest.write_bytes(archive.read(name))
     fernet = zipfile.ZipFile(io.BytesIO(raw)).read("fernet.key").decode("ascii")
     print(f"Restored. Set this in .env before starting:\nFERNET_KEY={fernet}")
     print("Previous files were copied to", backup)

@@ -1,7 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Check, KeyRound, LogOut, Monitor, Moon, Palette, ShieldCheck, Sun, Trash2, UserRound } from "lucide-react";
-import { useEffect, useState } from "react";
+import { Check, KeyRound, LogOut, Monitor, Moon, Palette, ShieldCheck, Sun, Trash2, Upload, UserRound } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -41,6 +41,11 @@ export function ProfilePage() {
   const queryClient = useQueryClient();
   const [language, setLanguage] = useState(user?.language ?? "es");
   const [selectedTheme, setSelectedTheme] = useState<Theme>(theme);
+  const [fullName, setFullName] = useState(user?.full_name ?? "");
+  const [email, setEmail] = useState(user?.email ?? "");
+  const [savingProfile, setSavingProfile] = useState(false);
+  const [avatarBusy, setAvatarBusy] = useState(false);
+  const avatarInput = useRef<HTMLInputElement | null>(null);
   const [savingPreferences, setSavingPreferences] = useState(false);
   const [passwordError, setPasswordError] = useState<string | null>(null);
   const [mfaSetup, setMfaSetup] = useState<MfaSetup | null>(null);
@@ -68,6 +73,11 @@ export function ProfilePage() {
   }, [user?.language]);
 
   useEffect(() => {
+    setFullName(user?.full_name ?? "");
+    setEmail(user?.email ?? "");
+  }, [user?.full_name, user?.email]);
+
+  useEffect(() => {
     setSelectedTheme(theme);
   }, [theme]);
 
@@ -88,6 +98,51 @@ export function ProfilePage() {
       notifyError(t, error);
     } finally {
       setSavingPreferences(false);
+    }
+  };
+
+  const saveProfile = async () => {
+    setSavingProfile(true);
+    try {
+      const result = await api.updateMe({
+        full_name: fullName.trim() || null,
+        email: email.trim() || null,
+      });
+      updateUser(result.user);
+      toast.success(t("profile.profileSaved"));
+    } catch (error) {
+      notifyError(t, error);
+    } finally {
+      setSavingProfile(false);
+    }
+  };
+
+  const uploadAvatar = async (file?: File) => {
+    if (!file) return;
+    setAvatarBusy(true);
+    try {
+      const result = await api.uploadAvatar(file);
+      updateUser(result.user);
+      toast.success(t("profile.avatarSaved"));
+    } catch (error) {
+      notifyError(t, error);
+    } finally {
+      setAvatarBusy(false);
+      if (avatarInput.current) avatarInput.current.value = "";
+    }
+  };
+
+  const removeAvatar = async () => {
+    if (!user) return;
+    setAvatarBusy(true);
+    try {
+      await api.deleteAvatar();
+      updateUser({ ...user, avatar_url: null });
+      toast.success(t("profile.avatarRemoved"));
+    } catch (error) {
+      notifyError(t, error);
+    } finally {
+      setAvatarBusy(false);
     }
   };
 
@@ -203,15 +258,69 @@ export function ProfilePage() {
             <CardTitle>{t("profile.account")}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex items-center gap-3">
-              <span className="flex h-12 w-12 items-center justify-center rounded-xl border border-primary/20 bg-primary/[0.06] font-mono text-sm font-semibold text-primary">
-                {user.username.slice(0, 2).toUpperCase()}
+            <div className="flex flex-wrap items-center gap-4">
+              <span className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-primary/20 bg-primary/[0.06] font-mono text-base font-semibold text-primary">
+                {user.avatar_url ? (
+                  <img src={user.avatar_url} alt="" className="h-full w-full object-cover" />
+                ) : (
+                  (user.full_name || user.username).slice(0, 2).toUpperCase()
+                )}
               </span>
-              <div>
-                <p className="text-sm font-semibold">{user.username}</p>
-                <Badge variant="secondary" className="mt-1">{t(`roles.${user.role}`)}</Badge>
+              <div className="min-w-0">
+                <p className="truncate text-sm font-semibold">{user.full_name || user.username}</p>
+                <p className="truncate text-[11px] text-muted-foreground">@{user.username}</p>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  <input
+                    ref={avatarInput}
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp,image/gif"
+                    className="hidden"
+                    onChange={(event) => void uploadAvatar(event.target.files?.[0])}
+                  />
+                  <Button type="button" variant="outline" size="xs" onClick={() => avatarInput.current?.click()} disabled={avatarBusy}>
+                    {avatarBusy ? <Spinner /> : <Upload />}
+                    {t("profile.changeAvatar")}
+                  </Button>
+                  {user.avatar_url ? (
+                    <Button type="button" variant="ghost" size="xs" onClick={() => void removeAvatar()} disabled={avatarBusy}>
+                      <Trash2 />
+                      {t("profile.removeAvatar")}
+                    </Button>
+                  ) : null}
+                </div>
               </div>
             </div>
+
+            <div className="grid gap-4 border-t pt-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="profile-full-name">{t("profile.fullName")}</Label>
+                <Input
+                  id="profile-full-name"
+                  value={fullName}
+                  maxLength={128}
+                  onChange={(event) => setFullName(event.target.value)}
+                  placeholder={t("profile.fullNamePlaceholder")}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="profile-email">{t("profile.email")}</Label>
+                <Input
+                  id="profile-email"
+                  type="email"
+                  value={email}
+                  maxLength={254}
+                  onChange={(event) => setEmail(event.target.value)}
+                  placeholder={t("profile.emailPlaceholder")}
+                />
+              </div>
+            </div>
+            <div className="flex justify-end">
+              <Button type="button" size="sm" onClick={() => void saveProfile()} disabled={savingProfile}>
+                {savingProfile ? <Spinner /> : <Check />}
+                {t("profile.saveProfile")}
+              </Button>
+            </div>
+
             <div className="space-y-2 border-t pt-4 text-xs">
               <div className="flex justify-between gap-3"><span className="text-muted-foreground">{t("profile.username")}</span><span className="font-mono">{user.username}</span></div>
               <div className="flex justify-between gap-3"><span className="text-muted-foreground">{t("profile.role")}</span><span>{t(`roles.${user.role}`)}</span></div>

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, Request, Response
-from fastapi.responses import RedirectResponse
+from fastapi import APIRouter, Depends, File, Request, Response, UploadFile
+from fastapi.responses import FileResponse, RedirectResponse
 from sqlalchemy.orm import Session
 
 from .. import oidc_service
@@ -18,8 +18,10 @@ from ..auth_service import (
     setup_admin,
     update_profile,
 )
+from ..avatar_service import avatar_path, delete_avatar, save_avatar
 from ..db import get_db
 from ..errors import AppError
+from ..image_service import media_type as image_media_type
 from ..mfa_service import (
     MfaRequired,
     begin_setup,
@@ -410,13 +412,56 @@ def patch_me(
     user = update_profile(
         db,
         context,
-        language=payload.language,
-        theme=payload.theme,
+        changes=payload.model_dump(exclude_unset=True),
     )
     return {
         "user": user_public(user, include_state=False),
         "capabilities": context.capabilities,
     }
+
+
+@router.post("/me/avatar")
+def upload_my_avatar(
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    context: AuthContext = Depends(get_auth_context),
+):
+    user = db.get(User, context.user_id)
+    if user is None:
+        raise AppError("auth.unauthenticated")
+    save_avatar(db, user, file)
+    return {"user": user_public(user, include_state=False)}
+
+
+@router.delete("/me/avatar", status_code=204)
+def delete_my_avatar(
+    db: Session = Depends(get_db),
+    context: AuthContext = Depends(get_auth_context),
+):
+    user = db.get(User, context.user_id)
+    if user is None:
+        raise AppError("auth.unauthenticated")
+    delete_avatar(db, user)
+    return Response(status_code=204)
+
+
+@router.get("/avatars/{user_id}")
+def get_user_avatar(
+    user_id: int,
+    db: Session = Depends(get_db),
+    _context: AuthContext = Depends(get_auth_context),
+):
+    user = db.get(User, user_id)
+    if user is None:
+        raise AppError("user.not_found", params={"user_id": user_id})
+    path = avatar_path(user)
+    if path is None:
+        raise AppError("app.not_found")
+    return FileResponse(
+        path,
+        media_type=image_media_type(path),
+        headers={"Cache-Control": "private, max-age=300"},
+    )
 
 
 @router.post("/me/password")

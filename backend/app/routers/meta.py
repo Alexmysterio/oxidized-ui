@@ -1,12 +1,15 @@
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends
-from fastapi.responses import JSONResponse
+from fastapi.responses import FileResponse, JSONResponse
 from sqlalchemy import func, select, text
 from sqlalchemy.orm import Session
 
+from ..branding_service import logo_path
 from ..config_service import health_config_writable
 from ..db import get_db
+from ..errors import AppError
+from ..image_service import media_type
 from ..models import User
 from ..oidc_service import enabled as oidc_enabled
 from ..settings import settings
@@ -18,14 +21,32 @@ router = APIRouter(tags=["meta"])
 @router.get("/meta")
 def meta(db: Session = Depends(get_db)) -> dict:
     setup_required = (db.scalar(select(func.count(User.id))) or 0) == 0
+    row = get_settings_row(db)
+    updated = row.updated_at
+    logo = logo_path(row)
     return {
         "setup_required": setup_required,
         "oidc_enabled": oidc_enabled(),
         "available_languages": settings.available_languages,
         "default_language": settings.resolved_default_language,
         "app_version": settings.app_version,
-        "timezone": get_settings_row(db).timezone,
+        "timezone": row.timezone,
+        "site_name": row.site_name or "Oxidized UI",
+        "logo_url": f"/api/branding/logo?v={int(updated.timestamp())}" if logo is not None and updated else None,
     }
+
+
+@router.get("/branding/logo")
+def branding_logo(db: Session = Depends(get_db)):
+    row = get_settings_row(db)
+    path = logo_path(row)
+    if path is None:
+        raise AppError("app.not_found")
+    return FileResponse(
+        path,
+        media_type=media_type(path),
+        headers={"Cache-Control": "public, max-age=3600"},
+    )
 
 
 @router.get("/health")

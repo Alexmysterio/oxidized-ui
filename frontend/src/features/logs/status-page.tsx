@@ -1,7 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Activity,
-  CalendarClock,
   ArrowDownToLine,
   CircleDot,
   Download,
@@ -32,7 +31,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { JobMeta } from "@/features/jobs/job-ui";
 import { useLogStream } from "@/features/logs/use-log-stream";
@@ -86,8 +84,6 @@ export function StatusPage() {
   const [paused, setPaused] = useState(false);
   const [autoScroll, setAutoScroll] = useState(true);
   const [restartOpen, setRestartOpen] = useState(false);
-  const [scheduleGroup, setScheduleGroup] = useState("");
-  const [scheduleInterval, setScheduleInterval] = useState(1440);
   const scrollRef = useRef<HTMLDivElement | null>(null);
   usePageTitle("logs.title");
 
@@ -138,31 +134,6 @@ export function StatusPage() {
       toast.success(t("logs.restartDone"), { description: `#${job.id}` });
       void queryClient.invalidateQueries({ queryKey: ["jobs"] });
       void queryClient.invalidateQueries({ queryKey: ["status"] });
-    },
-    onError: (error) => notifyError(t, error),
-  });
-
-  const schedulesQuery = useQuery({
-    queryKey: ["backup-schedules"],
-    queryFn: api.backupSchedules,
-    enabled: can("backups.trigger"),
-  });
-
-  const createSchedule = useMutation({
-    mutationFn: () => api.createBackupSchedule(scheduleGroup.trim() || null, scheduleInterval),
-    onSuccess: () => {
-      toast.success(t("logs.scheduleCreated"));
-      setScheduleGroup("");
-      void queryClient.invalidateQueries({ queryKey: ["backup-schedules"] });
-    },
-    onError: (error) => notifyError(t, error),
-  });
-
-  const deleteSchedule = useMutation({
-    mutationFn: (id: number) => api.deleteBackupSchedule(id),
-    onSuccess: () => {
-      toast.success(t("logs.scheduleDeleted"));
-      void queryClient.invalidateQueries({ queryKey: ["backup-schedules"] });
     },
     onError: (error) => notifyError(t, error),
   });
@@ -374,45 +345,6 @@ export function StatusPage() {
           </CardContent>
         </Card>
       </div>
-
-      {can("backups.trigger") ? (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-sm"><CalendarClock className="h-4 w-4 text-primary" />{t("logs.backupSchedules")}</CardTitle>
-            <CardDescription>{t("logs.backupSchedulesDescription")}</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="flex flex-wrap items-end gap-2">
-              <div className="space-y-1">
-                <Label>{t("logs.scheduleGroup")}</Label>
-                <Input value={scheduleGroup} onChange={(event) => setScheduleGroup(event.target.value)} placeholder={t("logs.scheduleAllGroups")} className="w-52" />
-              </div>
-              <div className="space-y-1">
-                <Label>{t("logs.scheduleInterval")}</Label>
-                <Input type="number" min={15} max={10080} value={scheduleInterval} onChange={(event) => setScheduleInterval(Number(event.target.value))} className="w-36" />
-              </div>
-              <Button type="button" size="sm" onClick={() => createSchedule.mutate()} disabled={createSchedule.isPending || scheduleInterval < 15}>
-                {createSchedule.isPending ? <Spinner /> : <CalendarClock />}
-                {t("logs.scheduleCreate")}
-              </Button>
-            </div>
-            <div className="divide-y">
-              {(schedulesQuery.data?.items ?? []).map((schedule) => (
-                <div key={schedule.id} className="flex items-center justify-between gap-3 py-2 text-xs">
-                  <span className="font-mono">
-                    {schedule.group_name ?? t("logs.scheduleAllGroups")} · {schedule.interval_minutes} min · {schedule.next_run_at ? intl.dateTime(schedule.next_run_at) : "—"}
-                  </span>
-                  <Button type="button" variant="ghost" size="sm" className="text-muted-foreground hover:text-destructive" onClick={() => deleteSchedule.mutate(schedule.id)}>
-                    <Trash2 />
-                    {t("common.delete")}
-                  </Button>
-                </div>
-              ))}
-              {(schedulesQuery.data?.items ?? []).length === 0 ? <p className="text-xs text-muted-foreground">{t("logs.noSchedules")}</p> : null}
-            </div>
-          </CardContent>
-        </Card>
-      ) : null}
 
       <ConfirmDialog
         open={restartOpen}

@@ -25,8 +25,9 @@ export function useIntl() {
 
 export function usePageTitle(titleKey?: string) {
   const { t } = useTranslation();
+  const { meta } = useAuth();
   useEffect(() => {
     if (!titleKey) return;
-    document.title = `${t(titleKey)} · ${t("app.name")}`;
-  }, [titleKey, t]);
+    document.title = `${t(titleKey)} · ${meta?.site_name || t("app.name")}`;
+  }, [titleKey, t, meta?.site_name]);
 }

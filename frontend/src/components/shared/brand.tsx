@@ -1,8 +1,19 @@
 import { useTranslation } from "react-i18next";
 
+import { useAuth } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 
 export function BrandMark({ className, animated = false }: { className?: string; animated?: boolean }) {
+  const { meta } = useAuth();
+  if (meta?.logo_url) {
+    return (
+      <img
+        src={meta.logo_url}
+        alt=""
+        className={cn("h-9 w-9 rounded-xl object-contain", className)}
+      />
+    );
+  }
   return (
     <svg viewBox="0 0 48 48" fill="none" aria-hidden="true" className={cn("h-9 w-9", className)}>
       <rect width="48" height="48" rx="12" fill="hsl(var(--primary))" />
@@ -23,12 +34,15 @@ export function BrandMark({ className, animated = false }: { className?: string;
 
 export function BrandLockup({ compact = false, className }: { compact?: boolean; className?: string }) {
   const { t } = useTranslation();
+  const { meta } = useAuth();
   return (
     <div className={cn("flex items-center gap-3", className)}>
       <BrandMark animated />
       {!compact && (
         <div className="leading-tight">
-          <div className="text-[15px] font-semibold tracking-tight text-sidebar-foreground">{t("app.name")}</div>
+          <div className="text-[15px] font-semibold tracking-tight text-sidebar-foreground">
+            {meta?.site_name || t("app.name")}
+          </div>
           <div className="font-mono text-[9px] uppercase tracking-[0.18em] text-sidebar-muted">{t("app.taglineShort")}</div>
         </div>
       )}

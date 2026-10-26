@@ -1,17 +1,31 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, Request, Response
+from fastapi import APIRouter, Depends, File, Request, Response, UploadFile
 from sqlalchemy.orm import Session
 
 from ..audit import add_audit
 from ..auth_deps import require_admin
+from ..branding_service import delete_logo, save_logo
 from ..db import get_db
 from ..docker_api import client_for as docker_client_for
 from ..encrypted_export import create_export
 from ..errors import AppError
-from ..notifications import notify_test
+from ..notifications import (
+    channel_public,
+    create_channel,
+    delete_channel,
+    list_channels,
+    notify_test,
+    update_channel,
+)
 from ..oxidized import client_for as oxidized_client_for
-from ..schemas import ConnectionTestRequest, ExportRequest, SystemSettingsUpdate
+from ..schemas import (
+    ConnectionTestRequest,
+    ExportRequest,
+    NotificationChannelCreate,
+    NotificationChannelUpdate,
+    SystemSettingsUpdate,
+)
 from ..security import AuthContext
 from ..system_service import get_settings_row, settings_public, update_system_settings
 from ..timeutil import utcnow
@@ -110,9 +124,131 @@ def export_encrypted_backup(
     )
 
 
+@router.get("/notifications")
+def read_notifications(
+    db: Session = Depends(get_db),
+    _context: AuthContext = Depends(require_admin),
+):
+    return {"items": [channel_public(row) for row in list_channels(db)]}
+
+
+@router.post("/notifications", status_code=201)
+def create_notification(
+    payload: NotificationChannelCreate,
+    request: Request,
+    db: Session = Depends(get_db),
+    context: AuthContext = Depends(require_admin),
+):
+    row = create_channel(db, payload=payload)
+    add_audit(
+        db,
+        actor=context,
+        action_code="system.notification_created",
+        action_params={"name": row.name, "kind": row.kind},
+        target_type="system",
+        target_id=row.id,
+        request=request,
+    )
+    db.commit()
+    return channel_public(row)
+
+
+@router.patch("/notifications/{channel_id}")
+def update_notification(
+    channel_id: int,
+    payload: NotificationChannelUpdate,
+    request: Request,
+    db: Session = Depends(get_db),
+    context: AuthContext = Depends(require_admin),
+):
+    row = update_channel(db, channel_id, payload=payload)
+    add_audit(
+        db,
+        actor=context,
+        action_code="system.notification_updated",
+        action_params={"name": row.name, "kind": row.kind},
+        target_type="system",
+        target_id=row.id,
+        request=request,
+    )
+    db.commit()
+    return channel_public(row)
+
+
+@router.delete("/notifications/{channel_id}", status_code=204)
+def delete_notification(
+    channel_id: int,
+    request: Request,
+    db: Session = Depends(get_db),
+    context: AuthContext = Depends(require_admin),
+):
+    delete_channel(db, channel_id)
+    add_audit(
+        db,
+        actor=context,
+        action_code="system.notification_deleted",
+        action_params={"channel_id": channel_id},
+        target_type="system",
+        target_id=channel_id,
+        request=request,
+    )
+    db.commit()
+    return Response(status_code=204)
+
+
+@router.post("/notifications/{channel_id}/test")
+def test_notification_channel(
+    channel_id: int,
+    db: Session = Depends(get_db),
+    _context: AuthContext = Depends(require_admin),
+):
+    return notify_test(db, channel_id)
+
+
+@router.post("/branding/logo")
+def upload_logo(
+    request: Request,
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    context: AuthContext = Depends(require_admin),
+):
+    row = save_logo(db, get_settings_row(db), file)
+    add_audit(
+        db,
+        actor=context,
+        action_code="system.branding_updated",
+        action_params={"logo": True},
+        target_type="system",
+        target_id="settings",
+        request=request,
+    )
+    db.commit()
+    return settings_public(row)
+
+
+@router.delete("/branding/logo", status_code=204)
+def remove_logo(
+    request: Request,
+    db: Session = Depends(get_db),
+    context: AuthContext = Depends(require_admin),
+):
+    delete_logo(db, get_settings_row(db))
+    add_audit(
+        db,
+        actor=context,
+        action_code="system.branding_updated",
+        action_params={"logo": False},
+        target_type="system",
+        target_id="settings",
+        request=request,
+    )
+    db.commit()
+    return Response(status_code=204)
+
+
 @router.post("/notify-test")
 def test_notification(
     db: Session = Depends(get_db),
     _context: AuthContext = Depends(require_admin),
 ):
-    return {"ok": notify_test(db)}
+    return notify_test(db)

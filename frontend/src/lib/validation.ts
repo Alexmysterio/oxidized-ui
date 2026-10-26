@@ -103,6 +103,11 @@ export function userSchema(t: TFunction) {
     password: passwordSchema(t),
     role: z.enum(["admin", "operator", "viewer"]),
     language: z.string().min(1),
+    full_name: z.string().max(128),
+    email: z
+      .string()
+      .max(254)
+      .refine((value) => !value || /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(value), t("validation.email")),
   });
 }
 

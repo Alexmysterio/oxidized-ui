@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 import threading
 from datetime import timedelta
+from typing import Any
 
 from fastapi import Request
 from sqlalchemy import delete, func, select
@@ -292,18 +293,21 @@ def update_profile(
     db: Session,
     context: AuthContext,
     *,
-    language: str | None,
-    theme: str | None,
+    changes: dict[str, Any],
 ) -> User:
     user = db.get(User, context.user_id)
     if user is None:
         raise AppError("auth.unauthenticated")
-    if language is not None:
-        user.language = validate_language(language)
-    if theme is not None:
-        if theme not in {"light", "dark", "system"}:
+    if "language" in changes and changes["language"] is not None:
+        user.language = validate_language(changes["language"])
+    if "theme" in changes and changes["theme"] is not None:
+        if changes["theme"] not in {"light", "dark", "system"}:
             raise AppError("validation.invalid_choice", params={"field": "theme"})
-        user.theme = theme
+        user.theme = changes["theme"]
+    if "full_name" in changes:
+        user.full_name = changes["full_name"]
+    if "email" in changes:
+        user.email = changes["email"]
     db.commit()
     db.refresh(user)
     return user

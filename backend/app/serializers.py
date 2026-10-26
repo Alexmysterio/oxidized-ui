@@ -12,9 +12,17 @@ UNKNOWN_STATUS_VALUES = {"", "never", "none", "nil"}
 
 
 def user_public(user: User, *, include_state: bool = True) -> dict[str, Any]:
+    updated = ensure_utc(user.updated_at)
     data: dict[str, Any] = {
         "id": user.id,
         "username": user.username,
+        "full_name": user.full_name,
+        "email": user.email,
+        "avatar_url": (
+            f"/api/avatars/{user.id}?v={int(updated.timestamp())}"
+            if user.avatar_filename and updated
+            else None
+        ),
         "role": user.role,
         "language": user.language,
         "theme": user.theme,

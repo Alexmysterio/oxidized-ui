@@ -1,7 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { CheckCircle2, Clock3, Download, PlugZap, Save, ServerCog, Settings2, ShieldCheck, TriangleAlert, XCircle } from "lucide-react";
-import { useEffect, useState } from "react";
+import { CheckCircle2, Clock3, Download, Image as ImageIcon, PlugZap, Save, ServerCog, Settings2, ShieldCheck, TriangleAlert, Upload, XCircle } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -15,8 +15,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input, Textarea } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { NotificationsCard } from "@/features/system/notifications-card";
 import { usePageTitle } from "@/hooks/use-app";
 import { api } from "@/lib/api";
+import { useAuth } from "@/lib/auth";
 import { errorMessage } from "@/lib/errors";
 import type { SystemSettings } from "@/types/api";
 
@@ -41,6 +43,7 @@ interface FormValues {
   notify_webhook_url: string;
   notify_on_failure: boolean;
   notify_stale_hours: number;
+  site_name: string;
 }
 
 function valuesFrom(settings: SystemSettings): FormValues {
@@ -65,15 +68,19 @@ function valuesFrom(settings: SystemSettings): FormValues {
     notify_webhook_url: settings.notify_webhook_url,
     notify_on_failure: settings.notify_on_failure,
     notify_stale_hours: settings.notify_stale_hours,
+    site_name: settings.site_name ?? "Oxidized UI",
   };
 }
 
 export function SystemPage() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
+  const { meta } = useAuth();
   const [serverError, setServerError] = useState<string | null>(null);
   const [testResults, setTestResults] = useState<Record<string, boolean>>({});
   const [testing, setTesting] = useState<string | null>(null);
+  const [logoBusy, setLogoBusy] = useState(false);
+  const logoInput = useRef<HTMLInputElement | null>(null);
   usePageTitle("nav.system");
 
   const schema = z.object({
@@ -113,6 +120,7 @@ export function SystemPage() {
     notify_webhook_url: z.string().max(2048),
     notify_on_failure: z.boolean(),
     notify_stale_hours: z.coerce.number().int().min(0).max(720),
+    site_name: z.string().min(1).max(100),
   });
 
   const settingsQuery = useQuery({ queryKey: ["system-settings"], queryFn: api.systemSettings });
@@ -139,6 +147,7 @@ export function SystemPage() {
       notify_webhook_url: "",
       notify_on_failure: true,
       notify_stale_hours: 0,
+      site_name: "Oxidized UI",
     },
   });
 
@@ -169,6 +178,36 @@ export function SystemPage() {
       toast.error(t("errors.title"), { description: errorMessage(t, error) });
     } finally {
       setTesting(null);
+    }
+  };
+
+  const uploadLogo = async (file?: File) => {
+    if (!file) return;
+    setLogoBusy(true);
+    try {
+      await api.uploadLogo(file);
+      await queryClient.invalidateQueries({ queryKey: ["meta"] });
+      await queryClient.invalidateQueries({ queryKey: ["system-settings"] });
+      toast.success(t("system.logoUpdated"));
+    } catch (error) {
+      toast.error(t("errors.title"), { description: errorMessage(t, error) });
+    } finally {
+      setLogoBusy(false);
+      if (logoInput.current) logoInput.current.value = "";
+    }
+  };
+
+  const removeLogo = async () => {
+    setLogoBusy(true);
+    try {
+      await api.deleteLogo();
+      await queryClient.invalidateQueries({ queryKey: ["meta"] });
+      await queryClient.invalidateQueries({ queryKey: ["system-settings"] });
+      toast.success(t("system.logoRemoved"));
+    } catch (error) {
+      toast.error(t("errors.title"), { description: errorMessage(t, error) });
+    } finally {
+      setLogoBusy(false);
     }
   };
 
@@ -210,6 +249,50 @@ export function SystemPage() {
             {serverError}
           </div>
         ) : null}
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2"><ImageIcon className="h-4 w-4 text-primary" />{t("system.branding")}</CardTitle>
+            <CardDescription>{t("system.brandingDescription")}</CardDescription>
+          </CardHeader>
+          <CardContent className="grid gap-4 lg:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="site-name">{t("system.siteName")}</Label>
+              <Input id="site-name" maxLength={100} {...form.register("site_name")} />
+              <p className="text-[11px] text-muted-foreground">{t("system.siteNameHelp")}</p>
+              {form.formState.errors.site_name ? <p className="text-xs text-destructive">{form.formState.errors.site_name.message}</p> : null}
+            </div>
+            <div className="space-y-2">
+              <Label>{t("system.logo")}</Label>
+              <div className="flex flex-wrap items-center gap-3">
+                <span className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-xl border bg-muted/30">
+                  {meta?.logo_url ? (
+                    <img src={meta.logo_url} alt="" className="h-full w-full object-contain" />
+                  ) : (
+                    <ImageIcon className="h-6 w-6 text-muted-foreground" />
+                  )}
+                </span>
+                <input
+                  ref={logoInput}
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp,image/gif"
+                  className="hidden"
+                  onChange={(event) => void uploadLogo(event.target.files?.[0])}
+                />
+                <Button type="button" variant="outline" size="sm" onClick={() => logoInput.current?.click()} disabled={logoBusy}>
+                  {logoBusy ? <Spinner /> : <Upload />}
+                  {t("system.uploadLogo")}
+                </Button>
+                {meta?.logo_url ? (
+                  <Button type="button" variant="ghost" size="sm" className="text-muted-foreground hover:text-destructive" onClick={() => void removeLogo()} disabled={logoBusy}>
+                    {t("system.removeLogo")}
+                  </Button>
+                ) : null}
+              </div>
+              <p className="text-[11px] text-muted-foreground">{t("system.logoHelp")}</p>
+            </div>
+          </CardContent>
+        </Card>
 
         <Card>
           <CardHeader>
@@ -348,11 +431,6 @@ export function SystemPage() {
             <CardDescription>{t("system.notificationsDescription")}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="notify-webhook">{t("system.webhookUrl")}</Label>
-              <Input id="notify-webhook" type="url" placeholder="https://hooks.slack.com/..." {...form.register("notify_webhook_url")} />
-              <p className="text-[11px] text-muted-foreground">{t("system.webhookHelp")}</p>
-            </div>
             <div className="flex flex-wrap items-center gap-4">
               <label className="flex items-center gap-2 text-xs"><Switch checked={form.watch("notify_on_failure")} onCheckedChange={(value) => form.setValue("notify_on_failure", value, { shouldDirty: true })} />{t("system.notifyOnFailure")}</label>
               <label className="flex items-center gap-2 text-xs">{t("system.notifyStaleHours")}<Input type="number" min={0} max={720} className="w-24" {...form.register("notify_stale_hours", { valueAsNumber: true })} /></label>
@@ -360,6 +438,8 @@ export function SystemPage() {
             </div>
           </CardContent>
         </Card>
+
+        <NotificationsCard />
 
         <div className="flex justify-end">
           <Button type="submit" size="sm" disabled={save.isPending || !form.formState.isDirty}>

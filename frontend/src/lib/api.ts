@@ -31,6 +31,9 @@ import type {
   NodeListParams,
   NodePingResult,
   NodeStatusDetail,
+  NotificationChannel,
+  NotificationEvent,
+  NotificationKind,
   Paginated,
   Revision,
   Role,
@@ -284,8 +287,14 @@ export const api = {
       skipUnauthorizedEvent: true,
     }),
   logout: () => request<void>("/auth/logout", { method: "POST", skipUnauthorizedEvent: true }),
-  updateMe: (payload: { language?: string; theme?: string }) =>
+  updateMe: (payload: { language?: string; theme?: string; full_name?: string | null; email?: string | null }) =>
     request<{ user: User; capabilities: string[] }>("/me", { method: "PATCH", body: payload }),
+  uploadAvatar: (file: File) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    return request<{ user: User }>("/me/avatar", { method: "POST", formData });
+  },
+  deleteAvatar: () => request<void>("/me/avatar", { method: "DELETE" }),
   changePassword: (current_password: string, new_password: string) =>
     request<SessionPayload>("/me/password", {
       method: "POST",
@@ -295,9 +304,9 @@ export const api = {
   users: (query?: { search?: string; role?: string; is_active?: boolean; page?: number; page_size?: number }) =>
     request<Paginated<User>>("/users", { query }),
   user: (id: number) => request<User>(`/users/${id}`),
-  createUser: (payload: { username: string; password: string; role: Role; language: string }) =>
+  createUser: (payload: { username: string; password: string; role: Role; language: string; full_name?: string | null; email?: string | null }) =>
     request<User>("/users", { method: "POST", body: payload }),
-  updateUser: (id: number, payload: { role?: Role; is_active?: boolean; language?: string }) =>
+  updateUser: (id: number, payload: { role?: Role; is_active?: boolean; language?: string; full_name?: string | null; email?: string | null }) =>
     request<User>(`/users/${id}`, { method: "PATCH", body: payload }),
   resetUserPassword: (id: number, new_password: string) =>
     request<void>(`/users/${id}/password`, { method: "POST", body: { new_password } }),
@@ -310,7 +319,7 @@ export const api = {
     request<{ node: Node; reload_status: string; warnings: string[] }>(`/nodes/${id}`, { method: "PATCH", body: payload }),
   deleteNode: (id: number) => request<{ deleted: number; reload_status: string; warnings: string[] }>(`/nodes/${id}`, { method: "DELETE" }),
   bulkNodes: (payload: {
-    action: "backup" | "change_group" | "delete" | "update";
+    action: "backup" | "change_group" | "delete" | "update" | "trust_host_key";
     ids: number[];
     group_name?: string | null;
     model?: string | null;
@@ -318,7 +327,7 @@ export const api = {
     port?: number | null;
     vars?: Record<string, unknown> | null;
   }) =>
-    request<{ job_id?: number; updated?: number; deleted?: number; requested?: number; failed?: unknown[]; reload_status?: string; warnings?: string[] }>("/nodes/bulk", { method: "POST", body: payload }),
+    request<{ job_id?: number; updated?: number; deleted?: number; requested?: number; trusted?: number; failed?: unknown[]; reload_status?: string; warnings?: string[] }>("/nodes/bulk", { method: "POST", body: payload }),
   importNodes: (formData: FormData) => request<ImportSummary>("/nodes/import", { method: "POST", formData }),
   exportNodes: () => download("/nodes/export.csv", undefined, "oxidized-nodes.csv"),
   backupNode: (id: number) => request<Job>(`/nodes/${id}/backup`, { method: "POST" }),
@@ -403,7 +412,20 @@ export const api = {
   systemSettings: () => request<SystemSettings>("/system/settings"),
   updateSystemSettings: (payload: Partial<SystemSettings>) =>
     request<SystemSettings>("/system/settings", { method: "PATCH", body: payload }),
-  testNotification: () => request<{ ok: boolean }>("/system/notify-test", { method: "POST" }),
+  testNotification: () => request<{ ok: boolean; results?: { id: number; name: string; ok: boolean }[] }>("/system/notify-test", { method: "POST" }),
+  notifications: () => request<{ items: NotificationChannel[] }>("/system/notifications"),
+  createNotification: (payload: { name: string; kind: NotificationKind; enabled: boolean; events: NotificationEvent[]; config: Record<string, string> }) =>
+    request<NotificationChannel>("/system/notifications", { method: "POST", body: payload }),
+  updateNotification: (id: number, payload: Partial<{ name: string; kind: NotificationKind; enabled: boolean; events: NotificationEvent[]; config: Record<string, string> }>) =>
+    request<NotificationChannel>(`/system/notifications/${id}`, { method: "PATCH", body: payload }),
+  deleteNotification: (id: number) => request<void>(`/system/notifications/${id}`, { method: "DELETE" }),
+  testNotificationChannel: (id: number) => request<{ ok: boolean; results: { id: number; name: string; ok: boolean }[] }>(`/system/notifications/${id}/test`, { method: "POST" }),
+  uploadLogo: (file: File) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    return request<SystemSettings>("/system/branding/logo", { method: "POST", formData });
+  },
+  deleteLogo: () => request<void>("/system/branding/logo", { method: "DELETE" }),
   testConnection: (target: "oxidized" | "docker") =>
     request<{ ok: boolean; target: string }>("/system/test", { method: "POST", body: { target } }),
 

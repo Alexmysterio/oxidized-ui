@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 
 from .audit import add_audit
 from .auth_service import revoke_user_sessions, validate_language
+from .avatar_service import avatars_dir
 from .errors import AppError
 from .models import User
 from .password_service import assert_not_reused, record_password, validate_new_password
@@ -43,7 +44,10 @@ def list_users(
 ) -> dict:
     query = select(User)
     if search:
-        query = query.where(User.username.ilike(f"%{search.strip()}%"))
+        needle = f"%{search.strip()}%"
+        query = query.where(
+            User.username.ilike(needle) | User.full_name.ilike(needle) | User.email.ilike(needle)
+        )
     if role:
         query = query.where(User.role == role)
     if is_active is not None:
@@ -73,6 +77,8 @@ def create_user(
         username=username,
         username_key=normalize_username(username),
         password_hash=hash_password(payload.password),
+        full_name=payload.full_name,
+        email=payload.email,
         role=payload.role,
         language=language,
         theme="system",
@@ -115,6 +121,10 @@ def update_user(
             raise AppError("user.last_admin")
     if "language" in data and data["language"] is not None:
         user.language = validate_language(data["language"])
+    if "full_name" in data:
+        user.full_name = data["full_name"]
+    if "email" in data:
+        user.email = data["email"]
     if "role" in data and data["role"] is not None:
         user.role = data["role"]
     if "is_active" in data and data["is_active"] is not None:
@@ -180,8 +190,14 @@ def delete_user(
     if user.role == "admin" and user.is_active and count_active_admins(db) <= 1:
         raise AppError("user.last_admin")
     username = user.username
+    avatar = user.avatar_filename
     db.delete(user)
     db.commit()
+    if avatar:
+        try:
+            (avatars_dir() / avatar).unlink(missing_ok=True)
+        except OSError:
+            pass
     add_audit(
         db,
         actor=actor,

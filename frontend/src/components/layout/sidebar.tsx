@@ -1,5 +1,6 @@
 import {
   Activity,
+  CalendarClock,
   ChevronLeft,
   ChevronRight,
   ClipboardList,
@@ -52,6 +53,7 @@ const groups: NavGroup[] = [
     labelKey: "nav.operations",
     items: [
       { to: "/config", labelKey: "nav.config", icon: FileCode2, capability: "config.read" },
+      { to: "/backups", labelKey: "nav.backups", icon: CalendarClock, capability: "backups.trigger" },
       { to: "/status", labelKey: "nav.status", icon: Activity, capability: "logs.read" },
     ],
   },

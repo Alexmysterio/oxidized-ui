@@ -85,7 +85,7 @@ export function AuthLayout({
         <div className="relative z-10 flex items-center gap-3">
           <BrandMark className="h-9 w-9" animated />
           <div>
-            <div className="text-[15px] font-semibold tracking-tight">{t("app.name")}</div>
+            <div className="text-[15px] font-semibold tracking-tight">{meta?.site_name || t("app.name")}</div>
             <div className="font-mono text-[9px] uppercase tracking-[0.22em] text-slate-500">{t("app.taglineShort")}</div>
           </div>
         </div>
@@ -133,7 +133,7 @@ export function AuthLayout({
         <div className="flex items-center justify-between px-5 py-5 sm:px-8">
           <div className="flex items-center gap-2.5 lg:invisible">
             <BrandMark className="h-8 w-8" />
-            <span className="text-sm font-semibold tracking-tight">{t("app.name")}</span>
+            <span className="text-sm font-semibold tracking-tight">{meta?.site_name || t("app.name")}</span>
           </div>
           <div className="flex items-center gap-1">
             <LanguageSwitcher compact />

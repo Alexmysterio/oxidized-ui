@@ -46,6 +46,12 @@ def build_bundle(db_path: Path) -> bytes:
         if backups.exists():
             for item in sorted(backups.glob("*.yaml"))[-50:]:
                 archive.write(item, f"ui-backups/{item.name}")
+        for folder in ("branding", "avatars"):
+            base = settings.data_dir / folder
+            if base.is_dir():
+                for item in sorted(base.iterdir()):
+                    if item.is_file():
+                        archive.write(item, f"{folder}/{item.name}")
         archive.writestr("fernet.key", settings.fernet_key)
         archive.writestr(
             "metadata.json",

@@ -44,7 +44,7 @@ office, or a trusted internal network.
 
 | 🗂️ Inventory | 🔐 Security | 📊 Operations |
 |---|---|---|
-| Nodes, groups, models, credentials, CSV import/export, bulk edit, saved filters, and node-to-node diff. | Argon2id passwords, TOTP, recovery codes, session revocation, IP allowlist, API tokens, OIDC, and encrypted secrets. | Backups by node or group, persistent jobs, live logs, SLA, history, audit, Prometheus, webhooks, and encrypted export. |
+| Nodes, groups, models, credentials, CSV import/export, bulk edit, saved filters, and node-to-node diff. | Argon2id passwords, TOTP, recovery codes, session revocation, IP allowlist, API tokens, OIDC, and encrypted secrets. | Backups by node or group, persistent jobs, live logs, SLA, history, audit, Prometheus, multi-channel alerts, and encrypted export. |
 | **⚙️ Configuration** | **🧭 Visibility** | **🐳 Deployment** |
 | YAML editor, validation, preflight, apply, health check, rollback, and scheduled maintenance windows. | Dashboard, per-node status, version history, diffs, backup timeline, and group-level success rate. | One image by default. A four-container hardened mode is available for stricter isolation. |
 
@@ -95,7 +95,8 @@ office, or a trusted internal network.
 - Backup history, success rate, and SLA by group.
 - Prometheus metrics.
 - Audit log with CSV export.
-- Outgoing failure/stale-backup webhooks and an incoming backup webhook.
+- Outgoing alerts to Telegram, Slack, Discord, or any webhook, plus an incoming backup webhook.
+- Custom site name and logo, user avatars, and full name/email on user profiles.
 - API tokens for automation.
 - Optional generic OIDC login.
 - English and Spanish interface.
@@ -456,11 +457,13 @@ services:
   comes from: node, group model, group, model, or global configuration.
 - **Configuration:** validate YAML, preflight, diff, apply, health check, and
   rollback. Scheduled apply supports maintenance windows.
-- **Logs and jobs:** live Oxidized log and persistent/cancellable jobs. Queued
-  jobs resume after restart; running jobs are marked interrupted.
+- **Operations:** backup schedules and jobs in the **Backups** section; live logs
+  and container health in **Status and logs**.
 - **Audit:** filter and export CSV; retention is separate from backup history.
-- **Users and profile:** roles, sessions, password, MFA, language, theme, and API
-  tokens.
+- **Users and profile:** roles, sessions, password, MFA, language, theme, full
+  name, email, profile photo, and API tokens.
+- **System settings:** connections, security, retention, branding, and
+  notification channels.
 
 ---
 
@@ -607,9 +610,13 @@ not in `.env`:
 | Poll interval | `30` seconds | System settings |
 | Log tail default | `500` lines | System settings |
 | YAML backup retention | `0` (keep all) | System settings |
-| Notification webhook | empty | System settings |
+| Notification channels | empty | System settings |
 | Stale-backup threshold | `0` (disabled) | System settings |
+| Site name | `Oxidized UI` | System settings |
+| Logo | default mark | System settings |
 | User language/theme | per user | Profile |
+| User full name/email | empty | Profile or Users |
+| User avatar | empty | Profile |
 
 ## Persistent data and backups
 
@@ -617,7 +624,7 @@ The default compose uses these host directories:
 
 | Host path | Container path | Contents |
 |---|---|---|
-| `./data/ui` | `/data` | SQLite, sessions, audit, Caddy CA/certificates |
+| `./data/ui` | `/data` | SQLite, sessions, audit, avatars, branding, Caddy CA/certificates |
 | `./data/config` | `/oxidized-config` | Oxidized config, `known_hosts`, `.ui-backups`, crashes |
 | `./data/oxidized` | `/var/lib/oxidized` | Git repository with device configurations |
 
@@ -651,8 +658,8 @@ Use the same `FERNET_KEY` that was used when the backup was created.
 
 Administrators can use **System settings -> Export encrypted** to download an
 AES-256-GCM `.oxui` file protected by a passphrase. It contains SQLite, the
-Oxidized configuration, `known_hosts`, YAML backups, the Fernet key, and
-metadata. The passphrase is not stored.
+Oxidized configuration, `known_hosts`, YAML backups, branding, avatars, the
+Fernet key, and metadata. The passphrase is not stored.
 
 Restore offline:
 
@@ -740,22 +747,33 @@ Deleting `data/` creates a new CA; every client must trust it again.
 
 ## Notifications
 
-Configure a webhook URL in **System settings -> Notifications**. The UI sends
-job-failure, test, and stale-backup notifications. The webhook is an HTTP POST
-with JSON. Use HTTPS and a secret URL where possible.
+Open **System settings -> Notifications** and add one or more channels:
+
+- **Telegram:** bot token and chat ID.
+- **Slack:** incoming webhook URL.
+- **Discord:** webhook URL.
+- **Generic webhook:** any HTTPS endpoint that accepts a JSON POST.
+
+Each channel can subscribe to **job failures**, **stale backups**, or both.
+Every channel has its own **Send test** button; the global test sends to all
+enabled channels. Channel configuration is encrypted with `FERNET_KEY`. The old
+single webhook setting is migrated automatically to a generic webhook channel.
 
 ---
 
 ## Backup schedules
 
-Open **Status and logs -> Backup schedules**:
+Open **Backups** in the sidebar:
 
 - leave the group empty for all nodes;
 - choose an interval in minutes;
 - create the schedule.
 
-The poller runs the schedule and avoids starting a second global backup while one
-is queued or running.
+A schedule creates a backup job for all nodes or for one group every N minutes.
+It is independent of Oxidized's polling interval: Oxidized decides when devices
+are read, while the schedule decides when the console asks for a backup. Every
+run is recorded in the job history and audit log. The poller runs the schedule
+and avoids starting a second global backup while one is queued or running.
 
 ---
 

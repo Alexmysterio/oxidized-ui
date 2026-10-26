@@ -45,11 +45,16 @@ export interface Meta {
   app_version: string;
   oidc_enabled?: boolean;
   timezone?: string | null;
+  site_name?: string;
+  logo_url?: string | null;
 }
 
 export interface User {
   id: number;
   username: string;
+  full_name?: string | null;
+  email?: string | null;
+  avatar_url?: string | null;
   role: Role;
   language: string;
   theme: Theme;
@@ -522,11 +527,27 @@ export interface SystemSettings {
   notify_webhook_url: string;
   notify_on_failure: boolean;
   notify_stale_hours: number;
+  site_name: string;
+  has_logo: boolean;
   environment: {
     oxidized_api_url: string;
     oxidized_container_name: string;
     docker_proxy_url: string;
   };
+}
+
+export type NotificationKind = "webhook" | "slack" | "discord" | "telegram";
+export type NotificationEvent = "job.failed" | "backup.stale";
+
+export interface NotificationChannel {
+  id: number;
+  name: string;
+  kind: NotificationKind;
+  enabled: boolean;
+  events: NotificationEvent[];
+  config: Record<string, string>;
+  created_at: string | null;
+  updated_at: string | null;
 }
 
 export interface ApiToken {
