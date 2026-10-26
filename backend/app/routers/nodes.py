@@ -28,6 +28,7 @@ from ..node_service import (
     update_node,
 )
 from ..node_test_service import test_connection
+from ..ping_service import ping_host
 from ..schemas import NodeBulkRequest, NodeCreate, NodeUpdate
 from ..security import AuthContext
 from ..version_service import current_config
@@ -222,9 +223,38 @@ def node_test_connection(
         action_code="node.connection_tested",
         action_params={
             "name": node.name,
+            "ping": result["ping"],
+            "ping_rtt_ms": result["ping_rtt_ms"],
             "tcp": result["tcp"],
             "ssh": result["ssh"],
             "authenticated": result["authenticated"],
+            "message": result["message"],
+        },
+        target_type="node",
+        target_id=node.id,
+        request=request,
+    )
+    db.commit()
+    return result
+
+
+@router.post("/{node_id}/ping")
+def node_ping(
+    node_id: int,
+    request: Request,
+    db: Session = Depends(get_db),
+    context: AuthContext = Depends(require_operator),
+):
+    node = get_node(db, node_id)
+    result = ping_host(node.address or "")
+    add_audit(
+        db,
+        actor=context,
+        action_code="node.ping_tested",
+        action_params={
+            "name": node.name,
+            "reachable": result["reachable"],
+            "rtt_ms": result["rtt_ms"],
             "message": result["message"],
         },
         target_type="node",

@@ -142,7 +142,19 @@ export interface NodeInput {
   timeout_seconds?: number | null;
 }
 
+export interface NodePingResult {
+  reachable: boolean;
+  address: string | null;
+  sent: number;
+  received: number;
+  rtt_ms: number | null;
+  message: string;
+}
+
 export interface NodeConnectionTest {
+  ping: boolean;
+  ping_rtt_ms: number | null;
+  ping_message: string | null;
   tcp: boolean;
   ssh: boolean;
   authenticated: boolean;

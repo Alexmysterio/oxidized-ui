@@ -387,7 +387,7 @@ expected; use **Nodes -> Add node**, then **Backup now**.
    - **Port:** usually `22`, or the device's SSH port.
    - **Username/password:** credentials Oxidized will use.
 3. Save.
-4. Open the node and select **Test connection** (TCP, SSH, authentication).
+4. Open the node and select **Test connection** (ping, TCP, SSH, authentication).
 5. If the host key is unknown, verify the fingerprint and select **Trust host
    key**.
 6. Select **Backup now**.
@@ -435,6 +435,9 @@ services:
       - ./data/ui:/data
       - ./data/config:/oxidized-config
       - ./data/oxidized:/var/lib/oxidized
+    # Allow the unprivileged UI process (UID/GID 30000) to send ICMP pings.
+    sysctls:
+      net.ipv4.ping_group_range: "30000 30000"
     security_opt:
       - no-new-privileges:true
 ```
@@ -448,7 +451,8 @@ services:
 - **Dashboard:** Oxidized status, node counts, recent activity, SLA by group,
   active jobs, and onboarding hints.
 - **Nodes:** search, filters, saved filters, bulk backup/group/field/delete, CSV
-  import/export, connection test, host-key trust, versions, diff, and history.
+  import/export, ICMP ping, connection test, host-key trust, versions, diff, and
+  history.
 - **Configuration:** validate YAML, preflight, diff, apply, health check, and
   rollback. Scheduled apply supports maintenance windows.
 - **Logs and jobs:** live Oxidized log and persistent/cancellable jobs. Queued
@@ -925,6 +929,21 @@ A failed apply should roll back to the previous configuration.
 Also confirm that the group name is valid and that you are not applying a draft
 that references a group not present in the applied config. The API returns a
 specific error code; the group form displays it.
+
+### Ping fails or reports `unavailable`
+
+The UI sends ICMP echo requests from the container as UID/GID `30000`. The
+default compose enables unprivileged ICMP with
+`net.ipv4.ping_group_range: "30000 30000"`. If you use an older compose file,
+add that `sysctls` entry to the UI service and recreate the container:
+
+```bash
+docker compose up -d --force-recreate
+```
+
+Some networks filter ICMP. A failed ping does not prove the device is down; use
+**Test connection** to check TCP and SSH. ICMP also does not test credentials or
+the configured port.
 
 ### Test connection says `host_key_unknown`
 

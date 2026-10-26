@@ -12,6 +12,7 @@ from .catalog import models as catalog_models
 from .config_service import applied_config, applied_groups
 from .crypto import decrypt_optional
 from .models import Node
+from .ping_service import ping_host
 from .settings import settings
 
 ANSI_ESCAPE = re.compile(r"\x1B(?:\[[0-?]*[ -/]*[@-~]|[@-_])")
@@ -19,6 +20,9 @@ ANSI_ESCAPE = re.compile(r"\x1B(?:\[[0-?]*[ -/]*[@-~]|[@-_])")
 
 def test_connection(db: Session, node: Node) -> dict[str, Any]:
     result: dict[str, Any] = {
+        "ping": False,
+        "ping_rtt_ms": None,
+        "ping_message": None,
         "tcp": False,
         "ssh": False,
         "authenticated": False,
@@ -30,6 +34,10 @@ def test_connection(db: Session, node: Node) -> dict[str, Any]:
     if not node.address:
         result["message"] = "missing_address"
         return result
+    ping = ping_host(node.address)
+    result["ping"] = ping["reachable"]
+    result["ping_rtt_ms"] = ping["rtt_ms"]
+    result["ping_message"] = ping["message"]
     port = int(node.port or 22)
     try:
         with socket.create_connection((node.address, port), timeout=5):

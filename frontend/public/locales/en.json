@@ -407,6 +407,9 @@
     "lastError": "Last error",
     "noErrorDetail": "Oxidized did not record a detailed reason for this failure. Check the container logs or run the backup again.",
     "testConnection": "Test connection",
+    "ping": "Ping",
+    "pingOk": "Ping OK: {{ms}} ms.",
+    "pingFailed": "Ping failed: {{reason}}",
     "connectionOk": "Connection OK.",
     "connectionFailed": "Connection failed: {{reason}}",
     "history": "History",
@@ -706,7 +709,8 @@
         "imported": "Nodes imported",
         "backup_requested": "Backup requested",
         "host_key_trusted": "Host SSH key trusted",
-        "connection_tested": "Node connection tested"
+        "connection_tested": "Node connection tested",
+        "ping_tested": "Node ping tested"
       },
       "group": {
         "created": "Group created as draft",
@@ -1025,7 +1029,11 @@
       "connection_refused": "The device refused the connection.",
       "dns_error": "The device address could not be resolved.",
       "connection_error": "Could not connect to the device ({{class}}).",
-      "missing_credentials": "The node has no username or password configured."
+      "missing_credentials": "The node has no username or password configured.",
+      "ping_timeout": "The device did not answer the ICMP ping.",
+      "ping_unknown_host": "The device address could not be resolved.",
+      "ping_unavailable": "Ping is not available in this container. Enable unprivileged ICMP as described in the README.",
+      "ping_error": "The ping could not be completed."
     },
     "oxidized": {
       "auto_recovery_failed": "Oxidized did not start after creating the first node.",

@@ -39,6 +39,7 @@
   "config.apply_scheduled",
   "config.apply_schedule_cancelled",
   "node.connection_tested",
+  "node.ping_tested",
   "job.cancelled",
   "auth.token_created",
   "auth.token_revoked",

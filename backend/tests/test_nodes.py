@@ -137,3 +137,72 @@ def test_node_source_optional_path_and_auth(client: TestClient, admin):
     )
     assert missing.status_code == 401
     assert missing.json()["error"]["code"] == "internal_source.unauthorized"
+
+
+def test_node_ping_endpoint(client: TestClient, admin, fake_clients, monkeypatch):
+    created = admin.post("/api/nodes", json=make_node())
+    assert created.status_code == 201
+    node_id = created.json()["node"]["id"]
+
+    monkeypatch.setattr(
+        "app.routers.nodes.ping_host",
+        lambda address: {
+            "reachable": True,
+            "address": address,
+            "sent": 3,
+            "received": 3,
+            "rtt_ms": 1.25,
+            "message": "ok",
+        },
+    )
+    response = admin.post(f"/api/nodes/{node_id}/ping")
+    assert response.status_code == 200, response.text
+    assert response.json() == {
+        "reachable": True,
+        "address": "10.20.0.11",
+        "sent": 3,
+        "received": 3,
+        "rtt_ms": 1.25,
+        "message": "ok",
+    }
+
+    audit = admin.get("/api/audit", params={"action": "node.ping_tested"})
+    assert audit.status_code == 200
+    assert audit.json()["total"] == 1
+    assert audit.json()["items"][0]["target_id"] == str(node_id)
+
+
+def test_connection_test_includes_ping(client: TestClient, admin, db_session, monkeypatch):
+    created = admin.post("/api/nodes", json=make_node())
+    assert created.status_code == 201
+    node_id = created.json()["node"]["id"]
+
+    from app import node_test_service
+
+    monkeypatch.setattr(
+        node_test_service,
+        "ping_host",
+        lambda _address: {
+            "reachable": True,
+            "address": "10.20.0.11",
+            "sent": 3,
+            "received": 3,
+            "rtt_ms": 2.5,
+            "message": "ok",
+        },
+    )
+
+    def unreachable(*_args, **_kwargs):
+        raise OSError("unreachable")
+
+    monkeypatch.setattr(node_test_service.socket, "create_connection", unreachable)
+
+    with db_session as db:
+        node = db.get(Node, node_id)
+        result = node_test_service.test_connection(db, node)
+
+    assert result["ping"] is True
+    assert result["ping_rtt_ms"] == 2.5
+    assert result["ping_message"] == "ok"
+    assert result["tcp"] is False
+    assert result["message"] == "tcp: OSError"

@@ -11,6 +11,7 @@ import {
   Network,
   PlugZap,
   Pencil,
+  Radar,
   RefreshCw,
   ServerCog,
   Trash2,
@@ -211,6 +212,20 @@ export function NodeDetailPage() {
     onError: (error) => notifyError(t, error),
   });
 
+  const ping = useMutation({
+    mutationFn: () => api.pingNode(nodeId),
+    onSuccess: (result) => {
+      if (result.reachable) {
+        const ms = result.rtt_ms != null ? result.rtt_ms.toFixed(2) : "?";
+        toast.success(t("nodeDetail.pingOk", { ms }));
+        return;
+      }
+      const reason = t(`errors.node.ping_${result.message}`, { defaultValue: t("errors.node.ping_error") });
+      toast.error(t("nodeDetail.pingFailed", { reason }));
+    },
+    onError: (error) => notifyError(t, error),
+  });
+
   const trustHostKey = useMutation({
     mutationFn: () => api.trustHostKey(nodeId),
     onSuccess: (data) => {
@@ -302,6 +317,10 @@ export function NodeDetailPage() {
               {can("nodes.write") ? (
                 <>
                   <DropdownMenuSeparator />
+                  <DropdownMenuItem onSelect={() => ping.mutate()}>
+                    <Radar />
+                    {t("nodeDetail.ping")}
+                  </DropdownMenuItem>
                   <DropdownMenuItem onSelect={() => testConnection.mutate()}>
                     <PlugZap />
                     {t("nodeDetail.testConnection")}

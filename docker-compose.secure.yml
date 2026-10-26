@@ -73,6 +73,9 @@ services:
     read_only: true
     tmpfs:
       - /tmp:size=64m,mode=1777
+    # Allow the unprivileged UI process (UID/GID 30000) to send ICMP pings.
+    sysctls:
+      net.ipv4.ping_group_range: "30000 30000"
     security_opt:
       - no-new-privileges:true
     cap_drop:

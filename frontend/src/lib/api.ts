@@ -29,6 +29,7 @@ import type {
   NodeHistory,
   NodeInput,
   NodeListParams,
+  NodePingResult,
   NodeStatusDetail,
   Paginated,
   Revision,
@@ -322,6 +323,7 @@ export const api = {
   exportNodes: () => download("/nodes/export.csv", undefined, "oxidized-nodes.csv"),
   backupNode: (id: number) => request<Job>(`/nodes/${id}/backup`, { method: "POST" }),
   testNodeConnection: (id: number) => request<NodeConnectionTest>(`/nodes/${id}/test-connection`, { method: "POST" }),
+  pingNode: (id: number) => request<NodePingResult>(`/nodes/${id}/ping`, { method: "POST" }),
   trustHostKey: (id: number) =>
     request<{ address: string; port: number; fingerprints: string[]; key_types: string[] }>(
       `/nodes/${id}/trust-host-key`,

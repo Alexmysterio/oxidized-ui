@@ -407,6 +407,9 @@
     "lastError": "Último error",
     "noErrorDetail": "Oxidized no registró un motivo detallado para este fallo. Revisa los logs del contenedor o vuelve a lanzar el backup.",
     "testConnection": "Probar conexión",
+    "ping": "Hacer ping",
+    "pingOk": "Ping correcto: {{ms}} ms.",
+    "pingFailed": "Ping fallido: {{reason}}",
     "connectionOk": "Conexión correcta.",
     "connectionFailed": "Conexión fallida: {{reason}}",
     "history": "Historial",
@@ -706,7 +709,8 @@
         "imported": "Nodos importados",
         "backup_requested": "Backup solicitado",
         "host_key_trusted": "Clave SSH del host confiada",
-        "connection_tested": "Conexión de nodo probada"
+        "connection_tested": "Conexión de nodo probada",
+        "ping_tested": "Ping de nodo probado"
       },
       "group": {
         "created": "Grupo creado como borrador",
@@ -1025,7 +1029,11 @@
       "connection_refused": "El dispositivo rechazó la conexión.",
       "dns_error": "No se pudo resolver la dirección del dispositivo.",
       "connection_error": "No se pudo conectar con el dispositivo ({{class}}).",
-      "missing_credentials": "El nodo no tiene usuario o contraseña configurados."
+      "missing_credentials": "El nodo no tiene usuario o contraseña configurados.",
+      "ping_timeout": "El dispositivo no respondió al ping ICMP.",
+      "ping_unknown_host": "No se pudo resolver la dirección del dispositivo.",
+      "ping_unavailable": "El ping no está disponible en este contenedor. Activa ICMP sin privilegios como se explica en el README.",
+      "ping_error": "No se pudo completar el ping."
     },
     "oxidized": {
       "auto_recovery_failed": "Oxidized no arrancó tras crear el primer nodo.",

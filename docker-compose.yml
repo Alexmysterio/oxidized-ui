@@ -28,5 +28,8 @@ services:
       - ./data/ui:/data
       - ./data/config:/oxidized-config
       - ./data/oxidized:/var/lib/oxidized
+    # Allow the unprivileged UI process (UID/GID 30000) to send ICMP pings.
+    sysctls:
+      net.ipv4.ping_group_range: "30000 30000"
     security_opt:
       - no-new-privileges:true
