@@ -6,6 +6,9 @@ chown -R 30000:30000 /data /oxidized-config /var/lib/oxidized /var/log/superviso
 chmod 700 /oxidized-config/.ssh
 chmod -R go-rwx /data /oxidized-config
 chmod 755 /var/log/supervisor
+# Older images created supervisor logs as root:root 0600. The UI runs as
+# UID 30000 and must be able to read them for the live log stream.
+find /var/log/supervisor -maxdepth 1 -type f -name '*.log' -exec chmod 0644 {} +
 rm -f /oxidized-config/pid
 rm -rf /home/oxidized/.config/oxidized /home/oxidized/.ssh
 ln -s /oxidized-config /home/oxidized/.config/oxidized
@@ -36,5 +39,9 @@ printf 'SECRET_KEY=%s\nFERNET_KEY=%s\nOXIDIZED_SOURCE_TOKEN=%s\n' "$SECRET_KEY" 
 chown 30000:30000 "$SECRETS_FILE"
 chmod 600 "$SECRETS_FILE"
 export SECRET_KEY FERNET_KEY OXIDIZED_SOURCE_TOKEN
+
+# Keep umask 077 only for the secrets file. Supervisor creates the log files
+# after this point; they must be readable by the UI user (UID 30000).
+umask 022
 
 exec supervisord -c /etc/supervisor/supervisord.conf

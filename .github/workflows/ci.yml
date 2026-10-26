@@ -72,6 +72,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: docker build -t oxidized-ui:ci .
+      - name: Verify supervisor logs are readable by the UI user
+        run: |
+          trap 'docker rm -f oxidized-ui-ci || true' EXIT
+          docker run -d --name oxidized-ui-ci -e UI_HOSTNAME=localhost oxidized-ui:ci
+          for _ in $(seq 1 30); do
+            if docker exec oxidized-ui-ci test -e /var/log/supervisor/oxidized.log; then
+              break
+            fi
+            sleep 1
+          done
+          docker exec -u 30000 oxidized-ui-ci test -r /var/log/supervisor/oxidized.log
+          docker exec -u 30000 oxidized-ui-ci test -r /var/log/supervisor/ui.log
       - name: Trivy scan
         uses: aquasecurity/trivy-action@v0.36.0
         with:

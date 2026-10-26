@@ -979,6 +979,33 @@ management tools. Do not use world-writable permissions.
 There is no email reset. Use another admin account or restore a backup. Otherwise
 reset the data (destructive) and set up again.
 
+### Live logs show `Disconnected`
+
+Older images created `/var/log/supervisor/*.log` as `root:root` with mode `0600`.
+The UI runs as UID `30000`, so it could not read the files and the log stream
+failed. Update to the current image and recreate the container:
+
+```bash
+docker compose pull
+docker compose up -d --force-recreate
+```
+
+As an immediate workaround for a running container (replace `oxidized-ui` with
+your container name):
+
+```bash
+docker exec -u 0 oxidized-ui chmod 0644 /var/log/supervisor/*.log
+```
+
+Check the permissions:
+
+```bash
+docker exec oxidized-ui ls -l /var/log/supervisor
+```
+
+The files should be `-rw-r--r-- root root`. The workaround is temporary; recreating
+the container restores its original files.
+
 ### Logs
 
 ```bash
