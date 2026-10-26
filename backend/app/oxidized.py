@@ -92,7 +92,17 @@ class OxidizedClient:
             if not isinstance(item, dict) or not item.get("name"):
                 continue
             last = item.get("last") if isinstance(item.get("last"), dict) else None
-            status = last.get("status") if last else None
+            # oxidized-web always returns a top-level status/time. It sets them
+            # to "never" when the in-memory `last` is absent (for example right
+            # after Oxidized restarts), even if the node has stored versions.
+            raw_status = last.get("status") if last else item.get("status")
+            status = str(raw_status) if raw_status else None
+            if last:
+                last_started = parse_oxidized_time(last.get("start"))
+                last_finished = parse_oxidized_time(last.get("end"))
+            else:
+                last_started = None
+                last_finished = parse_oxidized_time(item.get("time"))
             nodes.append(
                 OxidizedNode(
                     name=str(item.get("name")),
@@ -100,9 +110,9 @@ class OxidizedClient:
                     address=str(item["ip"]) if item.get("ip") else None,
                     group=str(item["group"]) if item.get("group") else None,
                     model=str(item["model"]) if item.get("model") else None,
-                    status=str(status) if status else None,
-                    last_started=parse_oxidized_time(last.get("start")) if last else None,
-                    last_finished=parse_oxidized_time(last.get("end")) if last else None,
+                    status=status,
+                    last_started=last_started,
+                    last_finished=last_finished,
                     last_time=float(last["time"]) if last and last.get("time") is not None else None,
                     mtime=parse_oxidized_time(item.get("mtime")),
                 )

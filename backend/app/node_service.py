@@ -560,11 +560,16 @@ def update_status_cache(db: Session, node: Node, live) -> None:  # noqa: ANN001
         db.add(cache)
     previous_success = cache.last_success_at
     previous_failure = cache.last_failure_at
-    cache.status = live.status
-    cache.last_started_at = live.last_started
-    cache.last_finished_at = live.last_finished
-    cache.duration_seconds = int(live.last_time) if live.last_time is not None else None
-    cache.oxidized_mtime = live.mtime
+    if live.status is not None:
+        cache.status = live.status
+    if live.last_started is not None:
+        cache.last_started_at = live.last_started
+    if live.last_finished is not None:
+        cache.last_finished_at = live.last_finished
+    if live.last_time is not None:
+        cache.duration_seconds = int(live.last_time)
+    if live.mtime is not None:
+        cache.oxidized_mtime = live.mtime
     cache.observed_at = utcnow()
     cache.raw_last_json = json.dumps(
         {

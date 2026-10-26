@@ -1,10 +1,13 @@
 from __future__ import annotations
 
+from collections import Counter
+
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from .models import AuditLog, BackupRun, Job, Node, NodeStatusCache
 from .oxidized import client_for as oxidized_client_for
+from .serializers import status_bucket
 
 
 def _metric(name: str, value: float | int, labels: dict[str, str] | None = None) -> str:
@@ -54,13 +57,21 @@ def render_metrics(db: Session) -> str:
     total = sum(counts.values())
     ratio = (counts.get("success", 0) / total) if total else 1.0
     lines.append(_metric("oxidized_ui_backup_success_ratio_24h", round(ratio, 4)))
+    rows = db.execute(
+        select(
+            Node.name,
+            NodeStatusCache.status,
+            NodeStatusCache.last_success_at,
+            NodeStatusCache.last_failure_at,
+        ).join(NodeStatusCache, NodeStatusCache.node_id == Node.id, isouter=True)
+    ).all()
+    node_buckets = [
+        (name, status_bucket(status, last_success, last_failure), last_success)
+        for name, status, last_success, last_failure in rows
+    ]
     lines.append("# HELP oxidized_ui_nodes_total Nodes by current status")
     lines.append("# TYPE oxidized_ui_nodes_total gauge")
-    for status, count in db.execute(
-        select(func.coalesce(NodeStatusCache.status, "never"), func.count(NodeStatusCache.node_id)).group_by(
-            NodeStatusCache.status
-        )
-    ):
+    for status, count in sorted(Counter(bucket for _name, bucket, _last_success in node_buckets).items()):
         lines.append(_metric("oxidized_ui_nodes_total", count, {"status": status}))
     lines.append("# HELP oxidized_ui_jobs_active Jobs queued or running")
     lines.append("# TYPE oxidized_ui_jobs_active gauge")
@@ -84,12 +95,9 @@ def render_metrics(db: Session) -> str:
     lines.append("# TYPE oxidized_ui_audit_entries_total gauge")
     lines.append(_metric("oxidized_ui_audit_entries_total", db.scalar(select(func.count(AuditLog.id))) or 0))
 
-    rows = db.execute(select(Node.name, NodeStatusCache.status, NodeStatusCache.last_success_at).join(
-        NodeStatusCache, NodeStatusCache.node_id == Node.id, isouter=True
-    )).all()
     lines.append("# HELP oxidized_ui_node_last_success_timestamp_seconds Unix timestamp of last successful backup")
     lines.append("# TYPE oxidized_ui_node_last_success_timestamp_seconds gauge")
-    for name, _status, last_success in rows:
+    for name, _bucket, last_success in node_buckets:
         if last_success is not None:
             lines.append(
                 _metric(
@@ -104,14 +112,14 @@ def render_metrics(db: Session) -> str:
 
     cutoff = datetime.now(UTC) - timedelta(hours=24)
     stale = 0
-    for _name, _status, last_success in rows:
+    for _name, _bucket, last_success in node_buckets:
         if last_success is None or last_success < cutoff:
             stale += 1
     lines.append(_metric("oxidized_ui_nodes_stale_24h", stale))
     lines.append("# HELP oxidized_ui_node_status Current node status as a labelled gauge")
     lines.append("# TYPE oxidized_ui_node_status gauge")
-    for name, status, _last_success in rows:
-        lines.append(_metric("oxidized_ui_node_status", 1, {"node": name, "status": status or "never"}))
+    for name, bucket, _last_success in node_buckets:
+        lines.append(_metric("oxidized_ui_node_status", 1, {"node": name, "status": bucket}))
 
     try:
         up = 1 if oxidized_client_for(db).online() else 0

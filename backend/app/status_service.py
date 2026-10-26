@@ -11,6 +11,7 @@ from .errors import AppError
 from .models import BackupRun, Job, Node, NodeStatusCache
 from .oxidized import client_for as oxidized_client_for
 from .poller import apply_live_nodes, recent_activity
+from .serializers import status_bucket
 from .system_service import ensure_system_settings, ensure_system_state
 from .timeutil import ensure_utc, to_iso, utcnow
 
@@ -63,12 +64,12 @@ def build_status(db: Session) -> dict[str, Any]:
             counts["pending"] += 1
             continue
         cache = caches.get(node.id)
-        if cache is None or cache.status is None:
-            counts["never"] += 1
-        elif cache.status == "success":
-            counts["ok"] += 1
-        else:
-            counts["failed"] += 1
+        bucket = status_bucket(
+            cache.status if cache else None,
+            cache.last_success_at if cache else None,
+            cache.last_failure_at if cache else None,
+        )
+        counts[bucket] += 1
 
     success_times = [ensure_utc(cache.last_success_at) for cache in caches.values() if cache.last_success_at]
     failure_times = [ensure_utc(cache.last_failure_at) for cache in caches.values() if cache.last_failure_at]

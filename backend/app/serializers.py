@@ -6,7 +6,9 @@ from sqlalchemy.orm import Session
 
 from .crypto import decrypt_json
 from .models import AuditLog, ConfigRevision, Job, Node, NodeStatusCache, User, UserSession
-from .timeutil import to_iso
+from .timeutil import ensure_utc, to_iso
+
+UNKNOWN_STATUS_VALUES = {"", "never", "none", "nil"}
 
 
 def user_public(user: User, *, include_state: bool = True) -> dict[str, Any]:
@@ -50,6 +52,33 @@ def node_vars(node: Node) -> dict[str, Any]:
     return value if isinstance(value, dict) else {}
 
 
+def status_bucket(
+    status: str | None,
+    last_success_at: Any | None,
+    last_failure_at: Any | None,
+) -> str:
+    """Map a raw Oxidized status to the UI bucket.
+
+    Oxidized reports ``never`` after a restart even when the node already has a
+    stored configuration, because its in-memory ``last`` value is gone. In that
+    case the last observed success/failure timestamps are the only reliable
+    source of truth, so they take precedence over an empty/unknown status.
+    """
+    if status:
+        normalized = status.strip().casefold()
+        if normalized == "success":
+            return "ok"
+        if normalized not in UNKNOWN_STATUS_VALUES:
+            return "failed"
+    success = ensure_utc(last_success_at)
+    failure = ensure_utc(last_failure_at)
+    if success is not None and (failure is None or success >= failure):
+        return "ok"
+    if failure is not None:
+        return "failed"
+    return "never"
+
+
 def node_status_bucket(
     node: Node,
     cache: NodeStatusCache | None,
@@ -58,9 +87,9 @@ def node_status_bucket(
 ) -> str:
     if active_job is not None and active_job.status in {"queued", "running"}:
         return "pending"
-    if cache is None or cache.status is None:
+    if cache is None:
         return "never"
-    return "ok" if cache.status == "success" else "failed"
+    return status_bucket(cache.status, cache.last_success_at, cache.last_failure_at)
 
 
 def node_public(

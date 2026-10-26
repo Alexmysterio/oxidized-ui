@@ -17,6 +17,7 @@ from .node_service import update_status_cache
 from .notifications import notify_stale
 from .oxidized import OxidizedNode
 from .oxidized import client_for as oxidized_client_for
+from .serializers import status_bucket
 from .system_service import ensure_system_settings, ensure_system_state
 from .timeutil import ensure_utc, utcnow
 
@@ -166,12 +167,12 @@ def status_snapshot(db: Session) -> dict[str, int]:
     counts = {"total": len(nodes), "ok": 0, "failed": 0, "pending": 0, "never": 0}
     for node in nodes:
         cache = caches.get(node.id)
-        if cache is None or cache.status is None:
-            counts["never"] += 1
-        elif cache.status == "success":
-            counts["ok"] += 1
-        else:
-            counts["failed"] += 1
+        bucket = status_bucket(
+            cache.status if cache else None,
+            cache.last_success_at if cache else None,
+            cache.last_failure_at if cache else None,
+        )
+        counts[bucket] += 1
     return counts
 
 
