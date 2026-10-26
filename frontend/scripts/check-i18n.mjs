@@ -56,6 +56,7 @@ const dynamicPrefixes = [
   "languages.",
   "logs.",
   "nav.",
+  "nodeDetail.sources.",
   "nodeStatus.",
   "oxidized.",
   "roles.",

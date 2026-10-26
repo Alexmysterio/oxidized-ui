@@ -334,6 +334,16 @@ function NodeForm({
           <div className="space-y-2">
             <Label htmlFor="node-username">{t("nodeForm.username")}</Label>
             <Input id="node-username" autoComplete="off" {...form.register("username")} />
+            {node?.effective?.username?.value && node.effective.username.source !== "node" ? (
+              <p className="text-[11px] leading-relaxed text-muted-foreground">
+                {t("nodeForm.inheritedUsername", {
+                  value: node.effective.username.value,
+                  source: t(`nodeDetail.sources.${node.effective.username.source}`, {
+                    defaultValue: node.effective.username.source,
+                  }),
+                })}
+              </p>
+            ) : null}
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
             <SecretControl
@@ -365,6 +375,24 @@ function NodeForm({
               }}
             />
           </div>
+          {node?.effective?.password?.set && node.effective.password.source !== "node" ? (
+            <p className="text-[11px] leading-relaxed text-muted-foreground">
+              {t("nodeForm.inheritedPassword", {
+                source: t(`nodeDetail.sources.${node.effective.password.source}`, {
+                  defaultValue: node.effective.password.source,
+                }),
+              })}
+            </p>
+          ) : null}
+          {node?.effective?.enable?.set && node.effective.enable.source !== "node" ? (
+            <p className="text-[11px] leading-relaxed text-muted-foreground">
+              {t("nodeForm.inheritedEnable", {
+                source: t(`nodeDetail.sources.${node.effective.enable.source}`, {
+                  defaultValue: node.effective.enable.source,
+                }),
+              })}
+            </p>
+          ) : null}
         </section>
 
         <section className="space-y-3 border-t pt-6">

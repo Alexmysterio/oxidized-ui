@@ -62,6 +62,39 @@ function InfoRow({ label, children, mono = false }: { label: string; children: R
   );
 }
 
+function SourceBadge({ source, detail }: { source?: string | null; detail?: string | null }) {
+  const { t } = useTranslation();
+  if (!source || source === "missing") return null;
+  return (
+    <Badge
+      variant="outline"
+      className="shrink-0 px-1.5 py-0 text-[9px] font-normal tracking-normal"
+      title={detail ?? undefined}
+    >
+      {t(`nodeDetail.sources.${source}`, { defaultValue: source })}
+    </Badge>
+  );
+}
+
+function SourceValue({
+  value,
+  source,
+  detail,
+  fallback = "—",
+}: {
+  value?: ReactNode;
+  source?: string | null;
+  detail?: string | null;
+  fallback?: string;
+}) {
+  return (
+    <span className="inline-flex min-w-0 max-w-full flex-wrap items-center justify-end gap-1">
+      <span className="min-w-0 truncate">{value ?? fallback}</span>
+      <SourceBadge source={source} detail={detail} />
+    </span>
+  );
+}
+
 function VersionContentDialog({
   nodeId,
   version,
@@ -243,6 +276,7 @@ export function NodeDetailPage() {
   }
 
   const node = nodeQuery.data;
+  const effective = node.effective;
   const status = statusQuery.data;
   const duration =
     status?.last_started_at && status?.last_finished_at
@@ -369,17 +403,52 @@ export function NodeDetailPage() {
               </CardHeader>
               <CardContent className="pt-0">
                 <InfoRow label={t("nodeForm.address")} mono>{node.address ?? "—"}</InfoRow>
-                <InfoRow label={t("nodes.input")} mono>{node.input ?? "—"}</InfoRow>
-                <InfoRow label={t("nodes.port")} mono>{node.port ?? "—"}</InfoRow>
-                <InfoRow label={t("nodes.username")} mono>{node.username ?? "—"}</InfoRow>
+                <InfoRow label={t("nodes.input")} mono>
+                  <SourceValue
+                    value={effective?.input?.value ?? node.input}
+                    source={effective?.input?.source}
+                    detail={effective?.input?.source_detail}
+                  />
+                </InfoRow>
+                <InfoRow label={t("nodes.port")} mono>
+                  <SourceValue
+                    value={effective?.port?.value ?? node.port}
+                    source={effective?.port?.source}
+                    detail={effective?.port?.source_detail}
+                  />
+                </InfoRow>
+                <InfoRow label={t("nodes.username")} mono>
+                  <SourceValue
+                    value={effective?.username?.value ?? node.username}
+                    source={effective?.username?.source}
+                    detail={effective?.username?.source_detail}
+                  />
+                </InfoRow>
                 <InfoRow label={t("nodes.credentials")}>
                   <span className="inline-flex flex-wrap justify-end gap-1">
-                    {node.has_password ? <Badge variant="success">{t("nodes.hasPassword")}</Badge> : null}
-                    {node.has_enable ? <Badge variant="info">{t("nodes.hasEnable")}</Badge> : null}
-                    {!node.has_password && !node.has_enable ? <span className="text-muted-foreground">—</span> : null}
+                    {(effective?.password?.set ?? node.has_password) ? (
+                      <>
+                        <Badge variant="success">{t("nodes.hasPassword")}</Badge>
+                        <SourceBadge source={effective?.password?.source} detail={effective?.password?.source_detail} />
+                      </>
+                    ) : (
+                      <span className="text-muted-foreground">{t("nodeDetail.noPassword")}</span>
+                    )}
+                    {(effective?.enable?.set ?? node.has_enable) ? (
+                      <>
+                        <Badge variant="info">{t("nodes.hasEnable")}</Badge>
+                        <SourceBadge source={effective?.enable?.source} detail={effective?.enable?.source_detail} />
+                      </>
+                    ) : null}
                   </span>
                 </InfoRow>
-                <InfoRow label={t("nodeForm.output")} mono>{node.output ?? "—"}</InfoRow>
+                <InfoRow label={t("nodeForm.output")} mono>
+                  <SourceValue
+                    value={effective?.output?.value ?? node.output}
+                    source={effective?.output?.source}
+                    detail={effective?.output?.source_detail}
+                  />
+                </InfoRow>
               </CardContent>
             </Card>
 
@@ -390,9 +459,19 @@ export function NodeDetailPage() {
               <CardContent className="pt-0">
                 <InfoRow label={t("nodeForm.model")} mono>{node.model}</InfoRow>
                 <InfoRow label={t("nodeForm.group")} mono>{node.group_name ?? "—"}</InfoRow>
-                <InfoRow label={t("nodeForm.timeout")} mono>{node.timeout_seconds ?? "—"}</InfoRow>
+                <InfoRow label={t("nodeForm.timeout")} mono>
+                  <SourceValue
+                    value={effective?.timeout_seconds?.value ?? node.timeout_seconds}
+                    source={effective?.timeout_seconds?.source}
+                    detail={effective?.timeout_seconds?.source_detail}
+                  />
+                </InfoRow>
                 <InfoRow label={t("nodeForm.prompt")} mono>
-                  <span className="line-clamp-2 break-all">{node.prompt ?? "—"}</span>
+                  <SourceValue
+                    value={effective?.prompt?.value ?? node.prompt}
+                    source={effective?.prompt?.source}
+                    detail={effective?.prompt?.source_detail}
+                  />
                 </InfoRow>
                 <InfoRow label={t("common.updatedAt")}>{intl.dateTime(node.updated_at)}</InfoRow>
               </CardContent>
@@ -435,6 +514,17 @@ export function NodeDetailPage() {
                       {status.last_error.error_class}
                       {status.last_error.at ? ` · ${intl.dateTime(status.last_error.at)}` : ""}
                     </p>
+                    {status.last_error.crash?.backtrace?.length ? (
+                      <details className="mt-2 rounded-md border border-border bg-background/40 p-2">
+                        <summary className="cursor-pointer text-xs font-medium">{t("nodeDetail.crashBacktrace")}</summary>
+                        {status.last_error.crash.message ? (
+                          <p className="mt-1 font-mono text-[10px] text-destructive">{status.last_error.crash.message}</p>
+                        ) : null}
+                        <pre className="mt-1 max-h-48 overflow-auto whitespace-pre-wrap break-all font-mono text-[9px] leading-relaxed text-muted-foreground">
+                          {status.last_error.crash.backtrace.join("\n")}
+                        </pre>
+                      </details>
+                    ) : null}
                   </div>
                 ) : status?.status === "failed" ? (
                   <p className="mt-3 rounded-md border border-border bg-muted/30 p-3 text-xs text-muted-foreground">

@@ -4,6 +4,40 @@ export type NodeStatus = "ok" | "failed" | "pending" | "never";
 export type OxidizedState = "online" | "offline" | "degraded" | "starting" | "unknown";
 export type JobStatus = "queued" | "running" | "succeeded" | "failed" | "cancelled";
 
+export type EffectiveSource =
+  | "node"
+  | "group_model"
+  | "group"
+  | "model"
+  | "config"
+  | "default"
+  | "mixed"
+  | "model_or_config"
+  | "missing";
+
+export interface EffectiveValue<T> {
+  value: T | null;
+  source: EffectiveSource;
+  source_detail?: string | null;
+}
+
+export interface EffectiveSecret {
+  set: boolean;
+  source: EffectiveSource;
+  source_detail?: string | null;
+}
+
+export interface NodeEffective {
+  input: EffectiveValue<string>;
+  port: EffectiveValue<string>;
+  username: EffectiveValue<string>;
+  password: EffectiveSecret;
+  enable: EffectiveSecret;
+  output: EffectiveValue<string>;
+  timeout_seconds: EffectiveValue<number>;
+  prompt: EffectiveValue<string>;
+}
+
 export interface Meta {
   setup_required: boolean;
   available_languages: string[];
@@ -111,6 +145,7 @@ export interface Node {
   output?: string | null;
   prompt?: string | null;
   timeout_seconds?: number | null;
+  effective?: NodeEffective;
 }
 
 export interface NodeListParams {
@@ -181,6 +216,12 @@ export interface NodeStatusDetail {
     params: Record<string, string>;
     error_class: string;
     at: string | null;
+    crash?: {
+      at: string | null;
+      message: string | null;
+      error_class: string | null;
+      backtrace: string[];
+    } | null;
   } | null;
 }
 

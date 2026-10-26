@@ -172,7 +172,7 @@ def node_detail(
     context: AuthContext = Depends(get_auth_context),
 ):
     node = get_node(db, node_id)
-    return serialize_node(db, node, role=context.role)
+    return serialize_node(db, node, role=context.role, include_effective=True)
 
 
 @router.patch("/{node_id}")

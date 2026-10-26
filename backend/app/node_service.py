@@ -20,6 +20,7 @@ from .docker_api import client_for as docker_client_for
 from .errors import AppError
 from .models import Job as JobModel
 from .models import Node, NodeStatusCache
+from .node_effective_service import effective_node_settings
 from .node_error_service import latest_error
 from .oxidized import client_for as oxidized_client_for
 from .schemas import NodeCreate, NodeUpdate, validate_group_name
@@ -110,12 +111,14 @@ def _all_active_jobs(db: Session) -> list[JobModel]:
     return db.scalars(select(JobModel).where(JobModel.status.in_(("queued", "running")))).all()
 
 
-def serialize_node(db: Session, node: Node, *, role: str) -> dict[str, Any]:
+def serialize_node(db: Session, node: Node, *, role: str, include_effective: bool = False) -> dict[str, Any]:
     cache = db.get(NodeStatusCache, node.id)
     active = _active_jobs(db).get(node.id)
     data = node_public(db, node, role=role, cache=cache, active_job=active)
     warnings = _model_warning(node.model) + _port_warning(db, node)
     data["warnings"] = warnings
+    if include_effective and role in {"admin", "operator"}:
+        data["effective"] = effective_node_settings(db, node)
     return data
 
 

@@ -452,7 +452,8 @@ services:
   active jobs, and onboarding hints.
 - **Nodes:** search, filters, saved filters, bulk backup/group/field/delete, CSV
   import/export, ICMP ping, connection test, host-key trust, versions, diff, and
-  history.
+  history. The node detail shows effective connection values and where each one
+  comes from: node, group model, group, model, or global configuration.
 - **Configuration:** validate YAML, preflight, diff, apply, health check, and
   rollback. Scheduled apply supports maintenance windows.
 - **Logs and jobs:** live Oxidized log and persistent/cancellable jobs. Queued
@@ -978,6 +979,22 @@ management tools. Do not use world-writable permissions.
 
 There is no email reset. Use another admin account or restore a backup. Otherwise
 reset the data (destructive) and set up again.
+
+### Oxidized logs `undefined method '[]' for nil`
+
+This is raised by Oxidized itself, usually by a model or an input variable, not
+by the console. The node detail shows the latest crash backtrace under **Last
+error** when Oxidized wrote a crash file. You can also read it directly:
+
+```bash
+docker exec oxidized-ui cat /oxidized-config/crashes/10.10.1.3
+```
+
+On the host it is under `./data/config/crashes/`. The first lines contain the
+error and the following lines the Ruby backtrace. Check the model selected for
+the device and any custom variables inherited from the node, group, or model.
+A variable with the wrong type (for example a mapping where a string or list is
+expected) can produce this error.
 
 ### Live logs show `Disconnected`
 
