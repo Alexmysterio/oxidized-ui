@@ -4,9 +4,9 @@
 
 FROM node:latest AS frontend
 
-RUN npm install --global pnpm@10.33.0
+RUN npm install --global pnpm@12.15.0
 WORKDIR /build
-COPY frontend/package.json frontend/pnpm-lock.yaml frontend/.npmrc ./
+COPY frontend/package.json frontend/pnpm-lock.yaml frontend/.npmrc frontend/pnpm-workspace.yaml ./
 RUN pnpm install --frozen-lockfile --prefer-offline
 RUN pnpm rebuild esbuild
 COPY frontend/ ./

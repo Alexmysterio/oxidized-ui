@@ -15,6 +15,7 @@ venv/
 .pytest_cache/
 .ruff_cache/
 .mypy_cache/
+*.egg-info/
 htmlcov/
 .coverage
 coverage.xml

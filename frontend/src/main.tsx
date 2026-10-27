@@ -10,6 +10,8 @@ import i18n from "@/lib/i18n";
 import { queryClient } from "@/lib/query-client";
 import { ThemeProvider } from "@/lib/theme";
 
+import "@fontsource-variable/inter";
+import "@fontsource-variable/jetbrains-mono";
 import "./index.css";
 
 async function bootstrap() {

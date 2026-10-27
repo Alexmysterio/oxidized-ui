@@ -12,7 +12,7 @@
   <a href="https://github.com/Alexmysterio/oxidized-ui/actions/workflows/ci.yml"><img src="https://github.com/Alexmysterio/oxidized-ui/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
   <a href="https://github.com/Alexmysterio/oxidized-ui/actions/workflows/contract.yml"><img src="https://github.com/Alexmysterio/oxidized-ui/actions/workflows/contract.yml/badge.svg" alt="Oxidized contract"></a>
   <img src="https://img.shields.io/badge/Docker-single%20image-2496ED?logo=docker&logoColor=white" alt="Docker">
-  <img src="https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white" alt="Python 3.12">
+  <img src="https://img.shields.io/badge/Python-3.13%2B-3776AB?logo=python&logoColor=white" alt="Python 3.13+">
   <img src="https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=111111" alt="React 19">
   <img src="https://img.shields.io/badge/Oxidized-latest-6E4AFF" alt="Oxidized latest">
 </p>
@@ -1117,6 +1117,27 @@ pnpm exec playwright install chromium
 pnpm build
 pnpm test:e2e
 ```
+
+### Dependency updates
+
+The project tracks the latest stable releases: Python 3.15 in CI and the secure
+image, Node.js 26, pnpm 12, Oxidized `latest`, and current npm/PyPI majors.
+Dependabot checks npm, uv, Docker and GitHub Actions every day. The `publish`
+workflow also rebuilds `latest` every day so newer base-image tags are picked
+up without a code commit.
+
+Manual update:
+
+```bash
+cd backend
+uv lock --upgrade
+uv sync --extra dev
+cd ../frontend
+pnpm up --latest
+pnpm install
+```
+
+Then run the checks below, commit, push and verify the publish workflow.
 
 ### CI
 

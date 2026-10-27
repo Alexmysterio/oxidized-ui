@@ -26,9 +26,10 @@ export default defineConfig({
     chunkSizeWarningLimit: 1500,
     rollupOptions: {
       output: {
-        manualChunks: {
-          codemirror: ["codemirror", "@codemirror/lang-yaml", "@codemirror/theme-one-dark"],
-          charts: ["recharts"],
+        manualChunks(id) {
+          if (id.includes("codemirror") || id.includes("@codemirror")) return "codemirror";
+          if (id.includes("recharts")) return "charts";
+          return undefined;
         },
       },
     },

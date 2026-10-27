@@ -89,37 +89,37 @@ export function SystemPage() {
     docker_proxy_url: z.string().url(t("validation.url")),
     timezone: z.string(),
     activity_retention_days: z.coerce
-      .number({ invalid_type_error: t("validation.number") })
+      .number<number>({ error: t("validation.number") })
       .int(t("validation.number"))
       .min(0, t("validation.range", { min: 0, max: 3650 }))
       .max(3650, t("validation.range", { min: 0, max: 3650 })),
-    audit_retention_days: z.coerce.number().int().min(7).max(3650),
+    audit_retention_days: z.coerce.number<number>().int().min(7).max(3650),
     poll_interval_seconds: z.coerce
-      .number({ invalid_type_error: t("validation.number") })
+      .number<number>({ error: t("validation.number") })
       .int(t("validation.number"))
       .min(5, t("validation.range", { min: 5, max: 3600 }))
       .max(3600, t("validation.range", { min: 5, max: 3600 })),
     log_tail_default: z.coerce
-      .number({ invalid_type_error: t("validation.number") })
+      .number<number>({ error: t("validation.number") })
       .int(t("validation.number"))
       .min(50, t("validation.range", { min: 50, max: 5000 }))
       .max(5000, t("validation.range", { min: 50, max: 5000 })),
     config_backup_keep: z.coerce
-      .number({ invalid_type_error: t("validation.number") })
+      .number<number>({ error: t("validation.number") })
       .int(t("validation.number"))
       .min(0, t("validation.range", { min: 0, max: 100 }))
       .max(100, t("validation.range", { min: 0, max: 100 })),
-    password_min_length: z.coerce.number().int().min(8).max(128),
+    password_min_length: z.coerce.number<number>().int().min(8).max(128),
     password_require_complexity: z.boolean(),
-    password_history_count: z.coerce.number().int().min(0).max(24),
-    login_max_failures_per_user: z.coerce.number().int().min(1).max(100),
-    login_max_failures_per_ip: z.coerce.number().int().min(1).max(1000),
-    login_window_minutes: z.coerce.number().int().min(1).max(1440),
-    login_lockout_minutes: z.coerce.number().int().min(1).max(1440),
+    password_history_count: z.coerce.number<number>().int().min(0).max(24),
+    login_max_failures_per_user: z.coerce.number<number>().int().min(1).max(100),
+    login_max_failures_per_ip: z.coerce.number<number>().int().min(1).max(1000),
+    login_window_minutes: z.coerce.number<number>().int().min(1).max(1440),
+    login_lockout_minutes: z.coerce.number<number>().int().min(1).max(1440),
     ip_allowlist: z.string().max(8192),
     notify_webhook_url: z.string().max(2048),
     notify_on_failure: z.boolean(),
-    notify_stale_hours: z.coerce.number().int().min(0).max(720),
+    notify_stale_hours: z.coerce.number<number>().int().min(0).max(720),
     site_name: z.string().min(1).max(100),
   });
 

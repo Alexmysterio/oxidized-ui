@@ -8,7 +8,7 @@ jobs:
   contract:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Start disposable Oxidized
         run: |
           mkdir -p /tmp/oxidized-output
@@ -22,10 +22,10 @@ jobs:
           done
           docker logs oxidized-contract
           exit 1
-      - uses: astral-sh/setup-uv@v5
-      - uses: actions/setup-python@v5
+      - uses: astral-sh/setup-uv@v10
+      - uses: actions/setup-python@v7
         with:
-          python-version: "3.12"
+          python-version: "3.15"
       - run: uv sync --frozen --extra dev
         working-directory: backend
       - run: OXIDIZED_CONTRACT_URL=http://127.0.0.1:8888 uv run --frozen pytest tests/test_oxidized_contract.py -q
