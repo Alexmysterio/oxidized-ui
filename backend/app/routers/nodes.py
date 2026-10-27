@@ -228,6 +228,17 @@ def collect_node_facts(
     return collect_node(db, node)
 
 
+@router.get("/sites")
+def node_sites(
+    tag: str = Query(default="Site", max_length=32),
+    db: Session = Depends(get_db),
+    context: AuthContext = Depends(get_auth_context),
+):
+    from ..node_service import sites
+
+    return sites(db, tag_key=tag, allowed_groups=context.scope_groups)
+
+
 @router.get("/compare")
 def compare_nodes(
     left_id: int = Query(ge=1),

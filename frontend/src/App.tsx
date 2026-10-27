@@ -23,6 +23,7 @@ const NodeDetailPage = lazy(() => import("@/features/nodes/node-detail-page").th
 const NodesPage = lazy(() => import("@/features/nodes/nodes-page").then((module) => ({ default: module.NodesPage })));
 const NodeTemplatesPage = lazy(() => import("@/features/templates/node-templates-page").then((module) => ({ default: module.NodeTemplatesPage })));
 const ReconciliationPage = lazy(() => import("@/features/reconciliation/reconciliation-page").then((module) => ({ default: module.ReconciliationPage })));
+const SitesPage = lazy(() => import("@/features/sites/sites-page").then((module) => ({ default: module.SitesPage })));
 const ProfilePage = lazy(() => import("@/features/profile/profile-page").then((module) => ({ default: module.ProfilePage })));
 const SystemPage = lazy(() => import("@/features/system/system-page").then((module) => ({ default: module.SystemPage })));
 const UsersPage = lazy(() => import("@/features/users/users-page").then((module) => ({ default: module.UsersPage })));
@@ -67,6 +68,7 @@ function RootLayout() {
               <Route path="nodes/:id" element={<Page><NodeDetailPage /></Page>} />
               <Route path="node-templates" element={<Page><NodeTemplatesPage /></Page>} />
               <Route path="reconciliation" element={<Page><ReconciliationPage /></Page>} />
+              <Route path="sites" element={<Page><SitesPage /></Page>} />
               <Route
                 path="groups"
                 element={

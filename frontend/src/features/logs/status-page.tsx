@@ -73,6 +73,21 @@ function LogConsoleLine({ line, language, timeZone }: { line: LogLine; language:
   );
 }
 
+function Sparkline({ values, color = "currentColor" }: { values: number[]; color?: string }) {
+  if (values.length < 2) return null;
+  const max = Math.max(...values);
+  const min = Math.min(...values);
+  const span = Math.max(max - min, 0.0001);
+  const points = values
+    .map((value, index) => `${(index / (values.length - 1)) * 100},${28 - ((value - min) / span) * 24}`)
+    .join(" ");
+  return (
+    <svg viewBox="0 0 100 30" className="h-8 w-full" preserveAspectRatio="none">
+      <polyline points={points} fill="none" stroke={color} strokeWidth="1.2" vectorEffect="non-scaling-stroke" />
+    </svg>
+  );
+}
+
 export function StatusPage() {
   const { t } = useTranslation();
   const intl = useIntl();
@@ -140,6 +155,7 @@ export function StatusPage() {
   });
 
   const healthQuery = useQuery({ queryKey: ["system-health"], queryFn: api.systemHealth });
+  const healthHistoryQuery = useQuery({ queryKey: ["system-health-history"], queryFn: () => api.healthHistory(168) });
 
   const status = statusQuery.data;
   const statusTone: "success" | "warning" | "destructive" =
@@ -223,6 +239,26 @@ export function StatusPage() {
               <p className="text-[11px] text-warning sm:col-span-2 xl:col-span-4">
                 {healthQuery.data.warnings.map((warning) => t(`errors.${warning}`, { defaultValue: warning })).join(" · ")}
               </p>
+            ) : null}
+            <div className="space-y-1 sm:col-span-2">
+              <p className="text-[10px] uppercase tracking-[0.1em] text-muted-foreground">{t("health.diskHistory")}</p>
+              <Sparkline values={(healthHistoryQuery.data?.samples ?? []).map((sample) => sample.disk_percent)} />
+            </div>
+            <div className="space-y-1 sm:col-span-2">
+              <p className="text-[10px] uppercase tracking-[0.1em] text-muted-foreground">{t("health.dbHistory")}</p>
+              <Sparkline values={(healthHistoryQuery.data?.samples ?? []).map((sample) => sample.db_bytes)} />
+            </div>
+            {(healthHistoryQuery.data?.top_nodes ?? []).length ? (
+              <div className="space-y-1 sm:col-span-2 xl:col-span-4">
+                <p className="text-[10px] uppercase tracking-[0.1em] text-muted-foreground">{t("health.topNodes")}</p>
+                <div className="flex flex-wrap gap-2">
+                  {(healthHistoryQuery.data?.top_nodes ?? []).map((item) => (
+                    <span key={item.name} className="rounded-full border px-2 py-0.5 font-mono text-[10px] text-muted-foreground">
+                      {item.name}: {formatBytes(item.bytes, intl.language)}
+                    </span>
+                  ))}
+                </div>
+              </div>
             ) : null}
           </CardContent>
         </Card>

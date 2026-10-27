@@ -854,11 +854,31 @@ export function NodesPage() {
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="space-y-1">
                 <Label>{t("nodes.tagKey")}</Label>
-                <Input value={tagKey} maxLength={32} onChange={(event) => setTagKey(event.target.value)} placeholder="site" />
+                <Input
+                  value={tagKey}
+                  list="bulk-tag-keys"
+                  maxLength={32}
+                  onChange={(event) => setTagKey(event.target.value)}
+                  placeholder="Site"
+                />
+                <datalist id="bulk-tag-keys">
+                  {tagKeys.map((key) => <option key={key} value={key} />)}
+                </datalist>
               </div>
               <div className="space-y-1">
                 <Label>{t("nodes.tagValue")}</Label>
-                <Input value={tagValue} maxLength={64} onChange={(event) => setTagValue(event.target.value)} placeholder="madrid" />
+                <Input
+                  value={tagValue}
+                  list="bulk-tag-values"
+                  maxLength={64}
+                  onChange={(event) => setTagValue(event.target.value)}
+                  placeholder="Madrid"
+                />
+                <datalist id="bulk-tag-values">
+                  {tagCatalog.filter((item) => item.key === tagKey).map((item) => (
+                    <option key={`${item.key}-${item.value}`} value={item.value} />
+                  ))}
+                </datalist>
               </div>
             </div>
             <div className="space-y-1">

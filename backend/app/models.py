@@ -6,6 +6,7 @@ from sqlalchemy import (
     JSON,
     Boolean,
     CheckConstraint,
+    Float,
     ForeignKey,
     Index,
     Integer,
@@ -375,6 +376,16 @@ class SystemSettings(Base):
     report_weekday: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     report_hour: Mapped[int] = mapped_column(Integer, nullable=False, default=8)
     report_last_run_at: Mapped[Any | None] = mapped_column(UTCDateTime, nullable=True)
+    report_keep: Mapped[int] = mapped_column(Integer, nullable=False, default=12)
+    report_email_to: Mapped[str] = mapped_column(String(500), nullable=False, default="")
+    health_alert_checks: Mapped[int] = mapped_column(Integer, nullable=False, default=3)
+    smtp_host: Mapped[str] = mapped_column(String(255), nullable=False, default="")
+    smtp_port: Mapped[int] = mapped_column(Integer, nullable=False, default=587)
+    smtp_user: Mapped[str] = mapped_column(String(255), nullable=False, default="")
+    smtp_password_ciphertext: Mapped[str | None] = mapped_column(Text, nullable=True)
+    smtp_from: Mapped[str] = mapped_column(String(255), nullable=False, default="")
+    smtp_tls: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    smtp_ssl: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     site_name: Mapped[str] = mapped_column(String(100), nullable=False, default="Oxidized UI")
     logo_filename: Mapped[str | None] = mapped_column(String(255), nullable=True)
     updated_by_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
@@ -521,3 +532,16 @@ class JobPriorityRule(Base):
     scope_value: Mapped[str | None] = mapped_column(String(128), nullable=True)
     priority: Mapped[int] = mapped_column(Integer, nullable=False, default=5)
     created_at: Mapped[Any] = mapped_column(UTCDateTime, nullable=False, default=utcnow)
+
+
+class HealthSample(Base):
+    __tablename__ = "health_samples"
+    __table_args__ = (Index("ix_health_samples_observed", "observed_at"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    observed_at: Mapped[Any] = mapped_column(UTCDateTime, nullable=False, default=utcnow)
+    disk_percent: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    db_bytes: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    output_bytes: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    queue_depth: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    nodes: Mapped[int] = mapped_column(Integer, nullable=False, default=0)

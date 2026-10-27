@@ -126,12 +126,15 @@ async def lifespan(_app: FastAPI):
     settings.ensure_directories()
     _run_migrations()
     with SessionLocal() as db:
+        from .node_service import normalize_all_tags
+
         ensure_system_state(db)
         ensure_system_settings(db)
         cleanup_sessions(db)
         interrupt_incomplete_jobs(db)
         bootstrap_admin(db)
         bootstrap_configuration(db)
+        normalize_all_tags(db)
         _cleanup_retention(db)
     if not settings.disable_background_tasks:
         start_poller()

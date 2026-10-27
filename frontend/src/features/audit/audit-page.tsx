@@ -60,11 +60,12 @@ interface Filters {
   actor: string;
   action: string;
   target_type: string;
+  target_id: string;
   from: string;
   to: string;
 }
 
-const emptyFilters: Filters = { actor: "", action: "", target_type: "", from: "", to: "" };
+const emptyFilters: Filters = { actor: "", action: "", target_type: "", target_id: "", from: "", to: "" };
 
 export function AuditPage() {
   const { t } = useTranslation();
@@ -82,6 +83,7 @@ export function AuditPage() {
         actor: applied.actor || undefined,
         action: applied.action || undefined,
         target_type: applied.target_type || undefined,
+        target_id: applied.target_id || undefined,
         from: applied.from || undefined,
         to: applied.to || undefined,
         page,
@@ -115,7 +117,7 @@ export function AuditPage() {
           <Filter className="h-3.5 w-3.5 text-muted-foreground" />
           <span className="eyebrow">{t("common.filters")}</span>
         </div>
-        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
+        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-6">
           <div className="space-y-1">
             <Label className="text-[10px] text-muted-foreground">{t("audit.actor")}</Label>
             <div className="relative">
@@ -142,6 +144,15 @@ export function AuditPage() {
                 {targetTypes.map((type) => <SelectItem key={type} value={type}>{type}</SelectItem>)}
               </SelectContent>
             </Select>
+          </div>
+          <div className="space-y-1">
+            <Label className="text-[10px] text-muted-foreground">{t("audit.targetId")}</Label>
+            <Input
+              value={filters.target_id}
+              onChange={(event) => setFilters({ ...filters, target_id: event.target.value })}
+              placeholder="42"
+              className="h-8 font-mono text-xs"
+            />
           </div>
           <div className="space-y-1">
             <Label className="text-[10px] text-muted-foreground">{t("audit.from")}</Label>
@@ -232,6 +243,29 @@ export function AuditPage() {
                 {JSON.stringify(details?.action_params ?? {}, null, 2)}
               </pre>
             </div>
+            {details?.action_params?.before && details?.action_params?.after ? (
+              <div>
+                <p className="mb-1 font-mono text-[9px] uppercase tracking-[0.12em] text-muted-foreground">{t("audit.beforeAfter")}</p>
+                <div className="overflow-hidden rounded-md border">
+                  <div className="grid grid-cols-3 gap-2 border-b bg-muted/30 px-3 py-1.5 text-[10px] font-medium">
+                    <span>{t("audit.field")}</span>
+                    <span>{t("audit.before")}</span>
+                    <span>{t("audit.after")}</span>
+                  </div>
+                  {Object.keys(details.action_params.before as Record<string, unknown>).map((field) => (
+                    <div key={field} className="grid grid-cols-3 gap-2 border-b px-3 py-1.5 font-mono text-[10px] last:border-0">
+                      <span className="text-muted-foreground">{field}</span>
+                      <span className="break-all text-destructive">
+                        {JSON.stringify((details.action_params.before as Record<string, unknown>)[field])}
+                      </span>
+                      <span className="break-all text-success">
+                        {JSON.stringify((details.action_params.after as Record<string, unknown>)[field])}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : null}
           </div>
         </DialogContent>
       </Dialog>

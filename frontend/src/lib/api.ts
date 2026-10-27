@@ -20,6 +20,7 @@ import type {
   Group,
   GroupInput,
   GroupList,
+  HealthHistory,
   HealthSnapshot,
   ImportSummary,
   Job,
@@ -56,6 +57,7 @@ import type {
   SearchResults,
   SessionInfo,
   SessionPayload,
+  SitesResponse,
   StatusPayload,
   SystemSettings,
   User,
@@ -331,6 +333,7 @@ export const api = {
   nodes: (query?: NodeListParams) => request<Paginated<Node>>("/nodes", { query: query as Query }),
   node: (id: number) => request<Node>(`/nodes/${id}`),
   nodeTags: () => request<{ items: NodeTagCount[] }>("/nodes/tags"),
+  sites: (tag = "Site") => request<SitesResponse>("/nodes/sites", { query: { tag } }),
   collectFacts: (ids: number[]) => request<Job>("/nodes/facts/collect", { method: "POST", body: { ids } }),
   collectNodeFacts: (id: number) => request<NodeFacts>(`/nodes/${id}/facts/collect`, { method: "POST" }),
   createNode: (payload: NodeInput) => request<{ node: Node; reload_status: string; warnings: string[] }>("/nodes", { method: "POST", body: payload }),
@@ -448,8 +451,10 @@ export const api = {
     ),
 
   systemHealth: () => request<HealthSnapshot>("/system/health"),
+  healthHistory: (hours = 168) => request<HealthHistory>("/system/health/history", { query: { hours } }),
   reports: () => request<ReportList>("/system/reports"),
   runReport: () => request<Job>("/system/reports/run", { method: "POST" }),
+  testEmail: () => request<{ ok: boolean; reason?: string }>("/system/email/test", { method: "POST" }),
   downloadReport: (filename: string) => download(`/system/reports/${encodeURIComponent(filename)}`, undefined, filename),
   verifyExport: (passphrase?: string) =>
     request<ExportVerification>("/system/export/verify", { method: "POST", body: { passphrase: passphrase ?? null } }),
@@ -505,7 +510,7 @@ export const api = {
   downloadLogs: (query?: { since?: string; until?: string; level?: string; q?: string }) =>
     download("/logs/download", query, "oxidized-logs.txt"),
 
-  audit: (query?: { actor?: string; action?: string; target_type?: string; from?: string; to?: string; page?: number; page_size?: number }) =>
+  audit: (query?: { actor?: string; action?: string; target_type?: string; target_id?: string; from?: string; to?: string; page?: number; page_size?: number }) =>
     request<Paginated<AuditEntry>>("/audit", { query }),
   exportAudit: () => download("/audit/export.csv", undefined, "oxidized-audit.csv"),
   exportEncrypted: (passphrase: string) => downloadEncryptedExport(passphrase),

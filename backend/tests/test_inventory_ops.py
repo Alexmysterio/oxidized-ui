@@ -57,9 +57,9 @@ def test_node_tags_filter_and_bulk(client: TestClient, admin):
         json=make_node(name="tagged-1", tags={"site": "madrid", "criticality": "high"}),
     )
     assert created.status_code == 201, created.text
-    assert created.json()["node"]["tags"] == {"site": "madrid", "criticality": "high"}
+    assert created.json()["node"]["tags"] == {"Site": "Madrid", "Criticality": "High"}
 
-    listed = admin.get("/api/nodes", params={"tag_key": "site", "tag_value": "madrid"}).json()
+    listed = admin.get("/api/nodes", params={"tag_key": "Site", "tag_value": "madrid"}).json()
     assert [item["name"] for item in listed["items"]] == ["tagged-1"]
 
     other = _node(admin, "tagged-2")
@@ -71,8 +71,8 @@ def test_node_tags_filter_and_bulk(client: TestClient, admin):
     assert updated.json()["updated"] == 1
 
     catalog = admin.get("/api/nodes/tags").json()["items"]
-    assert {"key": "site", "value": "barcelona", "count": 1} in catalog
-    filtered = admin.get("/api/nodes", params={"tag_key": "site", "tag_value": "barcelona"}).json()
+    assert {"key": "Site", "value": "Barcelona", "count": 1} in catalog
+    filtered = admin.get("/api/nodes", params={"tag_key": "Site", "tag_value": "barcelona"}).json()
     assert filtered["items"][0]["name"] == "tagged-2"
 
 
@@ -188,11 +188,18 @@ def test_scheduled_report_and_download(client: TestClient, admin):
     listing = admin.get("/api/system/reports")
     assert listing.status_code == 200, listing.text
     items = listing.json()["items"]
-    assert items and items[0]["filename"].startswith("report-")
+    assert items
+    formats = {item["format"] for item in items}
+    assert formats == {"csv", "pdf"}
+    csv_item = next(item for item in items if item["format"] == "csv")
 
-    download = admin.get(f"/api/system/reports/{items[0]['filename']}")
+    download = admin.get(f"/api/system/reports/{csv_item['filename']}")
     assert download.status_code == 200
     assert "summary" in download.text and "generated_at" in download.text
+    pdf_item = next(item for item in items if item["format"] == "pdf")
+    pdf = admin.get(f"/api/system/reports/{pdf_item['filename']}")
+    assert pdf.status_code == 200
+    assert pdf.content.startswith(b"%PDF")
 
 
 def test_export_verification(client: TestClient, admin):
@@ -218,3 +225,50 @@ def test_export_verification(client: TestClient, admin):
     assert verified.json()["ok"] is True
     assert verified.json()["has_database"] is True
     assert len(verified.json()["sha256"]) == 64
+
+def test_sites_grouping_and_map(client: TestClient, admin):
+    first = admin.post(
+        "/api/nodes",
+        json=make_node(name="site-a", tags={"site": "madrid", "latitude": "40.4", "longitude": "-3.7"}),
+    )
+    assert first.status_code == 201, first.text
+    second = admin.post(
+        "/api/nodes",
+        json=make_node(name="site-b", tags={"site": "madrid", "latitude": "40.5", "longitude": "-3.6"}),
+    )
+    assert second.status_code == 201, second.text
+    admin.post("/api/nodes", json=make_node(name="site-c", tags={"site": "barcelona"}))
+
+    sites = admin.get("/api/nodes/sites", params={"tag": "Site"}).json()
+    assert sites["total"] == 3
+    names = {site["name"]: site for site in sites["sites"]}
+    assert names["Madrid"]["count"] == 2
+    assert names["Barcelona"]["count"] == 1
+    assert names["Madrid"]["nodes"][0]["latitude"] == 40.4
+
+
+def test_audit_records_before_and_after(client: TestClient, admin):
+    node_id = _node(admin, "audit-1")
+    updated = admin.patch(f"/api/nodes/{node_id}", json={"model": "iosxe", "tags": {"site": "madrid"}})
+    assert updated.status_code == 200, updated.text
+
+    entries = admin.get(
+        "/api/audit",
+        params={"action": "node.updated", "target_type": "node", "target_id": str(node_id)},
+    ).json()["items"]
+    assert entries
+    params = entries[0]["action_params"]
+    assert params["before"]["model"] == "ios"
+    assert params["after"]["model"] == "iosxe"
+    assert params["after"]["tags"] == {"Site": "Madrid"}
+
+
+def test_health_history_samples(client: TestClient, admin):
+    from app.health_service import process_health
+
+    with SessionLocal() as db:
+        process_health(db)
+        process_health(db)
+    history = admin.get("/api/system/health/history", params={"hours": 24}).json()
+    assert len(history["samples"]) >= 2
+    assert {"top_nodes", "samples"} <= set(history)

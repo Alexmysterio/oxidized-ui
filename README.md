@@ -70,6 +70,7 @@ office, or a trusted internal network.
 - [Backup schedules](#backup-schedules)
 - [Nodes, tags and templates](#nodes-tags-and-templates)
 - [Reconciliation](#reconciliation)
+- [Sites](#sites)
 - [Queue priority and pacing](#queue-priority-and-pacing)
 - [System health and reports](#system-health-and-reports)
 - [Automatic retries](#automatic-retries)
@@ -111,9 +112,11 @@ office, or a trusted internal network.
 - Outgoing alerts to Telegram, Slack, Discord, or any webhook, plus an incoming backup webhook.
 - Optional daily notification digest.
 - Node tags, node templates, and inventory facts (serial, OS version, uptime).
+- Sites view grouped by tag, with an optional coordinate plot.
 - Reconciliation with Oxidized: missing nodes, orphans and field drift.
 - Queue priority rules and pacing for bulk backups.
-- System health panel and weekly CSV reports.
+- System health history, weekly CSV/PDF reports and email delivery.
+- Audit entries with before/after values per node edit.
 - Scheduled encrypted export to SFTP or S3, with bundle verification.
 - Custom site name and logo, user avatars, and full name/email on user profiles.
 - API tokens for automation.
@@ -805,9 +808,11 @@ Schedules can be paused and re-timed in place from the same page.
 ## Nodes, tags and templates
 
 Nodes accept free-form tags (for example `site=madrid`, `criticality=high`,
-`vendor=cisco`). Tags are metadata used by the console to filter, group actions
-and match queue-priority rules; they are not written to the Oxidized YAML. Tag a
-selection in bulk from the nodes table or edit them per node.
+`vendor=cisco`). The console always stores tag keys and values with the first
+letter upper-cased, and the editors suggest keys and values already in use. Tags
+are metadata used by the console to filter, group actions and match queue-priority
+rules; they are not written to the Oxidized YAML. Tag a selection in bulk from the
+nodes table or edit them per node.
 
 **Node templates** (Inventory -> Templates) store the reusable part of onboarding:
 model, group, input, port, username, output, prompt, timeout and vars. Creating a
@@ -836,6 +841,15 @@ reports and offers the import.
 
 ---
 
+## Sites
+
+**Inventory -> Sites** groups the inventory by a tag (default `Site`) and shows the
+aggregated status per location. If nodes carry `Latitude` and `Longitude` tags, the
+page plots them on a relative map without any external map provider. Status counts
+and node links stay available for locations without coordinates.
+
+---
+
 ## Queue priority and pacing
 
 **Backups -> Queue priority** maps a group or a tag to a priority from 1 (highest)
@@ -853,12 +867,20 @@ hundreds of devices at once.
 
 **Status & logs** shows disk usage, database size, Oxidized data size, queue depth,
 failed jobs today and the applied migration, with configurable warning thresholds.
-Threshold alerts use the `system.health` event.
+It also keeps hourly samples for seven days (disk and database sparklines, largest
+nodes). Threshold alerts use the `system.health` event and only fire after N
+consecutive checks, so a single spike does not page anyone.
 
-**System -> Weekly reports** generates a CSV with backup success/failure per node,
-failed jobs, configuration changes and the compliance summary. It is stored under
-`data/reports`, downloadable from the UI, and uploaded to the export target when
-one is configured. The `report.ready` event notifies subscribed channels.
+**System -> Weekly reports** generates a CSV and a PDF with backup success/failure
+per node, failed jobs, configuration changes, the compliance summary and the
+comparison against the previous week. Reports are stored under `data/reports`,
+pruned to the configured retention, downloadable from the UI, uploaded to the
+export target when configured, and emailed (CSV+PDF) when SMTP is configured.
+The `report.ready` event notifies subscribed channels.
+
+Audit entries for node edits include `before` and `after` values for every changed
+non-secret field (plus password/enable presence), and the audit page can filter by
+target type and target ID.
 
 The encrypted export page also has **Verify**: it builds and decrypts a bundle to
 check the ZIP, database, metadata and Fernet key are intact.

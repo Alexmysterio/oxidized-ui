@@ -111,7 +111,8 @@
     "maintenance": "Maintenance",
     "compliance": "Compliance",
     "nodeTemplates": "Templates",
-    "reconciliation": "Reconciliation"
+    "reconciliation": "Reconciliation",
+    "sites": "Sites"
   },
   "status": {
     "online": "Online",
@@ -863,7 +864,12 @@
       "report.generated": "Report generated",
       "system.export_verified": "Export verified"
     },
-    "export": "Export CSV"
+    "export": "Export CSV",
+    "targetId": "Target ID",
+    "beforeAfter": "Before / after",
+    "field": "Field",
+    "before": "Before",
+    "after": "After"
   },
   "profile": {
     "title": "My profile",
@@ -1080,7 +1086,8 @@
     "healthDisk": "Warn when disk exceeds (%)",
     "healthOutput": "Warn when Oxidized data exceeds (MB, 0 = off)",
     "exportVerify": "Verify",
-    "exportVerified": "Bundle verified: {{entries}} files, {{bytes}} KB."
+    "exportVerified": "Bundle verified: {{entries}} files, {{bytes}} KB.",
+    "healthChecks": "Consecutive checks before alerting"
   },
   "search": {
     "title": "Global search",
@@ -1977,7 +1984,18 @@
       "4": "Friday",
       "5": "Saturday",
       "6": "Sunday"
-    }
+    },
+    "keep": "Keep reports",
+    "emailTitle": "Email delivery (SMTP)",
+    "smtpHost": "SMTP server",
+    "smtpPort": "Port",
+    "smtpUser": "User",
+    "smtpPassword": "Password",
+    "smtpFrom": "Sender",
+    "emailTo": "Recipients (comma separated)",
+    "emailTest": "Test email",
+    "emailOk": "Test email sent.",
+    "emailFailed": "The email could not be sent; check the SMTP configuration."
   },
   "health": {
     "title": "System health",
@@ -1991,6 +2009,21 @@
     "output": "Oxidized data",
     "nodes": "{{count}} nodes",
     "queue": "Queue",
-    "failedToday": "{{count}} failed today"
+    "failedToday": "{{count}} failed today",
+    "diskHistory": "Disk (7 days)",
+    "dbHistory": "Database (7 days)",
+    "topNodes": "Largest nodes"
+  },
+  "sites": {
+    "title": "Sites",
+    "subtitle": "Group the inventory by tag and see the health of each location.",
+    "tagBy": "Group by {{tag}}",
+    "emptyTitle": "No sites",
+    "emptyDescription": "Add the Site tag (or any other) to nodes to group them here.",
+    "map": "Map",
+    "mapDescription": "Nodes with Latitude and Longitude tags.",
+    "mapHelp": "No map provider: real coordinates are plotted on a relative plane. Add Latitude/Longitude to the node tags.",
+    "noSite": "No site",
+    "nodes": "{{count}} nodes"
   }
 }

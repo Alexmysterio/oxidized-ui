@@ -32,6 +32,7 @@ def list_audit(
     actor: str | None = Query(default=None, max_length=64),
     action: str | None = Query(default=None, max_length=128),
     target_type: str | None = Query(default=None, max_length=32),
+    target_id: str | None = Query(default=None, max_length=64),
     from_: str | None = Query(default=None, alias="from", max_length=64),
     to: str | None = Query(default=None, max_length=64),
     page: int = Query(default=1, ge=1),
@@ -50,6 +51,8 @@ def list_audit(
         conditions.append(AuditLog.action_code == action)
     if target_type:
         conditions.append(AuditLog.target_type == target_type)
+    if target_id:
+        conditions.append(AuditLog.target_id == target_id)
     if from_dt:
         conditions.append(AuditLog.created_at >= from_dt)
     if to_dt:

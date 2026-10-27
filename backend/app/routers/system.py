@@ -194,6 +194,40 @@ def read_health(
     return health_snapshot(db)
 
 
+@router.get("/health/history")
+def read_health_history(
+    hours: int = 168,
+    db: Session = Depends(get_db),
+    _context: AuthContext = Depends(require_capability("logs.read")),
+):
+    from ..health_service import history
+
+    return history(db, hours=hours)
+
+
+@router.get("/email")
+def read_email_config(
+    db: Session = Depends(get_db),
+    _context: AuthContext = Depends(require_admin),
+):
+    from ..email_service import status
+
+    return status(db)
+
+
+@router.post("/email/test")
+def test_email(
+    db: Session = Depends(get_db),
+    _context: AuthContext = Depends(require_admin),
+):
+    from ..email_service import configured, send
+
+    if not configured(db):
+        return {"ok": False, "reason": "not_configured"}
+    ok = send(db, subject="Oxidized UI test", body="SMTP delivery works.")
+    return {"ok": ok}
+
+
 @router.post("/export/verify")
 def verify_export(
     payload: ExportVerifyRequest,

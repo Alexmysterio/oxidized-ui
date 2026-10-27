@@ -122,8 +122,11 @@ def update_system_settings(db: Session, patch: dict) -> SystemSettings:
         "backup_batch_delay_seconds",
         "health_disk_warn_percent",
         "health_output_warn_mb",
+        "health_alert_checks",
         "report_weekday",
         "report_hour",
+        "report_keep",
+        "smtp_port",
     ):
         if key in patch and patch[key] is not None:
             setattr(row, key, int(patch[key]))
@@ -134,9 +137,25 @@ def update_system_settings(db: Session, patch: dict) -> SystemSettings:
         "export_enabled",
         "health_alerts_enabled",
         "report_enabled",
+        "smtp_tls",
+        "smtp_ssl",
     ):
         if key in patch and patch[key] is not None:
             setattr(row, key, bool(patch[key]))
+    if "smtp_host" in patch and patch["smtp_host"] is not None:
+        row.smtp_host = str(patch["smtp_host"]).strip()[:255]
+    if "smtp_user" in patch and patch["smtp_user"] is not None:
+        row.smtp_user = str(patch["smtp_user"]).strip()[:255]
+    if "smtp_from" in patch and patch["smtp_from"] is not None:
+        row.smtp_from = str(patch["smtp_from"]).strip()[:255]
+    if "report_email_to" in patch and patch["report_email_to"] is not None:
+        row.report_email_to = str(patch["report_email_to"]).strip()[:500]
+    if patch.get("clear_smtp_password"):
+        row.smtp_password_ciphertext = None
+    elif patch.get("smtp_password"):
+        from .crypto import encrypt_optional
+
+        row.smtp_password_ciphertext = encrypt_optional(str(patch["smtp_password"]))
     if "ip_allowlist" in patch and patch["ip_allowlist"] is not None:
         row.ip_allowlist = _normalize_allowlist(str(patch["ip_allowlist"]))
     if "notify_webhook_url" in patch and patch["notify_webhook_url"] is not None:
@@ -189,6 +208,16 @@ def settings_public(row: SystemSettings) -> dict:
         "report_enabled": row.report_enabled,
         "report_weekday": row.report_weekday,
         "report_hour": row.report_hour,
+        "report_keep": row.report_keep,
+        "report_email_to": row.report_email_to,
+        "health_alert_checks": row.health_alert_checks,
+        "smtp_host": row.smtp_host,
+        "smtp_port": row.smtp_port,
+        "smtp_user": row.smtp_user,
+        "smtp_from": row.smtp_from,
+        "smtp_tls": row.smtp_tls,
+        "smtp_ssl": row.smtp_ssl,
+        "has_smtp_password": bool(row.smtp_password_ciphertext),
         "report_last_run_at": row.report_last_run_at.isoformat() if row.report_last_run_at else None,
         "site_name": row.site_name,
         "has_logo": bool(row.logo_filename),

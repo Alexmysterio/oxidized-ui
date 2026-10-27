@@ -36,6 +36,10 @@ TAG_KEY_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.:-]{0,31}$")
 MAX_TAGS = 20
 
 
+def _capitalize_tag_part(value: str) -> str:
+    return value[:1].upper() + value[1:] if value else value
+
+
 def normalize_tags(tags: dict[str, Any] | None) -> dict[str, str] | None:
     if not tags:
         return None
@@ -43,14 +47,31 @@ def normalize_tags(tags: dict[str, Any] | None) -> dict[str, str] | None:
         raise AppError("validation.too_long", params={"field": "tags"})
     cleaned: dict[str, str] = {}
     for raw_key, raw_value in tags.items():
-        key = str(raw_key).strip()
-        value = str(raw_value).strip()
+        key = _capitalize_tag_part(str(raw_key).strip())
+        value = _capitalize_tag_part(str(raw_value).strip())
         if not value:
             continue
         if not TAG_KEY_RE.fullmatch(key) or len(value) > 64:
             raise AppError("validation.invalid_format", params={"field": "tags"})
         cleaned[key] = value
     return cleaned or None
+
+
+def normalize_all_tags(db: Session) -> int:
+    from .timeutil import utcnow
+
+    changed = 0
+    for node in db.scalars(select(Node)).all():
+        if not isinstance(node.tags, dict) or not node.tags:
+            continue
+        normalized = normalize_tags(node.tags)
+        if normalized != node.tags:
+            node.tags = normalized
+            node.updated_at = utcnow()
+            changed += 1
+    if changed:
+        db.commit()
+    return changed
 
 
 NODE_SORT_FIELDS = {
@@ -272,6 +293,31 @@ def _set_secret_from_payload(node: Node, data: dict[str, Any]) -> None:
         node.enable_ciphertext = encrypt_optional(str(data["enable"]))
 
 
+def _audit_snapshot(node: Node) -> dict[str, Any]:
+    return {
+        "address": node.address,
+        "model": node.model,
+        "group_name": node.group_name,
+        "input": node.input,
+        "port": node.port,
+        "username": node.username,
+        "output": node.output,
+        "prompt": node.prompt,
+        "timeout_seconds": node.timeout_seconds,
+        "tags": dict(node.tags or {}) if isinstance(node.tags, dict) else {},
+        "has_password": bool(node.password_ciphertext),
+        "has_enable": bool(node.enable_ciphertext),
+    }
+
+
+def _audit_diff(before: dict[str, Any], after: dict[str, Any]) -> dict[str, Any]:
+    changed = {key for key in before if before.get(key) != after.get(key)}
+    return {
+        "before": {key: before.get(key) for key in changed},
+        "after": {key: after.get(key) for key in changed},
+    }
+
+
 def create_node(
     db: Session,
     *,
@@ -311,7 +357,12 @@ def create_node(
         db,
         actor=actor,
         action_code="node.created",
-        action_params={"name": node.name, "model": node.model, "group": node.group_name},
+        action_params={
+            "name": node.name,
+            "model": node.model,
+            "group": node.group_name,
+            "after": _audit_snapshot(node),
+        },
         target_type="node",
         target_id=node.id,
         request=request,
@@ -331,6 +382,7 @@ def update_node(
     request: Request,
 ) -> dict[str, Any]:
     node = get_node(db, node_id)
+    before = _audit_snapshot(node)
     data = payload.model_dump(exclude_unset=True)
     changed = sorted(key for key in data if key not in {"password", "enable", "clear_password", "clear_enable"})
     if "group_name" in data:
@@ -357,7 +409,11 @@ def update_node(
         db,
         actor=actor,
         action_code="node.updated",
-        action_params={"name": node.name, "changed_fields": changed},
+        action_params={
+            "name": node.name,
+            "changed_fields": changed,
+            **_audit_diff(before, _audit_snapshot(node)),
+        },
         target_type="node",
         target_id=node.id,
         request=request,
@@ -722,6 +778,52 @@ def tags_catalog(db: Session, *, allowed_groups: list[str] | None = None) -> lis
         {"key": key, "value": value, "count": count}
         for (key, value), count in sorted(counts.items())
     ]
+
+
+def sites(db: Session, *, tag_key: str = "Site", allowed_groups: list[str] | None = None) -> dict[str, Any]:
+    wanted = (tag_key or "Site").strip().casefold()
+    query = select(Node)
+    if allowed_groups is not None:
+        query = query.where(Node.group_name.in_(allowed_groups))
+    caches = {cache.node_id: cache for cache in db.scalars(select(NodeStatusCache)).all()}
+    buckets: dict[str, dict[str, Any]] = {}
+    for node in db.scalars(query.order_by(Node.name)).all():
+        tags = node.tags if isinstance(node.tags, dict) else {}
+        site_name: str | None = None
+        latitude: float | None = None
+        longitude: float | None = None
+        for key, value in tags.items():
+            lowered = str(key).casefold()
+            if lowered == wanted:
+                site_name = str(value)
+            elif lowered in {"latitude", "lat"}:
+                try:
+                    latitude = float(value)
+                except (TypeError, ValueError):
+                    latitude = None
+            elif lowered in {"longitude", "lon", "lng"}:
+                try:
+                    longitude = float(value)
+                except (TypeError, ValueError):
+                    longitude = None
+        bucket = buckets.setdefault(site_name or "", {"name": site_name, "count": 0, "status": {}, "nodes": []})
+        cache = caches.get(node.id)
+        status = node_status_bucket(node, cache)
+        bucket["count"] += 1
+        bucket["status"][status] = bucket["status"].get(status, 0) + 1
+        bucket["nodes"].append(
+            {
+                "id": node.id,
+                "name": node.name,
+                "group_name": node.group_name,
+                "model": node.model,
+                "status": status,
+                "latitude": latitude,
+                "longitude": longitude,
+            }
+        )
+    ordered = sorted(buckets.values(), key=lambda item: (item["name"] is None, (item["name"] or "").casefold()))
+    return {"tag": tag_key, "sites": ordered, "total": sum(item["count"] for item in ordered)}
 
 
 def export_csv(db: Session, *, allowed_groups: list[str] | None = None) -> str:

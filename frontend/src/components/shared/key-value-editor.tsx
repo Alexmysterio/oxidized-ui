@@ -51,6 +51,7 @@ export function KeyValueEditor({
   addLabel,
   className,
   suggestions,
+  valueSuggestions,
 }: {
   value: Record<string, unknown>;
   onChange: (value: Record<string, unknown>) => void;
@@ -59,6 +60,7 @@ export function KeyValueEditor({
   addLabel?: string;
   className?: string;
   suggestions?: string[];
+  valueSuggestions?: Record<string, string[]>;
 }) {
   const { t } = useTranslation();
   const [rows, setRows] = useState<Entry[]>(() => toRows(value));
@@ -103,6 +105,7 @@ export function KeyValueEditor({
                 />
                 <Input
                   value={row.value}
+                  list={valueSuggestions && valueSuggestions[row.key] ? `${listId}-${row.id}` : undefined}
                   placeholder={valuePlaceholder ?? t("nodeForm.variableValue")}
                   aria-label={valuePlaceholder ?? t("nodeForm.variableValue")}
                   onChange={(event) => {
@@ -111,6 +114,13 @@ export function KeyValueEditor({
                   }}
                   className="font-mono text-xs"
                 />
+                {valueSuggestions && valueSuggestions[row.key] ? (
+                  <datalist id={`${listId}-${row.id}`}>
+                    {valueSuggestions[row.key].map((suggestion) => (
+                      <option key={suggestion} value={suggestion} />
+                    ))}
+                  </datalist>
+                ) : null}
               </div>
               <Button
                 type="button"

@@ -581,6 +581,17 @@ class SystemSettingsUpdate(StrictModel):
     report_enabled: bool | None = None
     report_weekday: int | None = Field(default=None, ge=0, le=6)
     report_hour: int | None = Field(default=None, ge=0, le=23)
+    report_keep: int | None = Field(default=None, ge=1, le=200)
+    report_email_to: str | None = Field(default=None, max_length=500)
+    health_alert_checks: int | None = Field(default=None, ge=1, le=24)
+    smtp_host: str | None = Field(default=None, max_length=255)
+    smtp_port: int | None = Field(default=None, ge=1, le=65535)
+    smtp_user: str | None = Field(default=None, max_length=255)
+    smtp_from: str | None = Field(default=None, max_length=255)
+    smtp_tls: bool | None = None
+    smtp_ssl: bool | None = None
+    smtp_password: str | None = Field(default=None, max_length=512)
+    clear_smtp_password: bool = False
     digest_enabled: bool | None = None
     digest_hour: int | None = Field(default=None, ge=0, le=23)
     export_enabled: bool | None = None

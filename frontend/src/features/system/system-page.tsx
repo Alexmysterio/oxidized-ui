@@ -53,6 +53,7 @@ interface FormValues {
   health_alerts_enabled: boolean;
   health_disk_warn_percent: number;
   health_output_warn_mb: number;
+  health_alert_checks: number;
   report_enabled: boolean;
   report_weekday: number;
   report_hour: number;
@@ -91,6 +92,7 @@ function valuesFrom(settings: SystemSettings): FormValues {
     health_alerts_enabled: settings.health_alerts_enabled,
     health_disk_warn_percent: settings.health_disk_warn_percent,
     health_output_warn_mb: settings.health_output_warn_mb,
+    health_alert_checks: settings.health_alert_checks,
     report_enabled: settings.report_enabled,
     report_weekday: settings.report_weekday,
     report_hour: settings.report_hour,
@@ -156,6 +158,7 @@ export function SystemPage() {
     health_alerts_enabled: z.boolean(),
     health_disk_warn_percent: z.coerce.number<number>().int().min(0).max(100),
     health_output_warn_mb: z.coerce.number<number>().int().min(0),
+    health_alert_checks: z.coerce.number<number>().int().min(1).max(24),
     report_enabled: z.boolean(),
     report_weekday: z.coerce.number<number>().int().min(0).max(6),
     report_hour: z.coerce.number<number>().int().min(0).max(23),
@@ -196,6 +199,7 @@ export function SystemPage() {
       health_alerts_enabled: true,
       health_disk_warn_percent: 85,
       health_output_warn_mb: 0,
+      health_alert_checks: 3,
       report_enabled: false,
       report_weekday: 0,
       report_hour: 8,
@@ -556,7 +560,7 @@ export function SystemPage() {
               <Switch checked={form.watch("health_alerts_enabled")} onCheckedChange={(value) => form.setValue("health_alerts_enabled", value, { shouldDirty: true })} />
               {t("system.healthAlerts")}
             </label>
-            <div className="grid gap-3 sm:grid-cols-2">
+            <div className="grid gap-3 sm:grid-cols-3">
               <div className="space-y-2">
                 <Label htmlFor="health-disk">{t("system.healthDisk")}</Label>
                 <Input id="health-disk" type="number" min={0} max={100} {...form.register("health_disk_warn_percent", { valueAsNumber: true })} />
@@ -564,6 +568,10 @@ export function SystemPage() {
               <div className="space-y-2">
                 <Label htmlFor="health-output">{t("system.healthOutput")}</Label>
                 <Input id="health-output" type="number" min={0} {...form.register("health_output_warn_mb", { valueAsNumber: true })} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="health-checks">{t("system.healthChecks")}</Label>
+                <Input id="health-checks" type="number" min={1} max={24} {...form.register("health_alert_checks", { valueAsNumber: true })} />
               </div>
             </div>
           </CardContent>

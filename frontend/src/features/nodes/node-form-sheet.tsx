@@ -130,6 +130,8 @@ function NodeForm({
   inputs,
   outputs,
   variables,
+  tagKeySuggestions,
+  tagValueSuggestions,
   onSaved,
   onCancel,
 }: {
@@ -140,6 +142,8 @@ function NodeForm({
   inputs: string[];
   outputs: string[];
   variables: CatalogVar[];
+  tagKeySuggestions: string[];
+  tagValueSuggestions: Record<string, string[]>;
   onSaved: () => void;
   onCancel: () => void;
 }) {
@@ -465,7 +469,8 @@ function NodeForm({
             value={tags}
             onChange={setTags}
             addLabel={t("nodeForm.addTag")}
-            suggestions={["site", "criticality", "vendor", "tier"]}
+            suggestions={tagKeySuggestions}
+            valueSuggestions={tagValueSuggestions}
           />
         </section>
 
@@ -540,12 +545,44 @@ export function NodeFormSheet({
     enabled: open,
     staleTime: 5 * 60_000,
   });
+  const tagsQuery = useQuery({ queryKey: ["node-tags"], queryFn: api.nodeTags, enabled: open });
+  const tagCatalog = tagsQuery.data?.items ?? [];
+  const tagKeySuggestions = Array.from(
+    new Set([...tagCatalog.map((item) => item.key), "Site", "Criticality", "Vendor", "Tier", "Latitude", "Longitude"]),
+  ).sort();
+  const tagValueSuggestions = tagCatalog.reduce<Record<string, string[]>>((result, item) => {
+    result[item.key] = Array.from(new Set([...(result[item.key] ?? []), item.value])).sort();
+    return result;
+  }, {});
 
   const node = nodeQuery.data ?? null;
 
+  useEffect(() => {
+    if (open) return;
+    const frame = requestAnimationFrame(() => {
+      document.body.style.pointerEvents = "";
+      document.body.style.overflow = "";
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [open]);
+
+  useEffect(
+    () => () => {
+      // Radix/Select can leave the body locked when the sheet unmounts mid-close.
+      document.body.style.pointerEvents = "";
+      document.body.style.overflow = "";
+    },
+    [],
+  );
+
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-[min(94vw,38rem)] gap-0 p-0 sm:max-w-[38rem]">
+    <Sheet open={open} onOpenChange={onOpenChange} modal={false}>
+      <SheetContent
+        side="right"
+        hideOverlay
+        onInteractOutside={(event) => event.preventDefault()}
+        className="w-[min(94vw,38rem)] gap-0 p-0 sm:max-w-[38rem]"
+      >
         <SheetHeader className="border-b px-6 pb-5 pt-6">
           <SheetTitle className="flex items-center gap-2">
             <KeyRound className="h-4 w-4 text-primary" />
@@ -571,6 +608,8 @@ export function NodeFormSheet({
             inputs={catalogQuery.data?.inputs ?? []}
             outputs={catalogQuery.data?.outputs ?? []}
             variables={catalogQuery.data?.vars ?? []}
+            tagKeySuggestions={tagKeySuggestions}
+            tagValueSuggestions={tagValueSuggestions}
             onCancel={() => onOpenChange(false)}
             onSaved={() => {
               void queryClient.invalidateQueries({ queryKey: ["node", nodeId] });

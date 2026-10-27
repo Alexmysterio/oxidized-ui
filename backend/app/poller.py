@@ -14,11 +14,11 @@ from .config_service import run_due_scheduled
 from .db import SessionLocal
 from .errors import AppError
 from .export_service import run_due_export
-from .health_service import snapshot as health_snapshot
+from .health_service import process_health
 from .maintenance_service import scoped_node_ids
 from .models import AuditLog, BackupRun, Job, LoginAttempt, Node, NodeStatusCache
 from .node_service import update_status_cache
-from .notifications import notify_health, notify_stale, send_due_digests
+from .notifications import notify_stale, send_due_digests
 from .oxidized import OxidizedNode
 from .oxidized import client_for as oxidized_client_for
 from .report_service import run_due_report
@@ -103,14 +103,7 @@ def check_health(db: Session) -> None:
     if _last_health is not None and now - _last_health < timedelta(hours=1):
         return
     _last_health = now
-    snapshot = health_snapshot(db)
-    if snapshot.get("warnings"):
-        notify_health(
-            db,
-            list(snapshot["warnings"]),
-            float(snapshot["disk"]["percent"]),
-            int(snapshot["output_bytes"]),
-        )
+    process_health(db)
 
 
 def check_stale_backups(db: Session) -> None:

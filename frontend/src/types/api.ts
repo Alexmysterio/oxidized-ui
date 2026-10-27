@@ -548,9 +548,19 @@ export interface SystemSettings {
   health_alerts_enabled: boolean;
   health_disk_warn_percent: number;
   health_output_warn_mb: number;
+  health_alert_checks: number;
   report_enabled: boolean;
   report_weekday: number;
   report_hour: number;
+  report_keep: number;
+  report_email_to: string;
+  smtp_host: string;
+  smtp_port: number;
+  smtp_user: string;
+  smtp_from: string;
+  smtp_tls: boolean;
+  smtp_ssl: boolean;
+  has_smtp_password: boolean;
   digest_enabled: boolean;
   digest_hour: number;
   site_name: string;
@@ -793,8 +803,23 @@ export interface HealthSnapshot {
   checked_at: string;
 }
 
+export interface HealthSample {
+  observed_at: string | null;
+  disk_percent: number;
+  db_bytes: number;
+  output_bytes: number;
+  queue_depth: number;
+  nodes: number;
+}
+
+export interface HealthHistory {
+  samples: HealthSample[];
+  top_nodes: { name: string; bytes: number }[];
+}
+
 export interface ReportItem {
   filename: string;
+  format: string;
   bytes: number;
   created_at: string | null;
 }
@@ -833,4 +858,27 @@ export interface ExportVerification {
   has_fernet_key: boolean;
   has_metadata: boolean;
   target: string;
+}
+
+export interface SiteNode {
+  id: number;
+  name: string;
+  group_name: string | null;
+  model: string;
+  status: NodeStatus;
+  latitude: number | null;
+  longitude: number | null;
+}
+
+export interface SiteGroup {
+  name: string | null;
+  count: number;
+  status: Record<string, number>;
+  nodes: SiteNode[];
+}
+
+export interface SitesResponse {
+  tag: string;
+  sites: SiteGroup[];
+  total: number;
 }

@@ -111,7 +111,8 @@
     "maintenance": "Mantenimiento",
     "compliance": "Cumplimiento",
     "nodeTemplates": "Plantillas",
-    "reconciliation": "Reconciliación"
+    "reconciliation": "Reconciliación",
+    "sites": "Sitios"
   },
   "status": {
     "online": "Online",
@@ -863,7 +864,12 @@
       "report.generated": "Informe generado",
       "system.export_verified": "Exportación verificada"
     },
-    "export": "Exportar CSV"
+    "export": "Exportar CSV",
+    "targetId": "ID del objetivo",
+    "beforeAfter": "Antes / después",
+    "field": "Campo",
+    "before": "Antes",
+    "after": "Después"
   },
   "profile": {
     "title": "Mi perfil",
@@ -1080,7 +1086,8 @@
     "healthDisk": "Avisar si el disco supera (%)",
     "healthOutput": "Avisar si los datos de Oxidized superan (MB, 0 = off)",
     "exportVerify": "Verificar",
-    "exportVerified": "Paquete verificado: {{entries}} archivos, {{bytes}} KB."
+    "exportVerified": "Paquete verificado: {{entries}} archivos, {{bytes}} KB.",
+    "healthChecks": "Comprobaciones consecutivas antes de avisar"
   },
   "search": {
     "title": "Búsqueda global",
@@ -1977,7 +1984,18 @@
       "4": "Viernes",
       "5": "Sábado",
       "6": "Domingo"
-    }
+    },
+    "keep": "Conservar informes",
+    "emailTitle": "Entrega por email (SMTP)",
+    "smtpHost": "Servidor SMTP",
+    "smtpPort": "Puerto",
+    "smtpUser": "Usuario",
+    "smtpPassword": "Contraseña",
+    "smtpFrom": "Remitente",
+    "emailTo": "Destinatarios (separados por comas)",
+    "emailTest": "Probar email",
+    "emailOk": "Email de prueba enviado.",
+    "emailFailed": "No se pudo enviar el email; revisa la configuración SMTP."
   },
   "health": {
     "title": "Salud del sistema",
@@ -1991,6 +2009,21 @@
     "output": "Datos de Oxidized",
     "nodes": "{{count}} nodos",
     "queue": "Cola",
-    "failedToday": "{{count}} fallidos hoy"
+    "failedToday": "{{count}} fallidos hoy",
+    "diskHistory": "Disco (7 días)",
+    "dbHistory": "Base de datos (7 días)",
+    "topNodes": "Nodos que más ocupan"
+  },
+  "sites": {
+    "title": "Sitios",
+    "subtitle": "Agrupa el inventario por etiqueta y visualiza la salud de cada ubicación.",
+    "tagBy": "Agrupar por {{tag}}",
+    "emptyTitle": "Sin sitios",
+    "emptyDescription": "Añade la etiqueta Site (o la que elijas) a los nodos para agruparlos aquí.",
+    "map": "Mapa",
+    "mapDescription": "Nodos con etiquetas Latitude y Longitude.",
+    "mapHelp": "Sin proveedor de mapas: se dibujan las coordenadas reales en un plano relativo. Añade Latitude/Longitude a las etiquetas del nodo.",
+    "noSite": "Sin sitio",
+    "nodes": "{{count}} nodos"
   }
 }
