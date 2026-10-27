@@ -57,16 +57,54 @@ def delete_schedule(db: Session, schedule_id: int) -> None:
     db.commit()
 
 
+def update_schedule(
+    db: Session,
+    schedule_id: int,
+    *,
+    group_name: str | None = None,
+    interval_minutes: int | None = None,
+    enabled: bool | None = None,
+    group_name_set: bool = False,
+) -> BackupSchedule:
+    row = db.get(BackupSchedule, schedule_id)
+    if row is None:
+        raise AppError("app.not_found", params={"id": schedule_id})
+    if group_name_set:
+        existing = db.scalar(
+            select(BackupSchedule).where(
+                BackupSchedule.group_name == group_name, BackupSchedule.id != schedule_id
+            )
+        )
+        if existing is not None:
+            raise AppError("validation.duplicate", params={"field": "group_name"})
+        row.group_name = group_name
+    if interval_minutes is not None:
+        if interval_minutes < 15:
+            raise AppError("validation.range", params={"field": "interval_minutes", "min": 15})
+        row.interval_minutes = interval_minutes
+        row.next_run_at = utcnow() + timedelta(minutes=interval_minutes)
+    if enabled is not None:
+        row.enabled = bool(enabled)
+        if row.enabled and row.next_run_at is None:
+            row.next_run_at = utcnow() + timedelta(minutes=row.interval_minutes)
+    db.commit()
+    db.refresh(row)
+    return row
+
+
 def run_due(db: Session) -> int:
+    from .maintenance_service import scoped_node_ids
+
     due = db.scalars(
         select(BackupSchedule).where(BackupSchedule.enabled.is_(True), BackupSchedule.next_run_at <= utcnow())
     ).all()
     started = 0
+    maintenance = scoped_node_ids(db)
     for row in due:
         query = select(Node)
         if row.group_name:
             query = query.where(Node.group_name == row.group_name)
-        nodes = list(db.scalars(query).all())
+        nodes = [node for node in db.scalars(query).all() if node.id not in maintenance]
         now = utcnow()
         launched = False
         active = db.scalar(

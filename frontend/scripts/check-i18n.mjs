@@ -49,6 +49,7 @@ for (const match of source.matchAll(/usePageTitle\(\s*["']([^"']+)["']/g)) used.
 // These namespaces are built from runtime codes and cannot be enumerated statically.
 const dynamicPrefixes = [
   "audit.actions.",
+  "compliance.status.",
   "config.revisionStatus.",
   "config.tabs.",
   "errors.",

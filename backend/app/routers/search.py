@@ -18,13 +18,13 @@ def search_route(
     db: Session = Depends(get_db),
     context: AuthContext = Depends(get_auth_context),
 ):
-    return global_search(db, q, context.role)
+    return global_search(db, q, context.role, allowed_groups=context.scope_groups)
 
 
 @router.post("/search/configs")
 def config_search_route(
     payload: SearchRequest,
     db: Session = Depends(get_db),
-    _context: AuthContext = Depends(get_auth_context),
+    context: AuthContext = Depends(get_auth_context),
 ):
-    return {"matches": config_search(db, payload.query)}
+    return {"matches": config_search(db, payload.query, allowed_groups=context.scope_groups)}

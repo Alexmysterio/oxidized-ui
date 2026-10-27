@@ -11,17 +11,26 @@ from .models import Node
 from .oxidized import client_for
 
 
-def global_search(db: Session, query: str, role: str) -> dict[str, Any]:
+def global_search(
+    db: Session, query: str, role: str, allowed_groups: list[str] | None = None
+) -> dict[str, Any]:
     needle = query.strip()
     if not needle:
         return {"nodes": [], "groups": []}
-    nodes = db.scalars(
-        select(Node)
-        .where(Node.name.ilike(f"%{needle}%") | Node.address.ilike(f"%{needle}%") | Node.model.ilike(f"%{needle}%"))
-        .order_by(Node.name)
-        .limit(10)
-    ).all()
-    groups = [{"name": name} for name in sorted(applied_groups(db)) if needle.casefold() in name.casefold()][:10]
+    criteria = (
+        Node.name.ilike(f"%{needle}%")
+        | Node.address.ilike(f"%{needle}%")
+        | Node.model.ilike(f"%{needle}%")
+    )
+    statement = select(Node).where(criteria)
+    if allowed_groups is not None:
+        statement = statement.where(Node.group_name.in_(allowed_groups))
+    nodes = db.scalars(statement.order_by(Node.name).limit(10)).all()
+    groups = [
+        {"name": name}
+        for name in sorted(applied_groups(db))
+        if needle.casefold() in name.casefold() and (allowed_groups is None or name in allowed_groups)
+    ][:10]
     return {
         "nodes": [
             {
@@ -37,7 +46,7 @@ def global_search(db: Session, query: str, role: str) -> dict[str, Any]:
     }
 
 
-def config_search(db: Session, query: str) -> list[dict[str, Any]]:
+def config_search(db: Session, query: str, *, allowed_groups: list[str] | None = None) -> list[dict[str, Any]]:
     text = query.strip()
     if not text or len(text) > 200:
         raise AppError("search.query_invalid")
@@ -54,6 +63,8 @@ def config_search(db: Session, query: str) -> list[dict[str, Any]]:
     for match in matches[:100]:
         node = by_name.get(match["name"])
         if node is None:
+            continue
+        if allowed_groups is not None and node.group_name not in allowed_groups:
             continue
         result.append(
             {

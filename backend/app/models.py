@@ -24,6 +24,7 @@ NODE_STATUSES = ("success", "no_connection", "fail", "timelimit", "unknown")
 JOB_KINDS = (
     "backup_node",
     "backup_all",
+    "backup_export",
     "oxidized_reload",
     "oxidized_restart",
     "config_apply",
@@ -47,6 +48,7 @@ class User(Base):
     full_name: Mapped[str | None] = mapped_column(String(128), nullable=True)
     email: Mapped[str | None] = mapped_column(String(254), nullable=True)
     avatar_filename: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    scope_groups: Mapped[list[str] | None] = mapped_column(JSON, nullable=True)
     role: Mapped[str] = mapped_column(String(16), nullable=False, default="viewer")
     language: Mapped[str] = mapped_column(String(16), nullable=False, default="es")
     theme: Mapped[str] = mapped_column(String(16), nullable=False, default="system")
@@ -348,6 +350,18 @@ class SystemSettings(Base):
     notify_webhook_url: Mapped[str] = mapped_column(Text, nullable=False, default="")
     notify_on_failure: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
     notify_stale_hours: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    retry_failed_enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    retry_max_attempts: Mapped[int] = mapped_column(Integer, nullable=False, default=3)
+    retry_base_minutes: Mapped[int] = mapped_column(Integer, nullable=False, default=15)
+    digest_enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    digest_hour: Mapped[int] = mapped_column(Integer, nullable=False, default=8)
+    export_enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    export_interval_hours: Mapped[int] = mapped_column(Integer, nullable=False, default=24)
+    export_config_ciphertext: Mapped[str | None] = mapped_column(Text, nullable=True)
+    export_next_run_at: Mapped[Any | None] = mapped_column(UTCDateTime, nullable=True)
+    export_last_run_at: Mapped[Any | None] = mapped_column(UTCDateTime, nullable=True)
+    export_last_status: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    export_last_error: Mapped[str | None] = mapped_column(String(255), nullable=True)
     site_name: Mapped[str] = mapped_column(String(100), nullable=False, default="Oxidized UI")
     logo_filename: Mapped[str | None] = mapped_column(String(255), nullable=True)
     updated_by_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
@@ -364,6 +378,8 @@ class NotificationChannel(Base):
     enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
     config_ciphertext: Mapped[str] = mapped_column(Text, nullable=False)
     events: Mapped[list[str]] = mapped_column(JSON, nullable=False, default=list)
+    digest_enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    last_digest_at: Mapped[Any | None] = mapped_column(UTCDateTime, nullable=True)
     created_at: Mapped[Any] = mapped_column(UTCDateTime, nullable=False, default=utcnow)
     updated_at: Mapped[Any] = mapped_column(UTCDateTime, nullable=False, default=utcnow, onupdate=utcnow)
 
@@ -388,3 +404,64 @@ class AuditLog(Base):
     ip: Mapped[str | None] = mapped_column(String(64), nullable=True)
     user_agent: Mapped[str | None] = mapped_column(String(512), nullable=True)
     created_at: Mapped[Any] = mapped_column(UTCDateTime, nullable=False, default=utcnow)
+
+
+class NodeRetry(Base):
+    __tablename__ = "node_retries"
+    __table_args__ = (Index("ix_node_retries_due", "next_attempt_at"),)
+
+    node_id: Mapped[int] = mapped_column(ForeignKey("nodes.id", ondelete="CASCADE"), primary_key=True)
+    attempts: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    next_attempt_at: Mapped[Any] = mapped_column(UTCDateTime, nullable=False)
+    failure_at: Mapped[Any | None] = mapped_column(UTCDateTime, nullable=True)
+    exhausted_notified: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    last_error: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    created_at: Mapped[Any] = mapped_column(UTCDateTime, nullable=False, default=utcnow)
+    updated_at: Mapped[Any] = mapped_column(UTCDateTime, nullable=False, default=utcnow, onupdate=utcnow)
+
+
+class NodeConfigState(Base):
+    __tablename__ = "node_config_state"
+
+    node_id: Mapped[int] = mapped_column(ForeignKey("nodes.id", ondelete="CASCADE"), primary_key=True)
+    last_mtime: Mapped[Any | None] = mapped_column(UTCDateTime, nullable=True)
+    content_sha256: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    last_changed_at: Mapped[Any | None] = mapped_column(UTCDateTime, nullable=True)
+    last_checked_at: Mapped[Any | None] = mapped_column(UTCDateTime, nullable=True)
+
+
+class MaintenanceWindow(Base):
+    __tablename__ = "maintenance_windows"
+    __table_args__ = (Index("ix_maintenance_window_span", "starts_at", "ends_at"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    scope_type: Mapped[str] = mapped_column(String(16), nullable=False, default="node")
+    node_id: Mapped[int | None] = mapped_column(ForeignKey("nodes.id", ondelete="CASCADE"), nullable=True)
+    group_name: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    starts_at: Mapped[Any] = mapped_column(UTCDateTime, nullable=False)
+    ends_at: Mapped[Any] = mapped_column(UTCDateTime, nullable=False)
+    reason: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    created_by_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    created_at: Mapped[Any] = mapped_column(UTCDateTime, nullable=False, default=utcnow)
+
+
+class ConfigTemplate(Base):
+    __tablename__ = "config_templates"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    name: Mapped[str] = mapped_column(String(100), nullable=False, unique=True)
+    scope_type: Mapped[str] = mapped_column(String(16), nullable=False, default="global")
+    scope_value: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    content: Mapped[str] = mapped_column(Text, nullable=False)
+    created_by_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    created_at: Mapped[Any] = mapped_column(UTCDateTime, nullable=False, default=utcnow)
+    updated_at: Mapped[Any] = mapped_column(UTCDateTime, nullable=False, default=utcnow, onupdate=utcnow)
+
+
+class UserPreference(Base):
+    __tablename__ = "user_preferences"
+
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), primary_key=True)
+    favorites: Mapped[list[int]] = mapped_column(JSON, nullable=False, default=list)
+    saved_filters: Mapped[list[dict[str, Any]]] = mapped_column(JSON, nullable=False, default=list)
+    updated_at: Mapped[Any] = mapped_column(UTCDateTime, nullable=False, default=utcnow, onupdate=utcnow)

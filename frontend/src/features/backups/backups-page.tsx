@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { CalendarClock, Info, Trash2, TriangleAlert } from "lucide-react";
+import { CalendarClock, Check, Info, Pencil, Trash2, TriangleAlert } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -11,6 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { useIntl, usePageTitle } from "@/hooks/use-app";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
@@ -31,6 +32,8 @@ export function BackupsPage() {
   const queryClient = useQueryClient();
   const [scheduleGroup, setScheduleGroup] = useState(ALL_GROUPS);
   const [scheduleInterval, setScheduleInterval] = useState(1440);
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editingValue, setEditingValue] = useState("");
   usePageTitle("nav.backups");
 
   const schedulesQuery = useQuery({
@@ -61,6 +64,17 @@ export function BackupsPage() {
     mutationFn: (id: number) => api.deleteBackupSchedule(id),
     onSuccess: () => {
       toast.success(t("logs.scheduleDeleted"));
+      void queryClient.invalidateQueries({ queryKey: ["backup-schedules"] });
+    },
+    onError: (error) => notifyError(t, error),
+  });
+
+  const updateSchedule = useMutation({
+    mutationFn: ({ id, payload }: { id: number; payload: { interval_minutes?: number; enabled?: boolean } }) =>
+      api.updateBackupSchedule(id, payload),
+    onSuccess: () => {
+      toast.success(t("backups.scheduleUpdated"));
+      setEditingId(null);
       void queryClient.invalidateQueries({ queryKey: ["backup-schedules"] });
     },
     onError: (error) => notifyError(t, error),
@@ -152,8 +166,8 @@ export function BackupsPage() {
 
           <div className="divide-y">
             {(schedules?.items ?? []).map((schedule) => (
-              <div key={schedule.id} className="flex items-center justify-between gap-3 py-2 text-xs">
-                <div className="min-w-0 space-y-0.5">
+              <div key={schedule.id} className="flex flex-wrap items-center justify-between gap-3 py-2 text-xs">
+                <div className="min-w-0 flex-1 space-y-0.5">
                   <p className="flex flex-wrap items-center gap-2">
                     <span className="font-medium">
                       {schedule.group_name ?? t("logs.scheduleAllGroups")}
@@ -161,9 +175,50 @@ export function BackupsPage() {
                     <span className="text-muted-foreground">
                       {t("backups.nodesCount", { count: schedule.node_count })}
                     </span>
-                    <span className="rounded-full border border-border/70 bg-muted/40 px-2 py-0.5 font-mono text-[10px]">
-                      {t("backups.everyCadence", { value: cadenceValue(schedule.interval_minutes) })}
-                    </span>
+                    {editingId === schedule.id ? (
+                      <span className="inline-flex items-center gap-1">
+                        <Input
+                          type="number"
+                          min={15}
+                          max={10080}
+                          value={editingValue}
+                          onChange={(event) => setEditingValue(event.target.value)}
+                          className="h-6 w-24 rounded px-1.5 py-0 text-[11px]"
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon-xs"
+                          aria-label={t("common.save")}
+                          disabled={updateSchedule.isPending || Number(editingValue) < 15}
+                          onClick={() =>
+                            updateSchedule.mutate({
+                              id: schedule.id,
+                              payload: { interval_minutes: Number(editingValue) },
+                            })
+                          }
+                        >
+                          {updateSchedule.isPending ? <Spinner /> : <Check />}
+                        </Button>
+                      </span>
+                    ) : (
+                      <button
+                        type="button"
+                        className="inline-flex items-center gap-1 rounded-full border border-border/70 bg-muted/40 px-2 py-0.5 font-mono text-[10px] hover:border-primary/40 hover:text-primary"
+                        onClick={() => {
+                          setEditingId(schedule.id);
+                          setEditingValue(String(schedule.interval_minutes));
+                        }}
+                      >
+                        {t("backups.everyCadence", { value: cadenceValue(schedule.interval_minutes) })}
+                        <Pencil className="h-2.5 w-2.5" />
+                      </button>
+                    )}
+                    {!schedule.enabled ? (
+                      <span className="rounded-full border border-border/70 px-2 py-0.5 text-[10px] text-muted-foreground">
+                        {t("backups.paused")}
+                      </span>
+                    ) : null}
                   </p>
                   <p className="font-mono text-[10px] text-muted-foreground">
                     {t("backups.lastRun", { value: schedule.last_run_at ? intl.dateTime(schedule.last_run_at) : t("backups.never") })}
@@ -171,16 +226,26 @@ export function BackupsPage() {
                     {t("backups.nextRun", { value: schedule.next_run_at ? intl.dateTime(schedule.next_run_at) : "—" })}
                   </p>
                 </div>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="text-muted-foreground hover:text-destructive"
-                  onClick={() => deleteSchedule.mutate(schedule.id)}
-                >
-                  <Trash2 />
-                  {t("common.delete")}
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Switch
+                    checked={schedule.enabled}
+                    aria-label={t("backups.enabled")}
+                    disabled={updateSchedule.isPending}
+                    onCheckedChange={(checked) =>
+                      updateSchedule.mutate({ id: schedule.id, payload: { enabled: checked } })
+                    }
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="text-muted-foreground hover:text-destructive"
+                    onClick={() => deleteSchedule.mutate(schedule.id)}
+                  >
+                    <Trash2 />
+                    {t("common.delete")}
+                  </Button>
+                </div>
               </div>
             ))}
             {(schedules?.items ?? []).length === 0 ? (

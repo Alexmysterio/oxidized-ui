@@ -70,6 +70,9 @@ def create_backup_all_job(
     request: Request,
 ) -> JobModel:
     nodes = list(db.scalars(select(Node).order_by(Node.name)).all())
+    if actor.scope_groups:
+        scope = set(actor.scope_groups)
+        nodes = [node for node in nodes if node.group_name in scope]
     if node_ids is not None:
         selected = set(node_ids)
         nodes = [node for node in nodes if node.id in selected]

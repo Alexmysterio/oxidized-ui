@@ -386,6 +386,27 @@ export function NodeDetailPage() {
         </div>
       ) : null}
 
+      {node.maintenance ? (
+        <div className="flex gap-3 rounded-lg border border-info/25 bg-info/[0.045] p-3 text-xs">
+          <CalendarClock className="mt-0.5 h-4 w-4 shrink-0 text-info" />
+          <p>{t("nodeDetail.maintenanceActive")}</p>
+        </div>
+      ) : null}
+
+      {node.retry ? (
+        <div className="flex gap-3 rounded-lg border border-border bg-muted/20 p-3 text-xs">
+          <RefreshCw className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+          <p>
+            {node.retry.exhausted
+              ? t("nodeDetail.retryExhausted", { attempts: node.retry.attempts })
+              : t("nodeDetail.retryScheduled", {
+                  attempts: node.retry.attempts,
+                  value: node.retry.next_attempt_at ? intl.relative(node.retry.next_attempt_at) : "—",
+                })}
+          </p>
+        </div>
+      ) : null}
+
       <Tabs value={tab} onValueChange={setTab}>
         <TabsList className="h-auto w-full justify-start overflow-x-auto rounded-lg border bg-card p-1 shadow-xs sm:w-auto">
           <TabsTrigger value="overview">{t("nodeDetail.overview")}</TabsTrigger>
@@ -494,7 +515,10 @@ export function NodeDetailPage() {
                 {duration !== null ? (
                   <InfoRow label={t("nodeDetail.duration")} mono>{new Intl.NumberFormat(intl.language, { style: "unit", unit: "second", unitDisplay: "short" }).format(duration)}</InfoRow>
                 ) : null}
-                <InfoRow label={t("nodeDetail.observed")}>{status?.observed_at ? intl.relative(status.observed_at) : "—"}</InfoRow>
+                <InfoRow label={t("nodeDetail.observed")}>{status?.observed_at ? intl.relative(status.observed_at) : "-"}</InfoRow>
+                <InfoRow label={t("nodeDetail.lastConfigChange")}>
+                  {node.config_state?.last_changed_at ? intl.dateTime(node.config_state.last_changed_at) : t("common.never")}
+                </InfoRow>
                 {status?.last_status_raw ? (
                   <InfoRow label={t("nodeDetail.rawStatus")} mono>{status.last_status_raw}</InfoRow>
                 ) : null}

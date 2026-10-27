@@ -50,6 +50,7 @@ from fastapi.testclient import TestClient  # noqa: E402
 
 from app import (  # noqa: E402
     backup_service,
+    config_alert_service,
     config_service,
     docker_api,
     log_service,
@@ -83,6 +84,9 @@ class AutoClient:
 
     def patch(self, path: str, **kwargs):
         return self.raw.patch(path, headers={**self.headers, **kwargs.pop("headers", {})}, **kwargs)
+
+    def put(self, path: str, **kwargs):
+        return self.raw.put(path, headers={**self.headers, **kwargs.pop("headers", {})}, **kwargs)
 
     def delete(self, path: str, **kwargs):
         return self.raw.delete(path, headers={**self.headers, **kwargs.pop("headers", {})}, **kwargs)
@@ -181,6 +185,7 @@ def fake_clients(monkeypatch):
     monkeypatch.setattr(status_service, "oxidized_client_for", lambda db=None: oxidized)
     monkeypatch.setattr(status_service, "docker_client_for", lambda db=None: docker)
     monkeypatch.setattr(version_service, "client_for", lambda db=None: oxidized)
+    monkeypatch.setattr(config_alert_service, "oxidized_client_for", lambda db=None: oxidized)
     monkeypatch.setattr(search_service, "client_for", lambda db=None: oxidized)
     monkeypatch.setattr(log_service, "client_for", lambda db=None: docker)
     monkeypatch.setattr(config_service, "docker_client_for", lambda db=None: docker)

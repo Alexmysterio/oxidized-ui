@@ -21,7 +21,7 @@ import { errorMessage } from "@/lib/errors";
 import type { NotificationChannel, NotificationEvent, NotificationKind } from "@/types/api";
 
 const KINDS: NotificationKind[] = ["webhook", "slack", "discord", "telegram"];
-const EVENTS: NotificationEvent[] = ["job.failed", "backup.stale"];
+const EVENTS: NotificationEvent[] = ["job.failed", "backup.stale", "config.changed", "backup.retry_exhausted"];
 
 const KIND_ICONS = {
   webhook: Globe,
@@ -43,6 +43,8 @@ function eventLabel(t: TFunction, event: NotificationEvent): string {
   return {
     "job.failed": t("system.eventJobFailed"),
     "backup.stale": t("system.eventBackupStale"),
+    "config.changed": t("system.eventConfigChanged"),
+    "backup.retry_exhausted": t("system.eventRetryExhausted"),
   }[event];
 }
 
@@ -55,6 +57,7 @@ export function NotificationsCard() {
   const [name, setName] = useState("");
   const [kind, setKind] = useState<NotificationKind>("webhook");
   const [enabled, setEnabled] = useState(true);
+  const [digest, setDigest] = useState(false);
   const [events, setEvents] = useState<NotificationEvent[]>(["job.failed", "backup.stale"]);
   const [config, setConfig] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
@@ -66,6 +69,7 @@ export function NotificationsCard() {
     setName(channel?.name ?? "");
     setKind(channel?.kind ?? "webhook");
     setEnabled(channel?.enabled ?? true);
+    setDigest(channel?.digest_enabled ?? false);
     setEvents(channel?.events?.length ? channel.events : ["job.failed", "backup.stale"]);
     setConfig(channel?.config ?? {});
     setError(null);
@@ -77,6 +81,7 @@ export function NotificationsCard() {
         name: name.trim(),
         kind,
         enabled,
+        digest_enabled: digest,
         events,
         config: Object.fromEntries(Object.entries(config).filter(([, value]) => value.trim())),
       };
@@ -151,6 +156,9 @@ export function NotificationsCard() {
                         {channel.enabled ? t("system.channelEnabled") : t("system.channelDisabled")}
                       </Badge>
                       <span className="text-[10px] text-muted-foreground">{kindLabel(t, channel.kind)}</span>
+                      {channel.digest_enabled ? (
+                        <Badge variant="info" className="text-[9px]">{t("system.channelDigestShort")}</Badge>
+                      ) : null}
                     </div>
                     <p className="mt-0.5 text-[10px] text-muted-foreground">
                       {channel.events.map((event) => eventLabel(t, event)).join(" · ")}
@@ -203,6 +211,14 @@ export function NotificationsCard() {
             <div className="flex items-center justify-between rounded-md border p-3">
               <span className="text-xs font-medium">{t("system.channelEnabled")}</span>
               <Switch checked={enabled} onCheckedChange={setEnabled} />
+            </div>
+
+            <div className="flex items-center justify-between rounded-md border p-3">
+              <div>
+                <span className="text-xs font-medium">{t("system.channelDigest")}</span>
+                <p className="mt-0.5 text-[10px] text-muted-foreground">{t("system.channelDigestHelp")}</p>
+              </div>
+              <Switch checked={digest} onCheckedChange={setDigest} />
             </div>
 
             <div className="space-y-2">

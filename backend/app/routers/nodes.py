@@ -20,7 +20,6 @@ from ..node_service import (
     create_node,
     delete_node,
     export_csv,
-    get_node,
     import_csv,
     list_nodes,
     node_status,
@@ -30,6 +29,7 @@ from ..node_service import (
 from ..node_test_service import test_connection
 from ..ping_service import ping_host
 from ..schemas import NodeBulkRequest, NodeCreate, NodeUpdate
+from ..scope_service import require_group, scoped_node
 from ..security import AuthContext
 from ..version_service import current_config
 
@@ -44,11 +44,14 @@ def nodes_list(
     status: Literal["ok", "failed", "pending", "never"] | None = Query(default=None, alias="status"),
     sort: str = Query(default="name"),
     order: Literal["asc", "desc"] = "asc",
+    favorites: bool = Query(default=False),
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=25, ge=1, le=100),
     db: Session = Depends(get_db),
     context: AuthContext = Depends(get_auth_context),
 ):
+    from ..scope_service import favorite_ids
+
     return list_nodes(
         db,
         role=context.role,
@@ -60,15 +63,17 @@ def nodes_list(
         order=order,
         page=page,
         page_size=page_size,
+        allowed_groups=context.scope_groups,
+        favorite_ids=favorite_ids(db, context.user_id) if favorites else None,
     )
 
 
 @router.get("/export.csv")
 def export_nodes(
     db: Session = Depends(get_db),
-    _context: AuthContext = Depends(require_operator),
+    context: AuthContext = Depends(require_operator),
 ):
-    content = export_csv(db)
+    content = export_csv(db, allowed_groups=context.scope_groups)
     return Response(
         content=content,
         media_type="text/csv; charset=utf-8",
@@ -84,6 +89,7 @@ def create_node_route(
     context: AuthContext = Depends(require_operator),
 ):
     previous_count = db.scalar(select(func.count(Node.id))) or 0
+    require_group(context, payload.group_name)
     result = create_node(
         db,
         payload=payload,
@@ -104,6 +110,15 @@ def bulk_nodes(
 ):
     if len(payload.ids) > 1000:
         raise AppError("node.bulk_too_large")
+    if context.scope_groups is not None:
+        allowed = {
+            node.id
+            for node in db.scalars(select(Node)).all()
+            if node.group_name in context.scope_groups
+        }
+        payload.ids = [node_id for node_id in payload.ids if node_id in allowed]
+    if payload.group_name is not None:
+        require_group(context, payload.group_name)
     result = bulk_action(
         db,
         action=payload.action,
@@ -133,6 +148,8 @@ def import_nodes(
     if mode not in {"skip_existing", "update_existing"}:
         raise AppError("validation.invalid_choice", params={"field": "mode"})
     content = file.file.read(5_000_001)
+    if context.scope_groups is not None:
+        raise AppError("auth.forbidden")
     return import_csv(
         db,
         content=content,
@@ -150,12 +167,12 @@ def compare_nodes(
     left_id: int = Query(ge=1),
     right_id: int = Query(ge=1),
     db: Session = Depends(get_db),
-    _context: AuthContext = Depends(get_auth_context),
+    context: AuthContext = Depends(get_auth_context),
 ):
     if left_id == right_id:
         raise AppError("validation.invalid_format", params={"field": "node_id"})
-    left = get_node(db, left_id)
-    right = get_node(db, right_id)
+    left = scoped_node(db, context, left_id)
+    right = scoped_node(db, context, right_id)
     left_config = current_config(db, left)
     right_config = current_config(db, right)
     return {
@@ -171,7 +188,7 @@ def node_detail(
     db: Session = Depends(get_db),
     context: AuthContext = Depends(get_auth_context),
 ):
-    node = get_node(db, node_id)
+    node = scoped_node(db, context, node_id)
     return serialize_node(db, node, role=context.role, include_effective=True)
 
 
@@ -183,6 +200,9 @@ def node_update(
     db: Session = Depends(get_db),
     context: AuthContext = Depends(require_operator),
 ):
+    scoped_node(db, context, node_id)
+    if "group_name" in payload.model_dump(exclude_unset=True):
+        require_group(context, payload.group_name)
     return update_node(db, node_id=node_id, payload=payload, actor=context, request=request)
 
 
@@ -193,6 +213,7 @@ def node_delete(
     db: Session = Depends(get_db),
     context: AuthContext = Depends(require_operator),
 ):
+    scoped_node(db, context, node_id)
     return delete_node(db, node_id=node_id, actor=context, request=request)
 
 
@@ -203,7 +224,7 @@ def node_backup(
     db: Session = Depends(get_db),
     context: AuthContext = Depends(require_operator),
 ):
-    node = get_node(db, node_id)
+    node = scoped_node(db, context, node_id)
     job = create_backup_node_job(db, node=node, actor=context, request=request)
     return serialize_job(db, job)
 
@@ -215,7 +236,7 @@ def node_test_connection(
     db: Session = Depends(get_db),
     context: AuthContext = Depends(require_operator),
 ):
-    node = get_node(db, node_id)
+    node = scoped_node(db, context, node_id)
     result = test_connection(db, node)
     add_audit(
         db,
@@ -245,7 +266,7 @@ def node_ping(
     db: Session = Depends(get_db),
     context: AuthContext = Depends(require_operator),
 ):
-    node = get_node(db, node_id)
+    node = scoped_node(db, context, node_id)
     result = ping_host(node.address or "")
     add_audit(
         db,
@@ -272,7 +293,7 @@ def node_trust_host_key(
     db: Session = Depends(get_db),
     context: AuthContext = Depends(require_operator),
 ):
-    node = get_node(db, node_id)
+    node = scoped_node(db, context, node_id)
     return trust_host_key(db, node, actor=context, request=request)
 
 
@@ -282,9 +303,9 @@ def node_history(
     node_id: int,
     limit: int = Query(default=50, ge=1, le=200),
     db: Session = Depends(get_db),
-    _context: AuthContext = Depends(get_auth_context),
+    context: AuthContext = Depends(get_auth_context),
 ):
-    node = get_node(db, node_id)
+    node = scoped_node(db, context, node_id)
     rows = db.scalars(
         select(BackupRun).where(BackupRun.node_id == node.id).order_by(BackupRun.started_at.desc()).limit(limit)
     ).all()
@@ -313,7 +334,7 @@ def node_status_route(
     db: Session = Depends(get_db),
     context: AuthContext = Depends(get_auth_context),
 ):
-    node = get_node(db, node_id)
+    node = scoped_node(db, context, node_id)
     result = node_status(db, node, refresh=refresh)
     if context.role == "viewer":
         result["last_error"] = None

@@ -7,11 +7,13 @@ import {
   FileCode2,
   Gauge,
   Network,
+  Scale,
   ScrollText,
   ServerCog,
   Settings2,
   ShieldCheck,
   UsersRound,
+  Wrench,
   X,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
@@ -54,6 +56,8 @@ const groups: NavGroup[] = [
     items: [
       { to: "/config", labelKey: "nav.config", icon: FileCode2, capability: "config.read" },
       { to: "/backups", labelKey: "nav.backups", icon: CalendarClock, capability: "backups.trigger" },
+      { to: "/maintenance", labelKey: "nav.maintenance", icon: Wrench, capability: "backups.trigger" },
+      { to: "/compliance", labelKey: "nav.compliance", icon: Scale, capability: "compliance.read" },
       { to: "/status", labelKey: "nav.status", icon: Activity, capability: "logs.read" },
     ],
   },

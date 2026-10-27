@@ -16,6 +16,7 @@ import { PasswordInput } from "@/components/shared/password-input";
 import { Spinner, TableSkeleton } from "@/components/shared/loaders";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   DropdownMenu,
@@ -43,6 +44,7 @@ interface CreateValues {
   language: string;
   full_name: string;
   email: string;
+  scope_groups: string[];
 }
 
 function UserDialog({
@@ -63,8 +65,15 @@ function UserDialog({
 
   const createForm = useForm<CreateValues>({
     resolver: zodResolver(userSchema(t)),
-    defaultValues: { username: "", password: "", role: "operator", language: "es", full_name: "", email: "" },
+    defaultValues: { username: "", password: "", role: "operator", language: "es", full_name: "", email: "", scope_groups: [] },
   });
+
+  const groupsQuery = useQuery({
+    queryKey: ["groups"],
+    queryFn: api.groups,
+    enabled: open,
+  });
+  const availableGroups = (groupsQuery.data?.groups ?? []).filter((item) => item.state === "applied");
 
   const editSchema = z.object({
     role: z.enum(["admin", "operator", "viewer"]),
@@ -72,8 +81,16 @@ function UserDialog({
     is_active: z.boolean(),
     full_name: z.string().max(128),
     email: z.string().max(254),
+    scope_groups: z.array(z.string()),
   });
-  const editForm = useForm<{ role: Role; language: string; is_active: boolean; full_name: string; email: string }>({
+  const editForm = useForm<{
+    role: Role;
+    language: string;
+    is_active: boolean;
+    full_name: string;
+    email: string;
+    scope_groups: string[];
+  }>({
     resolver: zodResolver(editSchema),
     defaultValues: {
       role: user?.role ?? "operator",
@@ -81,6 +98,7 @@ function UserDialog({
       is_active: user?.is_active ?? true,
       full_name: user?.full_name ?? "",
       email: user?.email ?? "",
+      scope_groups: user?.scope_groups ?? [],
     },
   });
 
@@ -94,6 +112,7 @@ function UserDialog({
         is_active: user.is_active ?? true,
         full_name: user.full_name ?? "",
         email: user.email ?? "",
+        scope_groups: user.scope_groups ?? [],
       });
     } else {
       createForm.reset({
@@ -103,6 +122,7 @@ function UserDialog({
         language: meta?.default_language ?? "es",
         full_name: "",
         email: "",
+        scope_groups: [],
       });
     }
   }, [open, user, meta?.default_language, createForm, editForm]);
@@ -185,6 +205,31 @@ function UserDialog({
                   </Select>
                 </div>
               </div>
+              <div className="space-y-2">
+                <Label>{t("users.scopeGroups")}</Label>
+                <p className="text-[10px] text-muted-foreground">{t("users.scopeGroupsHelp")}</p>
+                <div className="flex flex-wrap gap-2">
+                  {availableGroups.map((group) => {
+                    const current = editForm.watch("scope_groups");
+                    const checked = current.includes(group.name);
+                    return (
+                      <label key={group.name} className="flex items-center gap-1.5 rounded-md border px-2 py-1 text-[11px]">
+                        <Checkbox
+                          checked={checked}
+                          onCheckedChange={(value) =>
+                            editForm.setValue(
+                              "scope_groups",
+                              value ? [...current, group.name] : current.filter((name) => name !== group.name),
+                            )
+                          }
+                        />
+                        {group.name}
+                      </label>
+                    );
+                  })}
+                  {!availableGroups.length ? <p className="text-[10px] text-muted-foreground">{t("users.noGroups")}</p> : null}
+                </div>
+              </div>
               <div className="flex items-center justify-between rounded-md border p-3">
                 <div>
                   <p className="text-xs font-medium">{t("users.active")}</p>
@@ -244,6 +289,30 @@ function UserDialog({
                       {languages.map((language) => <SelectItem key={language} value={language}>{t(`languages.${language}`)}</SelectItem>)}
                     </SelectContent>
                   </Select>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>{t("users.scopeGroups")}</Label>
+                <p className="text-[10px] text-muted-foreground">{t("users.scopeGroupsHelp")}</p>
+                <div className="flex flex-wrap gap-2">
+                  {availableGroups.map((group) => {
+                    const current = createForm.watch("scope_groups");
+                    const checked = current.includes(group.name);
+                    return (
+                      <label key={group.name} className="flex items-center gap-1.5 rounded-md border px-2 py-1 text-[11px]">
+                        <Checkbox
+                          checked={checked}
+                          onCheckedChange={(value) =>
+                            createForm.setValue(
+                              "scope_groups",
+                              value ? [...current, group.name] : current.filter((name) => name !== group.name),
+                            )
+                          }
+                        />
+                        {group.name}
+                      </label>
+                    );
+                  })}
                 </div>
               </div>
             </form>
@@ -409,7 +478,16 @@ export function UsersPage() {
                       </div>
                     </div>
                   </TableCell>
-                  <TableCell><Badge variant={user.role === "admin" ? "default" : "secondary"}>{t(`roles.${user.role}`)}</Badge></TableCell>
+                  <TableCell>
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <Badge variant={user.role === "admin" ? "default" : "secondary"}>{t(`roles.${user.role}`)}</Badge>
+                      {user.role !== "admin" ? (
+                        <Badge variant="outline">
+                          {user.scope_groups?.length ? user.scope_groups.join(", ") : t("users.scopeAll")}
+                        </Badge>
+                      ) : null}
+                    </div>
+                  </TableCell>
                   <TableCell><Badge variant={user.is_active === false ? "outline" : "success"}>{user.is_active === false ? t("users.inactive") : t("users.active")}</Badge></TableCell>
                   <TableCell className="hidden text-xs text-muted-foreground lg:table-cell">{user.last_login_at ? intl.dateTime(user.last_login_at) : t("common.never")}</TableCell>
                   <TableCell className="hidden text-xs text-muted-foreground xl:table-cell">{user.created_at ? intl.date(user.created_at) : "—"}</TableCell>

@@ -6,18 +6,23 @@ import type {
   BackupSchedule,
   BackupScheduleList,
   Catalog,
+  ComplianceNodeReport,
+  ComplianceReport,
+  ConfigTemplate,
   ConfigDraftResponse,
   ConfigRevisionDetail,
   ConfigSearchResult,
   ConfigState,
   ConfigValidation,
   DiffResult,
+  ExportStatus,
   Group,
   GroupInput,
   GroupList,
   ImportSummary,
   Job,
   LogSnapshot,
+  MaintenanceWindow,
   Meta,
   MfaChallenge,
   MfaEnableResult,
@@ -38,6 +43,7 @@ import type {
   Paginated,
   Revision,
   Role,
+  SavedFilter,
   ScheduledApply,
   SearchResults,
   SessionInfo,
@@ -45,6 +51,7 @@ import type {
   StatusPayload,
   SystemSettings,
   User,
+  UserPreferences,
   VersionContent,
   VersionsResponse,
 } from "@/types/api";
@@ -396,7 +403,53 @@ export const api = {
   backupSchedules: () => request<BackupScheduleList>("/backups/schedules"),
   createBackupSchedule: (group_name: string | null, interval_minutes: number) =>
     request<BackupSchedule>("/backups/schedules", { method: "POST", body: { group_name, interval_minutes } }),
+  updateBackupSchedule: (id: number, payload: { interval_minutes?: number; enabled?: boolean }) =>
+    request<BackupSchedule>(`/backups/schedules/${id}`, { method: "PATCH", body: payload }),
   deleteBackupSchedule: (id: number) => request<void>(`/backups/schedules/${id}`, { method: "DELETE" }),
+
+  maintenanceWindows: (include_finished = false) =>
+    request<{ items: MaintenanceWindow[] }>("/maintenance", { query: { include_finished } }),
+  createMaintenanceWindow: (payload: {
+    scope_type: "node" | "group" | "global";
+    node_id?: number | null;
+    group_name?: string | null;
+    starts_at: string;
+    ends_at: string;
+    reason?: string | null;
+  }) => request<{ id: number }>("/maintenance", { method: "POST", body: payload }),
+  deleteMaintenanceWindow: (id: number) => request<void>(`/maintenance/${id}`, { method: "DELETE" }),
+
+  complianceTemplates: () => request<{ items: ConfigTemplate[] }>("/compliance/templates"),
+  createComplianceTemplate: (payload: {
+    name: string;
+    scope_type: "global" | "group" | "model";
+    scope_value?: string | null;
+    content: string;
+  }) => request<ConfigTemplate>("/compliance/templates", { method: "POST", body: payload }),
+  updateComplianceTemplate: (
+    id: number,
+    payload: { name?: string; scope_type?: "global" | "group" | "model"; scope_value?: string | null; content?: string },
+  ) => request<ConfigTemplate>(`/compliance/templates/${id}`, { method: "PATCH", body: payload }),
+  deleteComplianceTemplate: (id: number) => request<void>(`/compliance/templates/${id}`, { method: "DELETE" }),
+  complianceReport: (query?: { group?: string; model?: string; template_id?: number; limit?: number }) =>
+    request<ComplianceReport>("/compliance/report", { query: query as Query }),
+  complianceNodeReport: (nodeId: number, templateId?: number) =>
+    request<ComplianceNodeReport>(`/compliance/report/${nodeId}`, {
+      query: templateId ? { template_id: templateId } : undefined,
+    }),
+
+  preferences: () => request<UserPreferences>("/me/preferences"),
+  updatePreferences: (payload: { favorites?: number[]; saved_filters?: SavedFilter[] }) =>
+    request<UserPreferences>("/me/preferences", { method: "PATCH", body: payload }),
+
+  exportStatus: () => request<ExportStatus>("/system/export"),
+  configureExport: (payload: {
+    kind: "sftp" | "s3";
+    interval_hours: number;
+    enabled: boolean;
+    config: Record<string, unknown>;
+  }) => request<ExportStatus>("/system/export", { method: "PUT", body: payload }),
+  runExport: () => request<Job>("/system/export/run", { method: "POST" }),
   reloadOxidized: () => request<{ reloaded: boolean }>("/oxidized/reload", { method: "POST" }),
   restartOxidized: () => request<Job>("/oxidized/restart", { method: "POST" }),
 

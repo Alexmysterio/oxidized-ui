@@ -31,7 +31,16 @@ from .timeutil import ensure_utc, to_iso, utcnow
 
 logger = logging.getLogger("oxidized_ui.nodes")
 
-NODE_SORT_FIELDS = {"name", "address", "model", "group_name", "updated_at", "status", "last_backup_at"}
+NODE_SORT_FIELDS = {
+    "name",
+    "address",
+    "model",
+    "group_name",
+    "updated_at",
+    "status",
+    "last_backup_at",
+    "last_failure_at",
+}
 CSV_COLUMNS = [
     "name",
     "address",
@@ -119,6 +128,13 @@ def serialize_node(db: Session, node: Node, *, role: str, include_effective: boo
     data["warnings"] = warnings
     if include_effective and role in {"admin", "operator"}:
         data["effective"] = effective_node_settings(db, node)
+    from .config_alert_service import state_public
+    from .maintenance_service import node_in_maintenance
+    from .retry_service import retry_public
+
+    data["maintenance"] = node_in_maintenance(db, node)
+    data["retry"] = retry_public(db, node.id)
+    data["config_state"] = state_public(db, node.id)
     return data
 
 
@@ -134,12 +150,18 @@ def list_nodes(
     order: str = "asc",
     page: int = 1,
     page_size: int = 25,
+    allowed_groups: list[str] | None = None,
+    favorite_ids: set[int] | None = None,
 ) -> dict[str, Any]:
     if sort not in NODE_SORT_FIELDS:
         sort = "name"
     if order not in {"asc", "desc"}:
         order = "asc"
     query = select(Node)
+    if allowed_groups is not None:
+        query = query.where(Node.group_name.in_(allowed_groups))
+    if favorite_ids is not None:
+        query = query.where(Node.id.in_(favorite_ids or {-1}))
     if group_name:
         query = query.where(Node.group_name == group_name)
     if model:
@@ -161,6 +183,7 @@ def list_nodes(
         )
         cache = cache_by_node.get(node.id)
         node._last_backup = cache.last_success_at if cache else None  # type: ignore[attr-defined]
+        node._last_failure = cache.last_failure_at if cache else None  # type: ignore[attr-defined]
     if status_filter:
         rows = [node for node in rows if node._status_bucket == status_filter]  # type: ignore[attr-defined]
 
@@ -169,6 +192,11 @@ def list_nodes(
     elif sort == "last_backup_at":
         rows.sort(
             key=lambda node: ensure_utc(node._last_backup) or utcnow().replace(year=1970),  # type: ignore[attr-defined]
+            reverse=order == "desc",
+        )
+    elif sort == "last_failure_at":
+        rows.sort(
+            key=lambda node: ensure_utc(node._last_failure) or utcnow().replace(year=1970),  # type: ignore[attr-defined]
             reverse=order == "desc",
         )
     else:
@@ -622,11 +650,14 @@ def _csv_cell(value: Any) -> str:
     return text
 
 
-def export_csv(db: Session) -> str:
+def export_csv(db: Session, *, allowed_groups: list[str] | None = None) -> str:
     buffer = io.StringIO()
     writer = csv.DictWriter(buffer, fieldnames=CSV_COLUMNS, lineterminator="\n")
     writer.writeheader()
-    for node in db.scalars(select(Node).order_by(Node.name)).all():
+    query = select(Node).order_by(Node.name)
+    if allowed_groups is not None:
+        query = query.where(Node.group_name.in_(allowed_groups))
+    for node in db.scalars(query).all():
         writer.writerow(
             {
                 "name": _csv_cell(node.name),

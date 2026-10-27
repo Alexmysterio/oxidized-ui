@@ -26,6 +26,7 @@ def user_public(user: User, *, include_state: bool = True) -> dict[str, Any]:
         "role": user.role,
         "language": user.language,
         "theme": user.theme,
+        "scope_groups": list(user.scope_groups or []),
     }
     if include_state:
         data.update(
@@ -119,6 +120,7 @@ def node_public(
         "status": status,
         "last_status_raw": cache.status if cache else None,
         "last_backup_at": to_iso(cache.last_success_at) if cache else None,
+        "last_failure_at": to_iso(cache.last_failure_at) if cache else None,
         "last_attempt_at": to_iso(cache.last_finished_at) if cache else None,
         "updated_at": to_iso(node.updated_at),
         "warnings": [],

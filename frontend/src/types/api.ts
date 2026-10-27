@@ -58,6 +58,7 @@ export interface User {
   role: Role;
   language: string;
   theme: Theme;
+  scope_groups?: string[];
   is_active?: boolean;
   created_at?: string;
   updated_at?: string;
@@ -138,9 +139,13 @@ export interface Node {
   status: NodeStatus;
   last_status_raw: string | null;
   last_backup_at: string | null;
+  last_failure_at: string | null;
   last_attempt_at: string | null;
   updated_at: string;
   warnings: string[];
+  maintenance?: boolean;
+  retry?: { attempts: number; next_attempt_at: string | null; exhausted: boolean } | null;
+  config_state?: { last_changed_at: string | null; last_checked_at: string | null } | null;
   input?: string | null;
   port?: number | null;
   username?: string | null;
@@ -160,6 +165,7 @@ export interface NodeListParams {
   status?: NodeStatus;
   sort?: string;
   order?: "asc" | "desc";
+  favorites?: boolean;
   page?: number;
   page_size?: number;
 }
@@ -528,6 +534,11 @@ export interface SystemSettings {
   notify_webhook_url: string;
   notify_on_failure: boolean;
   notify_stale_hours: number;
+  retry_failed_enabled: boolean;
+  retry_max_attempts: number;
+  retry_base_minutes: number;
+  digest_enabled: boolean;
+  digest_hour: number;
   site_name: string;
   has_logo: boolean;
   environment: {
@@ -538,7 +549,11 @@ export interface SystemSettings {
 }
 
 export type NotificationKind = "webhook" | "slack" | "discord" | "telegram";
-export type NotificationEvent = "job.failed" | "backup.stale";
+export type NotificationEvent =
+  | "job.failed"
+  | "backup.stale"
+  | "config.changed"
+  | "backup.retry_exhausted";
 
 export interface NotificationChannel {
   id: number;
@@ -546,6 +561,7 @@ export interface NotificationChannel {
   kind: NotificationKind;
   enabled: boolean;
   events: NotificationEvent[];
+  digest_enabled: boolean;
   config: Record<string, string>;
   created_at: string | null;
   updated_at: string | null;
@@ -619,4 +635,89 @@ export interface ImportSummary {
   dry_run: boolean;
   reload_status: string;
   warnings: string[];
+}
+
+export interface MaintenanceWindow {
+  id: number;
+  scope_type: "node" | "group" | "global";
+  node_id: number | null;
+  node_name: string | null;
+  group_name: string | null;
+  starts_at: string | null;
+  ends_at: string | null;
+  reason: string | null;
+  created_at: string | null;
+  active: boolean;
+}
+
+export type ComplianceStatus = "compliant" | "deviating" | "no_template" | "error";
+
+export interface ConfigTemplate {
+  id: number;
+  name: string;
+  scope_type: "global" | "group" | "model";
+  scope_value: string | null;
+  content: string;
+  created_at: string | null;
+  updated_at: string | null;
+}
+
+export interface ComplianceItem {
+  node_id: number;
+  name: string;
+  group_name: string | null;
+  model: string;
+  template_id: number | null;
+  template_name: string | null;
+  status: ComplianceStatus;
+  additions: number;
+  deletions: number;
+}
+
+export interface ComplianceReport {
+  items: ComplianceItem[];
+  summary: { compliant: number; deviating: number; no_template: number; error: number };
+  total: number;
+}
+
+export interface ComplianceNodeReport {
+  node_id: number;
+  name: string;
+  template: ConfigTemplate;
+  diff: DiffResult;
+  additions: number;
+  deletions: number;
+  compliant: boolean;
+}
+
+export interface SavedFilter {
+  name: string;
+  query: string;
+}
+
+export interface UserPreferences {
+  favorites: number[];
+  saved_filters: SavedFilter[];
+}
+
+export interface ExportStatus {
+  configured: boolean;
+  target: {
+    kind: "sftp" | "s3" | null;
+    host?: string;
+    port?: number;
+    username?: string;
+    remote_dir?: string;
+    endpoint_url?: string;
+    region?: string;
+    bucket?: string;
+    prefix?: string;
+    has_secret?: boolean;
+  };
+  enabled: boolean;
+  interval_hours: number;
+  next_run_at: string | null;
+  last_run_at: string | null;
+  last_status: string | null;
+  last_error: string | null;
 }

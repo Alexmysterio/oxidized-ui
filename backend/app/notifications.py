@@ -16,7 +16,7 @@ from .system_service import ensure_system_settings
 logger = logging.getLogger("oxidized_ui.notifications")
 
 KINDS = ("webhook", "slack", "discord", "telegram")
-EVENTS = ("job.failed", "backup.stale")
+EVENTS = ("job.failed", "backup.stale", "config.changed", "backup.retry_exhausted")
 URL_RE = re.compile(r"^https?://\S+$")
 
 
@@ -58,6 +58,7 @@ def channel_public(row: NotificationChannel) -> dict[str, Any]:
         "kind": row.kind,
         "enabled": row.enabled,
         "events": list(row.events or []),
+        "digest_enabled": bool(row.digest_enabled),
         "config": config if isinstance(config, dict) else {},
         "created_at": row.created_at.isoformat() if row.created_at else None,
         "updated_at": row.updated_at.isoformat() if row.updated_at else None,
@@ -101,6 +102,7 @@ def create_channel(db: Session, *, payload: Any) -> NotificationChannel:
         enabled=bool(payload.enabled),
         config_ciphertext=encrypt_json(config),
         events=events,
+        digest_enabled=bool(payload.digest_enabled),
     )
     db.add(row)
     db.commit()
@@ -123,6 +125,8 @@ def update_channel(db: Session, channel_id: int, *, payload: Any) -> Notificatio
         row.enabled = bool(payload.enabled)
     if payload.events is not None:
         row.events = validate_events(payload.events)
+    if payload.digest_enabled is not None:
+        row.digest_enabled = bool(payload.digest_enabled)
     if payload.config is not None:
         row.config_ciphertext = encrypt_json(validate_config(row.kind, payload.config))
     db.commit()
@@ -245,3 +249,79 @@ def notify_stale(db: Session, node_name: str, hours: int) -> bool:
     row = ensure_system_settings(db)
     text = f"{row.site_name}: node {node_name} has no successful backup for more than {hours} hours"
     return bool(_notify(db, text=text, event="backup.stale")["ok"])
+
+
+def notify_config_change(db: Session, node_name: str, changed_at: Any) -> bool:
+    row = ensure_system_settings(db)
+    text = f"{row.site_name}: configuration changed on {node_name} ({changed_at})"
+    return bool(_notify(db, text=text, event="config.changed")["ok"])
+
+
+def notify_retry_exhausted(db: Session, node_name: str, attempts: int) -> bool:
+    row = ensure_system_settings(db)
+    text = f"{row.site_name}: giving up on {node_name} after {attempts} retries; check connectivity or credentials"
+    return bool(_notify(db, text=text, event="backup.retry_exhausted")["ok"])
+
+
+def _digest_text(db: Session, site_name: str, hours: int = 24) -> tuple[str, int]:
+    from datetime import timedelta
+
+    from sqlalchemy import func
+
+    from .models import BackupRun, NodeConfigState
+    from .models import Job as JobModel
+    from .timeutil import utcnow
+
+    cutoff = utcnow() - timedelta(hours=hours)
+    failed_jobs = db.scalar(
+        select(func.count(JobModel.id)).where(
+            JobModel.status == "failed",
+            JobModel.finished_at.is_not(None),
+            JobModel.finished_at >= cutoff,
+        )
+    ) or 0
+    failed_backups = db.scalar(
+        select(func.count(BackupRun.id)).where(
+            BackupRun.status != "success",
+            BackupRun.finished_at.is_not(None),
+            BackupRun.finished_at >= cutoff,
+        )
+    ) or 0
+    changed = db.scalar(
+        select(func.count(NodeConfigState.node_id)).where(NodeConfigState.last_changed_at >= cutoff)
+    ) or 0
+    total = int(failed_jobs) + int(failed_backups) + int(changed)
+    text = (
+        f"{site_name} daily digest ({hours} h): "
+        f"{failed_jobs} failed jobs, {failed_backups} failed backups, {changed} configuration changes"
+    )
+    return text, total
+
+
+def send_due_digests(db: Session) -> int:
+    from datetime import timedelta
+    from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
+
+    from .timeutil import utcnow
+
+    settings_row = ensure_system_settings(db)
+    if not settings_row.digest_enabled:
+        return 0
+    now = utcnow()
+    try:
+        local_now = now.astimezone(ZoneInfo(settings_row.timezone)) if settings_row.timezone else now
+    except (ZoneInfoNotFoundError, ValueError):
+        local_now = now
+    if local_now.hour != int(settings_row.digest_hour or 0):
+        return 0
+    text, total = _digest_text(db, settings_row.site_name)
+    for channel in list_channels(db):
+        if not channel.enabled or not channel.digest_enabled:
+            continue
+        last = channel.last_digest_at
+        if last is not None and now - last < timedelta(hours=20):
+            continue
+        if _send_channel(channel, text=text, event="digest"):
+            channel.last_digest_at = now
+            db.commit()
+    return total

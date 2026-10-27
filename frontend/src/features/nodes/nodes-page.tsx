@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient, keepPreviousData } from "@tanstack/react-query";
-import { ArrowDown, ArrowUp, ArrowUpDown, ChevronDown, Download, Fingerprint, Filter, MoreHorizontal, Network, Pencil, Plus, RefreshCw, Search, ServerCog, Trash2, Upload, UsersRound } from "lucide-react";
+import { ArrowDown, ArrowUp, ArrowUpDown, ChevronDown, Download, Fingerprint, Filter, MoreHorizontal, Network, Pencil, Plus, RefreshCw, Search, ServerCog, Star, Trash2, Upload, UsersRound } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useSearchParams } from "react-router-dom";
@@ -92,13 +92,7 @@ export function NodesPage() {
   const [bulkPort, setBulkPort] = useState("");
   const [filterDialogOpen, setFilterDialogOpen] = useState(false);
   const [filterName, setFilterName] = useState("");
-  const [savedFilters, setSavedFilters] = useState<{ name: string; query: string }[]>(() => {
-    try {
-      return JSON.parse(localStorage.getItem("oxidized-ui:node-filters") ?? "[]") as { name: string; query: string }[];
-    } catch {
-      return [];
-    }
-  });
+  const [savedFilters, setSavedFilters] = useState<{ name: string; query: string }[]>([]);
   usePageTitle("nav.nodes");
 
   const page = Number(params.get("page") ?? "1") || 1;
@@ -107,6 +101,7 @@ export function NodesPage() {
   const status = (params.get("status") ?? "") as NodeStatus | "";
   const sort = params.get("sort") ?? "name";
   const order = (params.get("order") ?? "asc") as SortDirection;
+  const favoritesOnly = params.get("favorites") === "1";
 
   const setParam = (key: string, value: string | null, resetPage = true) => {
     const next = new URLSearchParams(params);
@@ -134,6 +129,7 @@ export function NodesPage() {
     status: status || undefined,
     sort,
     order,
+    favorites: favoritesOnly || undefined,
     page,
     page_size: 25,
   };
@@ -148,6 +144,25 @@ export function NodesPage() {
     queryFn: api.groups,
     enabled: can("groups.write"),
   });
+  const preferencesQuery = useQuery({ queryKey: ["preferences"], queryFn: api.preferences });
+
+  useEffect(() => {
+    if (preferencesQuery.data) setSavedFilters(preferencesQuery.data.saved_filters);
+  }, [preferencesQuery.data]);
+
+  const updatePreferences = useMutation({
+    mutationFn: (payload: { favorites?: number[]; saved_filters?: { name: string; query: string }[] }) =>
+      api.updatePreferences(payload),
+    onSuccess: (data) => queryClient.setQueryData(["preferences"], data),
+    onError: (error) => notifyError(t, error),
+  });
+  const favorites = useMemo(() => new Set(preferencesQuery.data?.favorites ?? []), [preferencesQuery.data?.favorites]);
+  const toggleFavorite = (nodeId: number) => {
+    const next = new Set(favorites);
+    if (next.has(nodeId)) next.delete(nodeId);
+    else next.add(nodeId);
+    updatePreferences.mutate({ favorites: Array.from(next) });
+  };
   const catalogQuery = useQuery({
     queryKey: ["config-catalog"],
     queryFn: api.configCatalog,
@@ -273,7 +288,7 @@ export function NodesPage() {
   const items = nodesQuery.data?.items ?? [];
   const allSelected = items.length > 0 && items.every((node) => selected.has(node.id));
   const someSelected = items.some((node) => selected.has(node.id));
-  const hasFilters = Boolean(query.search || query.group || query.model || query.status);
+  const hasFilters = Boolean(query.search || query.group || query.model || query.status || favoritesOnly);
   const availableGroups = (groupsQuery.data?.groups ?? []).filter((item) => item.state === "applied");
 
   const toggleAll = () => {
@@ -303,7 +318,7 @@ export function NodesPage() {
 
   const persistFilters = (items: { name: string; query: string }[]) => {
     setSavedFilters(items);
-    localStorage.setItem("oxidized-ui:node-filters", JSON.stringify(items));
+    updatePreferences.mutate({ saved_filters: items });
   };
   const saveFilter = () => {
     const name = filterName.trim();
@@ -417,6 +432,15 @@ export function NodesPage() {
                 {t("common.clearFilters")}
               </Button>
             ) : null}
+            <Button
+              variant={favoritesOnly ? "default" : "outline"}
+              size="xs"
+              onClick={() => setParam("favorites", favoritesOnly ? null : "1")}
+              title={t("nodes.favoritesOnly")}
+            >
+              <Star className={favoritesOnly ? "fill-current" : undefined} />
+              {t("nodes.favoritesOnly")}
+            </Button>
             <Button variant="outline" size="xs" onClick={() => setFilterDialogOpen(true)} disabled={!hasFilters}>
               <Filter />
               {t("nodes.saveFilter")}
@@ -545,6 +569,9 @@ export function NodesPage() {
                 <TableHead className="hidden text-right lg:table-cell">
                   <SortHead label={t("nodes.lastBackup")} field="last_backup_at" current={sort} direction={order} onSort={onSort} className="justify-end" />
                 </TableHead>
+                <TableHead className="hidden text-right xl:table-cell">
+                  <SortHead label={t("nodes.lastFailure")} field="last_failure_at" current={sort} direction={order} onSort={onSort} className="justify-end" />
+                </TableHead>
                 <TableHead className="w-10" />
               </TableRow>
             </TableHeader>
@@ -566,17 +593,31 @@ export function NodesPage() {
                     </TableCell>
                   ) : null}
                   <TableCell>
-                    <Link to={`/nodes/${node.id}`} className="group inline-flex items-center gap-2.5">
-                      <span className="flex h-7 w-7 items-center justify-center rounded-md border bg-muted/20 text-muted-foreground">
-                        <Network className="h-3.5 w-3.5" />
-                      </span>
-                      <span className="min-w-0">
-                        <span className="block max-w-[16rem] truncate text-[13px] font-medium group-hover:text-primary">{node.name}</span>
-                        <span className="block font-mono text-[9px] uppercase tracking-[0.08em] text-muted-foreground lg:hidden">
-                          {node.address ?? "—"} · {node.model}
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => toggleFavorite(node.id)}
+                        aria-label={t("nodes.toggleFavorite")}
+                        title={t("nodes.toggleFavorite")}
+                        className={cn(
+                          "rounded p-0.5 text-muted-foreground/50 transition-colors hover:text-warning",
+                          favorites.has(node.id) && "text-warning",
+                        )}
+                      >
+                        <Star className={cn("h-3.5 w-3.5", favorites.has(node.id) && "fill-current")} />
+                      </button>
+                      <Link to={`/nodes/${node.id}`} className="group inline-flex items-center gap-2.5">
+                        <span className="flex h-7 w-7 items-center justify-center rounded-md border bg-muted/20 text-muted-foreground">
+                          <Network className="h-3.5 w-3.5" />
                         </span>
-                      </span>
-                    </Link>
+                        <span className="min-w-0">
+                          <span className="block max-w-[16rem] truncate text-[13px] font-medium group-hover:text-primary">{node.name}</span>
+                          <span className="block font-mono text-[9px] uppercase tracking-[0.08em] text-muted-foreground lg:hidden">
+                            {node.address ?? "—"} · {node.model}
+                          </span>
+                        </span>
+                      </Link>
+                    </div>
                   </TableCell>
                   <TableCell className="hidden font-mono text-[11px] text-muted-foreground lg:table-cell">
                     {node.address ?? "—"}
@@ -590,6 +631,9 @@ export function NodesPage() {
                   <TableCell><NodeStatusBadge status={node.status} /></TableCell>
                   <TableCell className="hidden text-right font-mono text-[10px] text-muted-foreground lg:table-cell">
                     {node.last_backup_at ? intl.relative(node.last_backup_at) : t("common.never")}
+                  </TableCell>
+                  <TableCell className="hidden text-right font-mono text-[10px] text-muted-foreground xl:table-cell">
+                    {node.last_failure_at ? intl.relative(node.last_failure_at) : t("common.never")}
                   </TableCell>
                   <TableCell>
                     <DropdownMenu>

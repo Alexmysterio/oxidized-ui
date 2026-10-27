@@ -107,7 +107,9 @@
     "userMenu": "User menu",
     "search": "Search everything",
     "searchHint": "Search nodes, groups or pages",
-    "skipToContent": "Skip to content"
+    "skipToContent": "Skip to content",
+    "maintenance": "Maintenance",
+    "compliance": "Compliance"
   },
   "status": {
     "online": "Online",
@@ -310,7 +312,10 @@
     "bulkEditDescription": "Update fields on {{count}} nodes. Only filled fields are applied.",
     "bulkEditSuccess": "{{count}} nodes updated.",
     "compare": "Compare",
-    "compareDescription": "Differences between the current configurations of two nodes."
+    "compareDescription": "Differences between the current configurations of two nodes.",
+    "favoritesOnly": "Favorites",
+    "toggleFavorite": "Toggle favorite",
+    "lastFailure": "Last failure"
   },
   "nodeForm": {
     "createTitle": "New node",
@@ -443,7 +448,11 @@
     "historyEmpty": "No runs recorded.",
     "historyStarted": "Started",
     "trigger": "Trigger",
-    "status": "Status"
+    "status": "Status",
+    "maintenanceActive": "This node is in a maintenance window: scheduled backups and retries are skipped and alerts are muted.",
+    "retryScheduled": "Retry {{attempts}} scheduled ({{value}}).",
+    "retryExhausted": "All {{attempts}} automatic retries were exhausted.",
+    "lastConfigChange": "Last config change"
   },
   "groups": {
     "title": "Groups & credentials",
@@ -603,7 +612,10 @@
     "everyCadence": "every {{value}}",
     "lastRun": "Last: {{value}}",
     "nextRun": "Next: {{value}}",
-    "never": "never"
+    "never": "never",
+    "scheduleUpdated": "Schedule updated.",
+    "paused": "Paused",
+    "enabled": "Enabled"
   },
   "logs": {
     "title": "Status & logs",
@@ -703,7 +715,11 @@
     "deleted": "User deleted.",
     "language": "Language",
     "self": "You",
-    "rolesHelp": "The backend enforces permissions on every request."
+    "rolesHelp": "The backend enforces permissions on every request.",
+    "scopeGroups": "Allowed groups",
+    "scopeGroupsHelp": "With no selection the user sees every node. Administrators always see everything.",
+    "noGroups": "No applied groups.",
+    "scopeAll": "All groups"
   },
   "audit": {
     "title": "Audit",
@@ -791,7 +807,14 @@
       },
       "job": {
         "cancelled": "Job cancelled"
-      }
+      },
+      "maintenance.created": "Maintenance window created",
+      "maintenance.deleted": "Maintenance window deleted",
+      "compliance.template_created": "Compliance template created",
+      "compliance.template_updated": "Compliance template updated",
+      "compliance.template_deleted": "Compliance template deleted",
+      "system.export_configured": "Scheduled export configured",
+      "system.export_requested": "Export requested"
     },
     "export": "Export CSV"
   },
@@ -959,7 +982,46 @@
     "notifyStaleHours": "Alert if a node has no backup for hours (0 = off)",
     "auditRetention": "Audit retention (days)",
     "exportEncrypted": "Export encrypted",
-    "exportPassphrase": "Passphrase (at least 12 characters)"
+    "exportPassphrase": "Passphrase",
+    "digestEnabled": "Daily digest",
+    "digestHour": "Hour (0-23)",
+    "digestHelp": "Every channel with digest enabled gets one message a day with failed jobs, failed backups and configuration changes.",
+    "retriesTitle": "Automatic retries",
+    "retriesDescription": "Retry failed backups with exponential backoff.",
+    "retryEnabled": "Retry failed nodes",
+    "retryMaxAttempts": "Max attempts",
+    "retryBaseMinutes": "Initial delay (min)",
+    "retriesHelp": "The first retry runs after the initial delay and the wait doubles on each attempt. Nodes in maintenance are skipped.",
+    "eventConfigChanged": "Configuration changes",
+    "eventRetryExhausted": "Retries exhausted",
+    "channelDigest": "Daily digest",
+    "channelDigestHelp": "One message a day instead of one alert per event.",
+    "channelDigestShort": "digest",
+    "exportTitle": "Scheduled encrypted export",
+    "exportDescription": "Upload an encrypted .oxui bundle of the inventory, configuration and keys to SFTP or S3.",
+    "exportKind": "Target",
+    "exportInterval": "Every (h)",
+    "exportEnabled": "Enabled",
+    "exportHost": "Host",
+    "exportPort": "Port",
+    "exportUsername": "Username",
+    "exportPassword": "Password",
+    "exportRemoteDir": "Remote directory",
+    "exportEndpoint": "Endpoint",
+    "exportRegion": "Region",
+    "exportBucket": "Bucket",
+    "exportPrefix": "Prefix",
+    "exportAccessKey": "Access key",
+    "exportSecretKey": "Secret key",
+    "exportPassphrasePlaceholder": "At least 12 characters",
+    "exportPassphraseHelp": "Stored encrypted; required to restore the bundle.",
+    "exportSave": "Save target",
+    "exportRunNow": "Run now",
+    "exportSaved": "Export configured.",
+    "exportQueued": "Export queued.",
+    "exportNeverRun": "Never run",
+    "exportNotConfigured": "Not configured",
+    "exportNextRun": "Next: {{value}}"
   },
   "search": {
     "title": "Global search",
@@ -1176,7 +1238,10 @@
       "required": "The “{{field}}” field is required.",
       "too_long": "The value is too long.",
       "range": "The value must be between {{min}} and {{max}}."
-    }
+    },
+    "export.failed": "The export could not be uploaded.",
+    "export.not_configured": "Configure an export target first.",
+    "compliance.template_missing": "No template applies to this node."
   },
   "validation": {
     "required": "This field is required.",
@@ -1716,6 +1781,74 @@
       "models": "Models",
       "rest": "REST / Extensions",
       "advanced": "Advanced YAML"
+    }
+  },
+  "maintenance": {
+    "subtitle": "Pause scheduled backups, retries and alerts during a maintenance window.",
+    "newWindow": "New window",
+    "newWindowDescription": "Pick the scope and the time range.",
+    "scope": "Scope",
+    "scopeGroup": "Group",
+    "scopeNode": "Node",
+    "scopeGlobal": "All",
+    "group": "Group",
+    "selectGroup": "Select a group",
+    "node": "Node",
+    "selectNode": "Select a node",
+    "from": "From",
+    "to": "To",
+    "reason": "Reason",
+    "reasonPlaceholder": "Planned maintenance",
+    "create": "Create window",
+    "created": "Window created.",
+    "deleted": "Window deleted.",
+    "hint": "During the window, scheduled backups and retries are skipped and staleness and configuration-change alerts are muted. Oxidized keeps polling on its own interval.",
+    "activeWindows": "Windows",
+    "activeWindowsDescription": "Active and upcoming windows.",
+    "active": "Active",
+    "scheduled": "Scheduled",
+    "emptyTitle": "No windows",
+    "emptyDescription": "No maintenance is active or scheduled."
+  },
+  "compliance": {
+    "subtitle": "Compare each node's current configuration against a template and detect deviations.",
+    "templates": "Reference templates",
+    "templatesDescription": "One global, group or model template. Priority is group, model, then global.",
+    "name": "Name",
+    "scope": "Scope",
+    "scopeValue": "Scope value",
+    "scopeGlobal": "Global",
+    "scopeGroup": "Group",
+    "scopeModel": "Model",
+    "lines": "{{count}} lines",
+    "noTemplates": "No templates yet.",
+    "addTemplate": "Add template",
+    "update": "Update",
+    "saved": "Template saved.",
+    "deleted": "Template deleted.",
+    "contentPlaceholder": "Paste the reference configuration here…",
+    "report": "Compliance report",
+    "reportDescription": "Evaluate nodes with the template that applies to them.",
+    "allGroups": "All groups",
+    "autoTemplate": "Automatic (group > model > global)",
+    "evaluate": "Evaluate",
+    "compliant": "Compliant",
+    "deviating": "Deviating",
+    "errors": "Errors",
+    "noTemplate": "No template",
+    "template": "Template",
+    "changes": "Changes",
+    "viewDiff": "View diff",
+    "diffTitle": "{{name}} diff",
+    "diffDescription": "Template {{template}} against the current configuration.",
+    "currentConfig": "Current configuration",
+    "emptyTitle": "No results",
+    "emptyDescription": "Add a template or adjust the filters.",
+    "status": {
+      "compliant": "Compliant",
+      "deviating": "Deviating",
+      "no_template": "No template",
+      "error": "Error"
     }
   }
 }

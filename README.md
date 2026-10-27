@@ -68,6 +68,12 @@ office, or a trusted internal network.
 - [Certificates explained](#certificates-explained)
 - [Notifications](#notifications)
 - [Backup schedules](#backup-schedules)
+- [Automatic retries](#automatic-retries)
+- [Maintenance windows](#maintenance-windows)
+- [Compliance](#compliance)
+- [Scoped operators](#scoped-operators)
+- [Notification digests](#notification-digests)
+- [Scheduled encrypted export](#scheduled-encrypted-export)
 - [API tokens](#api-tokens)
 - [OIDC login](#oidc-login)
 - [Incoming webhooks](#incoming-webhooks)
@@ -91,11 +97,16 @@ office, or a trusted internal network.
 - Configuration editor with validation, preflight, diff, apply, health check,
   and rollback.
 - Scheduled configuration apply and backup schedules by group.
+- Automatic retries with backoff, maintenance windows and configuration-change alerts.
+- Golden-config compliance per group or model with line-level diffs.
+- Group-scoped operators, saved filters and favorite nodes.
 - Manual and scheduled backups with a persistent, cancellable job queue.
 - Backup history, success rate, and SLA by group.
 - Prometheus metrics.
 - Audit log with CSV export.
 - Outgoing alerts to Telegram, Slack, Discord, or any webhook, plus an incoming backup webhook.
+- Optional daily notification digest.
+- Scheduled encrypted export to SFTP or S3.
 - Custom site name and logo, user avatars, and full name/email on user profiles.
 - API tokens for automation.
 - Optional generic OIDC login.
@@ -778,6 +789,74 @@ same or a slower cadence than Oxidized, it adds nothing — the console warns yo
 in that case. Every run is recorded in the job history and audit log. The poller
 runs due schedules and, if another bulk backup is queued or running, retries in a
 few minutes without marking the schedule as executed.
+
+Schedules can be paused and re-timed in place from the same page.
+
+---
+
+## Automatic retries
+
+When a node's latest outcome is a failure, the console schedules a retry with
+exponential backoff (initial delay and maximum attempts are configured in
+**System**). The node detail page shows the pending retry. When attempts are
+exhausted the retry loop stops and, if a channel subscribes to
+`backup.retry_exhausted`, a notification is sent. Nodes inside a maintenance
+window are skipped.
+
+---
+
+## Maintenance windows
+
+**Maintenance** pauses the console's automated work for a node, a group, or every
+node during a time range:
+
+- scheduled and automatic-retry backups are skipped;
+- stale and configuration-change alerts are muted;
+- node detail shows a maintenance banner.
+
+Oxidized keeps polling on its own interval; maintenance only controls what the
+console triggers and reports.
+
+---
+
+## Compliance
+
+**Compliance** compares each node's current configuration against a reference
+template and reports compliant, deviating or missing-template nodes, with a
+line-level diff. Templates can be global, per group, or per model; the most
+specific one wins (group, then model, then global).
+
+Templates are plain text and are stored in the console database. The comparison
+runs on demand and reads the current configuration through Oxidized.
+
+---
+
+## Scoped operators
+
+Users with the `operator` or `viewer` role can be restricted to a list of groups.
+Restricted users only see their nodes in the inventory, search, dashboard node
+actions and the API; direct access to a node outside their scope returns 404 and
+bulk actions are intersected with their scope. Administrators always see
+everything.
+
+---
+
+## Notification digests
+
+Each channel can opt into a daily digest. At the configured hour (in the system
+timezone) the console sends a single message with failed jobs, failed backups and
+configuration changes from the last 24 hours instead of one alert per event.
+Configuration changes are detected from the Oxidized output and notified through
+the `config.changed` event.
+
+---
+
+## Scheduled encrypted export
+
+**System → Scheduled encrypted export** uploads the same encrypted `.oxui` bundle
+as the manual export to SFTP or S3 on a schedule, or on demand with **Run now**.
+The passphrase is stored encrypted with `FERNET_KEY`; keep a copy of it, because
+it is required to restore the bundle.
 
 ---
 

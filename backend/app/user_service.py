@@ -12,6 +12,7 @@ from .errors import AppError
 from .models import User
 from .password_service import assert_not_reused, record_password, validate_new_password
 from .schemas import UserCreate, UserPasswordReset, UserUpdate
+from .scope_service import validate_scope_groups
 from .security import (
     AuthContext,
     hash_password,
@@ -83,6 +84,7 @@ def create_user(
         language=language,
         theme="system",
         is_active=True,
+        scope_groups=validate_scope_groups(db, payload.scope_groups),
     )
     db.add(user)
     try:
@@ -129,6 +131,8 @@ def update_user(
         user.role = data["role"]
     if "is_active" in data and data["is_active"] is not None:
         user.is_active = data["is_active"]
+    if "scope_groups" in data:
+        user.scope_groups = validate_scope_groups(db, data["scope_groups"])
     if user.id == actor.user_id and data.get("is_active") is False:
         raise AppError("user.self_delete")
     db.commit()

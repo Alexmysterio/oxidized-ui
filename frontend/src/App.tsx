@@ -13,6 +13,8 @@ import { useTheme } from "@/lib/theme";
 
 const AuditPage = lazy(() => import("@/features/audit/audit-page").then((module) => ({ default: module.AuditPage })));
 const BackupsPage = lazy(() => import("@/features/backups/backups-page").then((module) => ({ default: module.BackupsPage })));
+const CompliancePage = lazy(() => import("@/features/compliance/compliance-page").then((module) => ({ default: module.CompliancePage })));
+const MaintenancePage = lazy(() => import("@/features/maintenance/maintenance-page").then((module) => ({ default: module.MaintenancePage })));
 const ConfigPage = lazy(() => import("@/features/config/config-page").then((module) => ({ default: module.ConfigPage })));
 const DashboardPage = lazy(() => import("@/features/dashboard/dashboard-page").then((module) => ({ default: module.DashboardPage })));
 const GroupsPage = lazy(() => import("@/features/groups/groups-page").then((module) => ({ default: module.GroupsPage })));
@@ -90,6 +92,22 @@ function RootLayout() {
                 element={
                   <RequireCapability capability="backups.trigger">
                     <Page><BackupsPage /></Page>
+                  </RequireCapability>
+                }
+              />
+              <Route
+                path="maintenance"
+                element={
+                  <RequireCapability capability="backups.trigger">
+                    <Page><MaintenancePage /></Page>
+                  </RequireCapability>
+                }
+              />
+              <Route
+                path="compliance"
+                element={
+                  <RequireCapability capability="compliance.read">
+                    <Page><CompliancePage /></Page>
                   </RequireCapability>
                 }
               />

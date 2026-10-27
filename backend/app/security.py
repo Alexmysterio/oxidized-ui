@@ -36,6 +36,8 @@ CAPABILITIES: dict[str, tuple[str, ...]] = {
         "users.manage",
         "audit.read",
         "system.manage",
+        "compliance.read",
+        "compliance.write",
         "me.write",
     ),
     "operator": (
@@ -46,9 +48,11 @@ CAPABILITIES: dict[str, tuple[str, ...]] = {
         "groups.write",
         "logs.read",
         "jobs.read",
+        "compliance.read",
+        "compliance.write",
         "me.write",
     ),
-    "viewer": ("nodes.read", "versions.read", "me.write"),
+    "viewer": ("nodes.read", "versions.read", "compliance.read", "me.write"),
 }
 
 
@@ -195,6 +199,7 @@ class AuthContext:
     session_id: int
     session_token: str
     csrf_token: str
+    scope_groups: list[str] | None = None
 
     @property
     def capabilities(self) -> list[str]:

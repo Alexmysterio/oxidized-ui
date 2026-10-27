@@ -10,6 +10,10 @@ from ..db import get_db
 from ..docker_api import client_for as docker_client_for
 from ..encrypted_export import create_export
 from ..errors import AppError
+from ..export_service import configure as configure_export_target
+from ..export_service import export_now
+from ..export_service import public_status as export_status
+from ..jobs import serialize_job
 from ..notifications import (
     channel_public,
     create_channel,
@@ -21,6 +25,7 @@ from ..notifications import (
 from ..oxidized import client_for as oxidized_client_for
 from ..schemas import (
     ConnectionTestRequest,
+    ExportConfigPayload,
     ExportRequest,
     NotificationChannelCreate,
     NotificationChannelUpdate,
@@ -122,6 +127,61 @@ def export_encrypted_backup(
         media_type="application/octet-stream",
         headers={"Content-Disposition": f'attachment; filename="{filename}"'},
     )
+
+
+@router.get("/export")
+def read_export_config(
+    db: Session = Depends(get_db),
+    _context: AuthContext = Depends(require_admin),
+):
+    return export_status(get_settings_row(db))
+
+
+@router.put("/export")
+def configure_export(
+    payload: ExportConfigPayload,
+    request: Request,
+    db: Session = Depends(get_db),
+    context: AuthContext = Depends(require_admin),
+):
+    row = configure_export_target(
+        db,
+        kind=payload.kind,
+        config=payload.config,
+        interval_hours=payload.interval_hours,
+        enabled=payload.enabled,
+    )
+    add_audit(
+        db,
+        actor=context,
+        action_code="system.export_configured",
+        action_params={"kind": payload.kind, "enabled": payload.enabled},
+        target_type="system",
+        target_id="export",
+        request=request,
+    )
+    db.commit()
+    return export_status(row)
+
+
+@router.post("/export/run", status_code=202)
+def run_export(
+    request: Request,
+    db: Session = Depends(get_db),
+    context: AuthContext = Depends(require_admin),
+):
+    job = export_now(db, actor_id=context.user_id)
+    add_audit(
+        db,
+        actor=context,
+        action_code="system.export_requested",
+        action_params={"job_id": job.id},
+        target_type="system",
+        target_id="export",
+        request=request,
+    )
+    db.commit()
+    return serialize_job(db, job)
 
 
 @router.get("/notifications")

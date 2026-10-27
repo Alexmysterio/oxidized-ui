@@ -108,6 +108,7 @@ export function userSchema(t: TFunction) {
       .string()
       .max(254)
       .refine((value) => !value || /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(value), t("validation.email")),
+    scope_groups: z.array(z.string()),
   });
 }
 

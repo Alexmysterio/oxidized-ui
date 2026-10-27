@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 
 from ..audit import add_audit
 from ..auth_deps import get_auth_context, require_admin, require_operator
-from ..backup_schedule_service import count_nodes, create_schedule, delete_schedule
+from ..backup_schedule_service import count_nodes, create_schedule, delete_schedule, update_schedule
 from ..backup_schedule_service import serialize as serialize_schedule
 from ..backup_service import create_backup_all_job, run_backup_all_job
 from ..db import get_db
@@ -18,7 +18,7 @@ from ..errors import AppError
 from ..jobs import Job, cancel_job, create_and_submit, serialize_job
 from ..models import Job as JobModel
 from ..oxidized import client_for as oxidized_client_for
-from ..schemas import BackupAllRequest, BackupScheduleCreate
+from ..schemas import BackupAllRequest, BackupScheduleCreate, BackupScheduleUpdate
 from ..security import AuthContext
 from ..settings import settings
 from ..status_service import build_status
@@ -146,13 +146,17 @@ def list_jobs(
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=25, ge=1, le=100),
     db: Session = Depends(get_db),
-    _context: AuthContext = Depends(require_operator),
+    context: AuthContext = Depends(require_operator),
 ):
     filters = []
     if status:
         filters.append(JobModel.status == status)
     if kind:
         filters.append(JobModel.kind == kind)
+    if context.scope_groups is not None:
+        from ..scope_service import node_ids_in_scope
+
+        filters.append(JobModel.node_id.in_(node_ids_in_scope(db, context) or set()))
     base = select(JobModel)
     count_query = select(func.count(JobModel.id))
     for condition in filters:
@@ -242,6 +246,9 @@ def create_backup_schedule(
     db: Session = Depends(get_db),
     context: AuthContext = Depends(require_operator),
 ):
+    from ..scope_service import require_group
+
+    require_group(context, payload.group_name)
     row = create_schedule(
         db,
         group_name=payload.group_name,
@@ -251,6 +258,31 @@ def create_backup_schedule(
     created = serialize_schedule(row)
     created["node_count"] = count_nodes(db, row.group_name)
     return created
+
+
+@router.patch("/backups/schedules/{schedule_id}")
+def patch_backup_schedule(
+    schedule_id: int,
+    payload: BackupScheduleUpdate,
+    db: Session = Depends(get_db),
+    context: AuthContext = Depends(require_operator),
+):
+    from ..scope_service import require_group
+
+    data = payload.model_dump(exclude_unset=True)
+    if "group_name" in data:
+        require_group(context, data["group_name"])
+    row = update_schedule(
+        db,
+        schedule_id,
+        group_name=data.get("group_name"),
+        group_name_set="group_name" in data,
+        interval_minutes=data.get("interval_minutes"),
+        enabled=data.get("enabled"),
+    )
+    updated = serialize_schedule(row)
+    updated["node_count"] = count_nodes(db, row.group_name)
+    return updated
 
 
 @router.delete("/backups/schedules/{schedule_id}", status_code=204)

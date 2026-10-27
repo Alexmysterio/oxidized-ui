@@ -107,7 +107,9 @@
     "userMenu": "Menú de usuario",
     "search": "Buscar en todo",
     "searchHint": "Busca nodos, grupos o páginas",
-    "skipToContent": "Saltar al contenido"
+    "skipToContent": "Saltar al contenido",
+    "maintenance": "Mantenimiento",
+    "compliance": "Cumplimiento"
   },
   "status": {
     "online": "Online",
@@ -310,7 +312,10 @@
     "bulkEditDescription": "Actualiza campos en {{count}} nodos. Solo se aplican los campos rellenos.",
     "bulkEditSuccess": "{{count}} nodos actualizados.",
     "compare": "Comparar",
-    "compareDescription": "Diferencias entre las configuraciones actuales de dos nodos."
+    "compareDescription": "Diferencias entre las configuraciones actuales de dos nodos.",
+    "favoritesOnly": "Favoritos",
+    "toggleFavorite": "Marcar como favorito",
+    "lastFailure": "Último fallo"
   },
   "nodeForm": {
     "createTitle": "Nuevo nodo",
@@ -443,7 +448,11 @@
     "historyEmpty": "Sin ejecuciones registradas.",
     "historyStarted": "Inicio",
     "trigger": "Origen",
-    "status": "Estado"
+    "status": "Estado",
+    "maintenanceActive": "Este nodo está en ventana de mantenimiento: no se lanzan backups programados ni reintentos y las alertas están silenciadas.",
+    "retryScheduled": "Reintento {{attempts}} programado ({{value}}).",
+    "retryExhausted": "Se agotaron los {{attempts}} reintentos automáticos.",
+    "lastConfigChange": "Último cambio de config"
   },
   "groups": {
     "title": "Grupos y credenciales",
@@ -603,7 +612,10 @@
     "everyCadence": "cada {{value}}",
     "lastRun": "Última: {{value}}",
     "nextRun": "Próxima: {{value}}",
-    "never": "nunca"
+    "never": "nunca",
+    "scheduleUpdated": "Programación actualizada.",
+    "paused": "Pausada",
+    "enabled": "Activa"
   },
   "logs": {
     "title": "Estado y logs",
@@ -703,7 +715,11 @@
     "deleted": "Usuario eliminado.",
     "language": "Idioma",
     "self": "Tú",
-    "rolesHelp": "El backend aplica los permisos en cada petición."
+    "rolesHelp": "El backend aplica los permisos en cada petición.",
+    "scopeGroups": "Grupos permitidos",
+    "scopeGroupsHelp": "Sin selección, ve todos los nodos. Los administradores siempre ven todo.",
+    "noGroups": "No hay grupos aplicados.",
+    "scopeAll": "Todos los grupos"
   },
   "audit": {
     "title": "Auditoría",
@@ -791,7 +807,14 @@
       },
       "job": {
         "cancelled": "Job cancelado"
-      }
+      },
+      "maintenance.created": "Ventana de mantenimiento creada",
+      "maintenance.deleted": "Ventana de mantenimiento eliminada",
+      "compliance.template_created": "Plantilla de cumplimiento creada",
+      "compliance.template_updated": "Plantilla de cumplimiento actualizada",
+      "compliance.template_deleted": "Plantilla de cumplimiento eliminada",
+      "system.export_configured": "Exportación programada configurada",
+      "system.export_requested": "Exportación solicitada"
     },
     "export": "Exportar CSV"
   },
@@ -959,7 +982,46 @@
     "notifyStaleHours": "Avisar si un nodo lleva horas sin backup (0 = desactivado)",
     "auditRetention": "Retención de auditoría (días)",
     "exportEncrypted": "Exportar cifrado",
-    "exportPassphrase": "Passphrase (mínimo 12 caracteres)"
+    "exportPassphrase": "Frase de paso",
+    "digestEnabled": "Resumen diario",
+    "digestHour": "Hora (0-23)",
+    "digestHelp": "Cada canal con resumen activo recibe un único mensaje al día con fallos, backups fallidos y cambios de configuración.",
+    "retriesTitle": "Reintentos automáticos",
+    "retriesDescription": "Reintenta backups fallidos con espera exponencial.",
+    "retryEnabled": "Reintentar nodos fallidos",
+    "retryMaxAttempts": "Intentos máximos",
+    "retryBaseMinutes": "Espera inicial (min)",
+    "retriesHelp": "El primer reintento se lanza tras la espera inicial y se duplica en cada intento. Se omiten los nodos en mantenimiento.",
+    "eventConfigChanged": "Cambios de configuración",
+    "eventRetryExhausted": "Reintentos agotados",
+    "channelDigest": "Resumen diario",
+    "channelDigestHelp": "Un mensaje al día en vez de una alerta por evento.",
+    "channelDigestShort": "resumen",
+    "exportTitle": "Exportación cifrada programada",
+    "exportDescription": "Sube un paquete .oxui cifrado del inventario, la configuración y las claves a SFTP o S3.",
+    "exportKind": "Destino",
+    "exportInterval": "Cada (h)",
+    "exportEnabled": "Activa",
+    "exportHost": "Host",
+    "exportPort": "Puerto",
+    "exportUsername": "Usuario",
+    "exportPassword": "Contraseña",
+    "exportRemoteDir": "Directorio remoto",
+    "exportEndpoint": "Endpoint",
+    "exportRegion": "Región",
+    "exportBucket": "Bucket",
+    "exportPrefix": "Prefijo",
+    "exportAccessKey": "Access key",
+    "exportSecretKey": "Secret key",
+    "exportPassphrasePlaceholder": "Mínimo 12 caracteres",
+    "exportPassphraseHelp": "Se guarda cifrada y es necesaria para restaurar el paquete.",
+    "exportSave": "Guardar destino",
+    "exportRunNow": "Ejecutar ahora",
+    "exportSaved": "Exportación configurada.",
+    "exportQueued": "Exportación en cola.",
+    "exportNeverRun": "Sin ejecutar",
+    "exportNotConfigured": "Sin configurar",
+    "exportNextRun": "Próxima: {{value}}"
   },
   "search": {
     "title": "Búsqueda global",
@@ -1176,7 +1238,10 @@
       "required": "El campo «{{field}}» es obligatorio.",
       "too_long": "El valor es demasiado largo.",
       "range": "El valor debe estar entre {{min}} y {{max}}."
-    }
+    },
+    "export.failed": "No se pudo subir la exportación.",
+    "export.not_configured": "Configura un destino de exportación primero.",
+    "compliance.template_missing": "No hay plantilla aplicable a este nodo."
   },
   "validation": {
     "required": "Este campo es obligatorio.",
@@ -1716,6 +1781,74 @@
       "models": "Modelos",
       "rest": "REST / Extensiones",
       "advanced": "YAML avanzado"
+    }
+  },
+  "maintenance": {
+    "subtitle": "Pausa backups programados, reintentos y alertas durante una ventana de mantenimiento.",
+    "newWindow": "Nueva ventana",
+    "newWindowDescription": "Elige el ámbito y el intervalo de tiempo.",
+    "scope": "Ámbito",
+    "scopeGroup": "Grupo",
+    "scopeNode": "Nodo",
+    "scopeGlobal": "Todos",
+    "group": "Grupo",
+    "selectGroup": "Selecciona un grupo",
+    "node": "Nodo",
+    "selectNode": "Selecciona un nodo",
+    "from": "Desde",
+    "to": "Hasta",
+    "reason": "Motivo",
+    "reasonPlaceholder": "Mantenimiento planificado",
+    "create": "Crear ventana",
+    "created": "Ventana creada.",
+    "deleted": "Ventana eliminada.",
+    "hint": "Durante la ventana no se lanzan backups programados ni reintentos, y se silencian las alertas de obsolescencia y de cambios de configuración. Oxidized sigue sondeando con su intervalo.",
+    "activeWindows": "Ventanas",
+    "activeWindowsDescription": "Ventanas activas y futuras.",
+    "active": "Activa",
+    "scheduled": "Programada",
+    "emptyTitle": "Sin ventanas",
+    "emptyDescription": "No hay mantenimientos activos ni programados."
+  },
+  "compliance": {
+    "subtitle": "Compara la configuración actual de cada nodo con una plantilla y detecta desviaciones.",
+    "templates": "Plantillas de referencia",
+    "templatesDescription": "Una plantilla global, por grupo o por modelo. La prioridad es grupo, modelo y global.",
+    "name": "Nombre",
+    "scope": "Ámbito",
+    "scopeValue": "Valor del ámbito",
+    "scopeGlobal": "Global",
+    "scopeGroup": "Grupo",
+    "scopeModel": "Modelo",
+    "lines": "{{count}} líneas",
+    "noTemplates": "Todavía no hay plantillas.",
+    "addTemplate": "Añadir plantilla",
+    "update": "Actualizar",
+    "saved": "Plantilla guardada.",
+    "deleted": "Plantilla eliminada.",
+    "contentPlaceholder": "Pega aquí la configuración de referencia…",
+    "report": "Informe de cumplimiento",
+    "reportDescription": "Evalúa los nodos con la plantilla que les corresponde.",
+    "allGroups": "Todos los grupos",
+    "autoTemplate": "Automática (grupo > modelo > global)",
+    "evaluate": "Evaluar",
+    "compliant": "Cumplen",
+    "deviating": "Desviados",
+    "errors": "Errores",
+    "noTemplate": "Sin plantilla",
+    "template": "Plantilla",
+    "changes": "Cambios",
+    "viewDiff": "Ver diff",
+    "diffTitle": "Diff de {{name}}",
+    "diffDescription": "Plantilla {{template}} frente a la configuración actual.",
+    "currentConfig": "Configuración actual",
+    "emptyTitle": "Sin resultados",
+    "emptyDescription": "Añade una plantilla o ajusta los filtros.",
+    "status": {
+      "compliant": "Cumple",
+      "deviating": "Desviado",
+      "no_template": "Sin plantilla",
+      "error": "Error"
     }
   }
 }

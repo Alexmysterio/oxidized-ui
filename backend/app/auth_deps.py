@@ -11,6 +11,7 @@ from .api_token_service import authenticate_token, context_from_token
 from .db import get_db
 from .errors import AppError
 from .models import User, UserSession
+from .scope_service import context_scope
 from .security import AuthContext, csrf_token_for, hash_token, role_has
 from .settings import settings
 from .timeutil import ensure_utc, utcnow
@@ -59,6 +60,7 @@ def get_auth_context(request: Request, db: Session = Depends(get_db)) -> AuthCon
         session_id=session.id,
         session_token=raw,
         csrf_token=csrf_token_for(raw),
+        scope_groups=context_scope(user),
     )
 
 

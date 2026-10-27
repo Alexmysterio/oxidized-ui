@@ -48,5 +48,12 @@
   "auth.token_created",
   "auth.token_revoked",
   "system.export_created",
+  "system.export_configured",
+  "system.export_requested",
+  "maintenance.created",
+  "maintenance.deleted",
+  "compliance.template_created",
+  "compliance.template_updated",
+  "compliance.template_deleted",
   "auth.oidc_login_succeeded"
 ]

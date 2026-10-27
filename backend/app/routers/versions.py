@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from ..auth_deps import get_auth_context
 from ..db import get_db
-from ..node_service import get_node
+from ..scope_service import scoped_node
 from ..security import AuthContext
 from ..version_service import (
     content_for_download,
@@ -22,9 +22,9 @@ router = APIRouter(prefix="/nodes", tags=["versions"])
 def node_current_config(
     node_id: int,
     db: Session = Depends(get_db),
-    _context: AuthContext = Depends(get_auth_context),
+    context: AuthContext = Depends(get_auth_context),
 ):
-    node = get_node(db, node_id)
+    node = scoped_node(db, context, node_id)
     return Response(content=current_config(db, node), media_type="text/plain; charset=utf-8")
 
 
@@ -32,9 +32,9 @@ def node_current_config(
 def node_versions(
     node_id: int,
     db: Session = Depends(get_db),
-    _context: AuthContext = Depends(get_auth_context),
+    context: AuthContext = Depends(get_auth_context),
 ):
-    node = get_node(db, node_id)
+    node = scoped_node(db, context, node_id)
     return list_versions(db, node)
 
 
@@ -43,9 +43,9 @@ def node_version_content(
     node_id: int,
     oid: str,
     db: Session = Depends(get_db),
-    _context: AuthContext = Depends(get_auth_context),
+    context: AuthContext = Depends(get_auth_context),
 ):
-    node = get_node(db, node_id)
+    node = scoped_node(db, context, node_id)
     return version_content(db, node, oid)
 
 
@@ -55,9 +55,9 @@ def node_diff(
     from_oid: str = Query(min_length=4, max_length=128),
     to_oid: str = Query(min_length=4, max_length=128),
     db: Session = Depends(get_db),
-    _context: AuthContext = Depends(get_auth_context),
+    context: AuthContext = Depends(get_auth_context),
 ):
-    node = get_node(db, node_id)
+    node = scoped_node(db, context, node_id)
     return version_diff(db, node, from_oid, to_oid)
 
 
@@ -66,9 +66,9 @@ def node_download(
     node_id: int,
     oid: str | None = Query(default=None, min_length=4, max_length=128),
     db: Session = Depends(get_db),
-    _context: AuthContext = Depends(get_auth_context),
+    context: AuthContext = Depends(get_auth_context),
 ):
-    node = get_node(db, node_id)
+    node = scoped_node(db, context, node_id)
     filename, content = content_for_download(db, node, oid)
     return Response(
         content=content,

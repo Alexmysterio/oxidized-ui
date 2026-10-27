@@ -114,6 +114,7 @@ class UserCreate(StrictModel):
     language: str = Field(default="es", max_length=16)
     full_name: str | None = Field(default=None, max_length=128)
     email: str | None = Field(default=None, max_length=254)
+    scope_groups: list[str] | None = Field(default=None, max_length=200)
 
     @field_validator("full_name")
     @classmethod
@@ -132,6 +133,7 @@ class UserUpdate(StrictModel):
     language: str | None = Field(default=None, max_length=16)
     full_name: str | None = Field(default=None, max_length=128)
     email: str | None = Field(default=None, max_length=254)
+    scope_groups: list[str] | None = Field(default=None, max_length=200)
 
     @field_validator("full_name")
     @classmethod
@@ -524,11 +526,18 @@ class SystemSettingsUpdate(StrictModel):
     notify_webhook_url: str | None = Field(default=None, max_length=2048)
     notify_on_failure: bool | None = None
     notify_stale_hours: int | None = Field(default=None, ge=0, le=720)
+    retry_failed_enabled: bool | None = None
+    retry_max_attempts: int | None = Field(default=None, ge=1, le=10)
+    retry_base_minutes: int | None = Field(default=None, ge=1, le=1440)
+    digest_enabled: bool | None = None
+    digest_hour: int | None = Field(default=None, ge=0, le=23)
+    export_enabled: bool | None = None
+    export_interval_hours: int | None = Field(default=None, ge=1, le=720)
     site_name: str | None = Field(default=None, max_length=100)
 
 
 NOTIFICATION_KINDS = ("webhook", "slack", "discord", "telegram")
-NOTIFICATION_EVENTS = ("job.failed", "backup.stale")
+NOTIFICATION_EVENTS = ("job.failed", "backup.stale", "config.changed", "backup.retry_exhausted")
 
 
 class NotificationChannelCreate(StrictModel):
@@ -536,6 +545,7 @@ class NotificationChannelCreate(StrictModel):
     kind: Literal["webhook", "slack", "discord", "telegram"]
     enabled: bool = True
     events: list[str] = Field(default_factory=lambda: list(NOTIFICATION_EVENTS), max_length=10)
+    digest_enabled: bool = False
     config: dict[str, Any] = Field(default_factory=dict)
 
 
@@ -544,6 +554,7 @@ class NotificationChannelUpdate(StrictModel):
     kind: Literal["webhook", "slack", "discord", "telegram"] | None = None
     enabled: bool | None = None
     events: list[str] | None = Field(default=None, max_length=10)
+    digest_enabled: bool | None = None
     config: dict[str, Any] | None = None
 
 
@@ -562,3 +573,44 @@ class BackupAllRequest(StrictModel):
 class BackupScheduleCreate(StrictModel):
     group_name: str | None = Field(default=None, max_length=128)
     interval_minutes: int = Field(ge=15, le=10080)
+
+
+class BackupScheduleUpdate(StrictModel):
+    group_name: str | None = Field(default=None, max_length=128)
+    interval_minutes: int | None = Field(default=None, ge=15, le=10080)
+    enabled: bool | None = None
+
+
+class MaintenanceWindowCreate(StrictModel):
+    scope_type: Literal["node", "group", "global"] = "node"
+    node_id: int | None = None
+    group_name: str | None = Field(default=None, max_length=128)
+    starts_at: datetime
+    ends_at: datetime
+    reason: str | None = Field(default=None, max_length=255)
+
+
+class ConfigTemplateCreate(StrictModel):
+    name: str = Field(min_length=1, max_length=100)
+    scope_type: Literal["global", "group", "model"] = "global"
+    scope_value: str | None = Field(default=None, max_length=128)
+    content: str = Field(min_length=1, max_length=2_000_000)
+
+
+class ConfigTemplateUpdate(StrictModel):
+    name: str | None = Field(default=None, min_length=1, max_length=100)
+    scope_type: Literal["global", "group", "model"] | None = None
+    scope_value: str | None = Field(default=None, max_length=128)
+    content: str | None = Field(default=None, min_length=1, max_length=2_000_000)
+
+
+class PreferenceUpdate(StrictModel):
+    favorites: list[int] | None = Field(default=None, max_length=500)
+    saved_filters: list[dict[str, Any]] | None = Field(default=None, max_length=50)
+
+
+class ExportConfigPayload(StrictModel):
+    kind: Literal["sftp", "s3"]
+    interval_hours: int = Field(default=24, ge=1, le=720)
+    enabled: bool = True
+    config: dict[str, Any] = Field(default_factory=dict)

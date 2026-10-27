@@ -24,13 +24,16 @@ from .poller import start_poller, stop_poller
 from .routers import (
     audit,
     auth,
+    compliance,
     config,
     groups,
     internal,
     logs,
+    maintenance,
     meta,
     metrics,
     nodes,
+    preferences,
     search,
     status,
     system,
@@ -203,6 +206,9 @@ def create_app() -> FastAPI:
     app.include_router(groups.router, prefix=api_prefix)
     app.include_router(config.router, prefix=api_prefix)
     app.include_router(status.router, prefix=api_prefix)
+    app.include_router(maintenance.router, prefix=api_prefix)
+    app.include_router(compliance.router, prefix=api_prefix)
+    app.include_router(preferences.router, prefix=api_prefix)
     app.include_router(logs.router, prefix=api_prefix)
     app.include_router(metrics.router, prefix=api_prefix)
     app.include_router(audit.router, prefix=api_prefix)

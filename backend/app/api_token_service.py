@@ -90,4 +90,5 @@ def context_from_token(user: User, token: ApiToken, raw: str) -> AuthContext:
         session_id=0,
         session_token=raw,
         csrf_token="",
+        scope_groups=[str(group) for group in user.scope_groups] if user.scope_groups else None,
     )

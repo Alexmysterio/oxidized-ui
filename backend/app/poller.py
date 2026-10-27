@@ -9,14 +9,18 @@ from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
 from .backup_schedule_service import run_due as run_due_backups
+from .config_alert_service import detect_config_changes
 from .config_service import run_due_scheduled
 from .db import SessionLocal
 from .errors import AppError
+from .export_service import run_due_export
+from .maintenance_service import scoped_node_ids
 from .models import AuditLog, BackupRun, Job, LoginAttempt, Node, NodeStatusCache
 from .node_service import update_status_cache
-from .notifications import notify_stale
+from .notifications import notify_stale, send_due_digests
 from .oxidized import OxidizedNode
 from .oxidized import client_for as oxidized_client_for
+from .retry_service import plan_retries, run_due_retries
 from .serializers import status_bucket
 from .system_service import ensure_system_settings, ensure_system_state
 from .timeutil import ensure_utc, utcnow
@@ -49,7 +53,11 @@ def _loop() -> None:
                 refresh_status(db)
                 run_due_scheduled(db)
                 run_due_backups(db)
+                plan_retries(db)
+                run_due_retries(db)
+                run_due_export(db)
                 check_stale_backups(db)
+                send_due_digests(db)
                 cleanup_retention(db)
                 settings_row = ensure_system_settings(db)
                 interval = max(5, int(settings_row.poll_interval_seconds or 30))
@@ -90,8 +98,11 @@ def check_stale_backups(db: Session) -> None:
         return
     cutoff = utcnow() - timedelta(hours=hours)
     now = utcnow()
+    maintenance = scoped_node_ids(db)
     rows = db.execute(select(NodeStatusCache, Node).join(Node, Node.id == NodeStatusCache.node_id)).all()
     for cache, node in rows:
+        if node.id in maintenance:
+            continue
         if cache.last_success_at is None or ensure_utc(cache.last_success_at) > cutoff:
             continue
         last_sent = _stale_sent.get(node.id)
@@ -114,6 +125,10 @@ def refresh_status(db: Session) -> int:
         logger.debug("Oxidized API unavailable while polling status")
         return 0
     apply_live_nodes(db, live_nodes)
+    try:
+        detect_config_changes(db, live_nodes)
+    except Exception:  # noqa: BLE001 - change detection must not stop status polling
+        logger.exception("Configuration change detection failed")
     return len(live_nodes)
 
 

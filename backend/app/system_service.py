@@ -114,11 +114,16 @@ def update_system_settings(db: Session, patch: dict) -> SystemSettings:
         "login_max_failures_per_ip",
         "login_window_minutes",
         "login_lockout_minutes",
+        "retry_max_attempts",
+        "retry_base_minutes",
+        "digest_hour",
+        "export_interval_hours",
     ):
         if key in patch and patch[key] is not None:
             setattr(row, key, int(patch[key]))
-    if "password_require_complexity" in patch and patch["password_require_complexity"] is not None:
-        row.password_require_complexity = bool(patch["password_require_complexity"])
+    for key in ("password_require_complexity", "retry_failed_enabled", "digest_enabled", "export_enabled"):
+        if key in patch and patch[key] is not None:
+            setattr(row, key, bool(patch[key]))
     if "ip_allowlist" in patch and patch["ip_allowlist"] is not None:
         row.ip_allowlist = _normalize_allowlist(str(patch["ip_allowlist"]))
     if "notify_webhook_url" in patch and patch["notify_webhook_url"] is not None:
@@ -158,6 +163,11 @@ def settings_public(row: SystemSettings) -> dict:
         "notify_webhook_url": row.notify_webhook_url,
         "notify_on_failure": row.notify_on_failure,
         "notify_stale_hours": row.notify_stale_hours,
+        "retry_failed_enabled": row.retry_failed_enabled,
+        "retry_max_attempts": row.retry_max_attempts,
+        "retry_base_minutes": row.retry_base_minutes,
+        "digest_enabled": row.digest_enabled,
+        "digest_hour": row.digest_hour,
         "site_name": row.site_name,
         "has_logo": bool(row.logo_filename),
         "environment": {

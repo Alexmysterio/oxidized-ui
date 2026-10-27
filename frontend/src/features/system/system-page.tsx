@@ -1,6 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { CheckCircle2, Clock3, Download, Image as ImageIcon, PlugZap, Save, ServerCog, Settings2, ShieldCheck, TriangleAlert, Upload, XCircle } from "lucide-react";
+import { CheckCircle2, Clock3, Download, Image as ImageIcon, PlugZap, RotateCcw, Save, ServerCog, Settings2, ShieldCheck, TriangleAlert, Upload, XCircle } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
@@ -16,6 +16,7 @@ import { Input, Textarea } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { NotificationsCard } from "@/features/system/notifications-card";
+import { ExportCard } from "@/features/system/export-card";
 import { usePageTitle } from "@/hooks/use-app";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
@@ -43,6 +44,11 @@ interface FormValues {
   notify_webhook_url: string;
   notify_on_failure: boolean;
   notify_stale_hours: number;
+  retry_failed_enabled: boolean;
+  retry_max_attempts: number;
+  retry_base_minutes: number;
+  digest_enabled: boolean;
+  digest_hour: number;
   site_name: string;
 }
 
@@ -68,6 +74,11 @@ function valuesFrom(settings: SystemSettings): FormValues {
     notify_webhook_url: settings.notify_webhook_url,
     notify_on_failure: settings.notify_on_failure,
     notify_stale_hours: settings.notify_stale_hours,
+    retry_failed_enabled: settings.retry_failed_enabled,
+    retry_max_attempts: settings.retry_max_attempts,
+    retry_base_minutes: settings.retry_base_minutes,
+    digest_enabled: settings.digest_enabled,
+    digest_hour: settings.digest_hour,
     site_name: settings.site_name ?? "Oxidized UI",
   };
 }
@@ -120,6 +131,11 @@ export function SystemPage() {
     notify_webhook_url: z.string().max(2048),
     notify_on_failure: z.boolean(),
     notify_stale_hours: z.coerce.number<number>().int().min(0).max(720),
+    retry_failed_enabled: z.boolean(),
+    retry_max_attempts: z.coerce.number<number>().int().min(1).max(10),
+    retry_base_minutes: z.coerce.number<number>().int().min(1).max(1440),
+    digest_enabled: z.boolean(),
+    digest_hour: z.coerce.number<number>().int().min(0).max(23),
     site_name: z.string().min(1).max(100),
   });
 
@@ -147,6 +163,11 @@ export function SystemPage() {
       notify_webhook_url: "",
       notify_on_failure: true,
       notify_stale_hours: 0,
+      retry_failed_enabled: true,
+      retry_max_attempts: 3,
+      retry_base_minutes: 15,
+      digest_enabled: false,
+      digest_hour: 8,
       site_name: "Oxidized UI",
     },
   });
@@ -436,10 +457,46 @@ export function SystemPage() {
               <label className="flex items-center gap-2 text-xs">{t("system.notifyStaleHours")}<Input type="number" min={0} max={720} className="w-24" {...form.register("notify_stale_hours", { valueAsNumber: true })} /></label>
               <Button type="button" variant="outline" size="sm" onClick={() => void api.testNotification().then((r) => toast.success(r.ok ? t("system.notificationSent") : t("system.notificationNotConfigured"))).catch((error) => toast.error(t("errors.title"), { description: errorMessage(t, error) }))}>{t("system.testNotification")}</Button>
             </div>
+            <div className="flex flex-wrap items-center gap-4 border-t pt-3">
+              <label className="flex items-center gap-2 text-xs">
+                <Switch checked={form.watch("digest_enabled")} onCheckedChange={(value) => form.setValue("digest_enabled", value, { shouldDirty: true })} />
+                {t("system.digestEnabled")}
+              </label>
+              <label className="flex items-center gap-2 text-xs">
+                {t("system.digestHour")}
+                <Input type="number" min={0} max={23} className="w-20" {...form.register("digest_hour", { valueAsNumber: true })} />
+              </label>
+              <p className="w-full text-[11px] text-muted-foreground">{t("system.digestHelp")}</p>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2"><RotateCcw className="h-4 w-4 text-primary" />{t("system.retriesTitle")}</CardTitle>
+            <CardDescription>{t("system.retriesDescription")}</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <label className="flex items-center gap-2 text-xs">
+              <Switch checked={form.watch("retry_failed_enabled")} onCheckedChange={(value) => form.setValue("retry_failed_enabled", value, { shouldDirty: true })} />
+              {t("system.retryEnabled")}
+            </label>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="retry-max">{t("system.retryMaxAttempts")}</Label>
+                <Input id="retry-max" type="number" min={1} max={10} {...form.register("retry_max_attempts", { valueAsNumber: true })} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="retry-base">{t("system.retryBaseMinutes")}</Label>
+                <Input id="retry-base" type="number" min={1} max={1440} {...form.register("retry_base_minutes", { valueAsNumber: true })} />
+              </div>
+            </div>
+            <p className="text-[11px] leading-relaxed text-muted-foreground">{t("system.retriesHelp")}</p>
           </CardContent>
         </Card>
 
         <NotificationsCard />
+        <ExportCard />
 
         <div className="flex justify-end">
           <Button type="submit" size="sm" disabled={save.isPending || !form.formState.isDirty}>
