@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 
 from .db import SessionLocal
 from .errors import AppError
-from .models import Job, User
+from .models import Job, Node, User
 from .notifications import notify_job_failure
 from .timeutil import to_iso, utcnow
 
@@ -210,6 +210,7 @@ def update_progress(db: Session, job: Job, *, done: int, total: int | None = Non
 
 def serialize_job(db: Session, job: Job) -> dict[str, Any]:
     actor = db.get(User, job.created_by_id) if job.created_by_id else None
+    node = db.get(Node, job.node_id) if job.node_id else None
     error = None
     if job.error_code:
         error = {"code": job.error_code, "params": job.error_params or {}}
@@ -219,6 +220,7 @@ def serialize_job(db: Session, job: Job) -> dict[str, Any]:
         "status": job.status,
         "progress": {"done": job.progress_done, "total": job.progress_total},
         "node_id": job.node_id,
+        "node_name": node.name if node is not None else (job.payload or {}).get("name"),
         "created_by": ({"id": actor.id, "username": actor.username} if actor is not None else None),
         "created_at": to_iso(job.created_at),
         "started_at": to_iso(job.started_at),

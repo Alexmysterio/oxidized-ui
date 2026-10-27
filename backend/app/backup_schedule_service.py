@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import timedelta
 from typing import Any
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from .backup_service import run_backup_all_job
@@ -22,6 +22,13 @@ def serialize(row: BackupSchedule) -> dict[str, Any]:
         "next_run_at": row.next_run_at.isoformat() if row.next_run_at else None,
         "last_run_at": row.last_run_at.isoformat() if row.last_run_at else None,
     }
+
+
+def count_nodes(db: Session, group_name: str | None) -> int:
+    query = select(func.count(Node.id))
+    if group_name:
+        query = query.where(Node.group_name == group_name)
+    return int(db.scalar(query) or 0)
 
 
 def create_schedule(db: Session, *, group_name: str | None, interval_minutes: int, actor_id: int) -> BackupSchedule:
@@ -60,18 +67,29 @@ def run_due(db: Session) -> int:
         if row.group_name:
             query = query.where(Node.group_name == row.group_name)
         nodes = list(db.scalars(query).all())
-        if nodes:
-            if db.scalar(select(Job).where(Job.kind == "backup_all", Job.status.in_(("queued", "running")))) is None:
-                create_and_submit(
-                    db,
-                    kind="backup_all",
-                    actor_id=row.created_by_id,
-                    payload={"node_ids": [node.id for node in nodes], "count": len(nodes), "schedule_id": row.id},
-                    progress_total=len(nodes),
-                    runner=run_backup_all_job,
-                )
-                started += 1
-        row.last_run_at = utcnow()
-        row.next_run_at = utcnow() + timedelta(minutes=row.interval_minutes)
+        now = utcnow()
+        launched = False
+        active = db.scalar(
+            select(Job).where(Job.kind == "backup_all", Job.status.in_(("queued", "running")))
+        )
+        if nodes and active is None:
+            create_and_submit(
+                db,
+                kind="backup_all",
+                actor_id=row.created_by_id,
+                payload={"node_ids": [node.id for node in nodes], "count": len(nodes), "schedule_id": row.id},
+                progress_total=len(nodes),
+                runner=run_backup_all_job,
+            )
+            started += 1
+            launched = True
+        if launched:
+            row.last_run_at = now
+            row.next_run_at = now + timedelta(minutes=row.interval_minutes)
+        else:
+            # Another bulk backup is running (or the group is empty): retry shortly
+            # instead of reporting a run that never happened.
+            retry = 5 if nodes else row.interval_minutes
+            row.next_run_at = now + timedelta(minutes=retry)
         db.commit()
     return started

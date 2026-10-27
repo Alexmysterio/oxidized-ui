@@ -593,8 +593,17 @@
     "configDate": "Fecha de configuración"
   },
   "backups": {
-    "subtitle": "Programaciones de backup automático por grupo, independientes del intervalo de sondeo de Oxidized.",
-    "howItWorks": "Una programación crea un trabajo de backup para todos los nodos, o solo para el grupo indicado, cada N minutos. Cada ejecución queda registrada en el historial de trabajos y en la auditoría. No es el intervalo de sondeo de Oxidized: Oxidized decide cuándo leer los equipos; la programación decide cuándo la consola pide un backup."
+    "subtitle": "Fuerza lecturas adicionales de configuración por grupo, sin esperar al intervalo global de Oxidized.",
+    "howItWorks": "Una programación encola un backup (una lectura inmediata en Oxidized) para todos los nodos o solo para un grupo cada N minutos. No sustituye al intervalo de Oxidized: si quieres la misma cadencia que ya tienes configurada, no necesitas ninguna programación. Solo sirve para pedir lecturas extra con otra cadencia, por ejemplo cada 6 h en un grupo crítico.",
+    "oxidizedCadence": "Oxidized ya recoge todas las configuraciones cada {{value}}. Una programación con la misma cadencia o más lenta no aporta nada.",
+    "scheduleUseful": "Se pedirá una lectura extra de {{nodes}} nodos cada {{value}}, además del ciclo normal de Oxidized.",
+    "scheduleRedundant": "Oxidized ya recoge cada {{value}}: esta programación solo duplicaría trabajo. Usa una cadencia menor o elimínala.",
+    "emptyScope": "Este ámbito no tiene nodos todavía. Añade nodos al grupo antes de programar backups.",
+    "nodesCount": "{{count}} nodos",
+    "everyCadence": "cada {{value}}",
+    "lastRun": "Última: {{value}}",
+    "nextRun": "Próxima: {{value}}",
+    "never": "nunca"
   },
   "logs": {
     "title": "Estado y logs",

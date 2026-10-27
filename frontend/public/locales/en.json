@@ -593,8 +593,17 @@
     "configDate": "Configuration date"
   },
   "backups": {
-    "subtitle": "Automatic backup schedules by group, independent of Oxidized's polling interval.",
-    "howItWorks": "A schedule creates a backup job for all nodes, or only the selected group, every N minutes. Each run is recorded in the job history and audit log. It is not the Oxidized polling interval: Oxidized decides when devices are read; the schedule decides when the console asks for a backup."
+    "subtitle": "Force extra configuration reads per group without waiting for Oxidized's global interval.",
+    "howItWorks": "A schedule queues a backup (an immediate read in Oxidized) for all nodes or a single group every N minutes. It does not replace the Oxidized interval: if you want the cadence you already configured, you do not need a schedule. It is only useful to request extra reads on a different cadence, for example every 6 h for a critical group.",
+    "oxidizedCadence": "Oxidized already collects every configuration every {{value}}. A schedule with the same or a slower cadence adds nothing.",
+    "scheduleUseful": "An extra read of {{nodes}} nodes will be requested every {{value}}, on top of Oxidized's normal cycle.",
+    "scheduleRedundant": "Oxidized already collects every {{value}}: this schedule would only duplicate work. Use a shorter cadence or remove it.",
+    "emptyScope": "This scope has no nodes yet. Add nodes to the group before scheduling backups.",
+    "nodesCount": "{{count}} nodes",
+    "everyCadence": "every {{value}}",
+    "lastRun": "Last: {{value}}",
+    "nextRun": "Next: {{value}}",
+    "never": "never"
   },
   "logs": {
     "title": "Status & logs",

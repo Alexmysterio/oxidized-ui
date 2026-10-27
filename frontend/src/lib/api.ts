@@ -4,6 +4,7 @@ import type {
   ApiToken,
   AuditEntry,
   BackupSchedule,
+  BackupScheduleList,
   Catalog,
   ConfigDraftResponse,
   ConfigRevisionDetail,
@@ -392,7 +393,7 @@ export const api = {
   job: (id: number) => request<Job>(`/jobs/${id}`),
   cancelJob: (id: number) => request<void>(`/jobs/${id}`, { method: "DELETE" }),
   backupsAll: (ids?: number[]) => request<Job>("/backups/all", { method: "POST", body: ids ? { ids } : undefined }),
-  backupSchedules: () => request<{ items: BackupSchedule[] }>("/backups/schedules"),
+  backupSchedules: () => request<BackupScheduleList>("/backups/schedules"),
   createBackupSchedule: (group_name: string | null, interval_minutes: number) =>
     request<BackupSchedule>("/backups/schedules", { method: "POST", body: { group_name, interval_minutes } }),
   deleteBackupSchedule: (id: number) => request<void>(`/backups/schedules/${id}`, { method: "DELETE" }),

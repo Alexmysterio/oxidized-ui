@@ -39,8 +39,15 @@ export function JobMeta({ job, compact = false }: { job: Job; compact?: boolean 
       <div className="flex flex-wrap items-center gap-2">
         <JobStatusBadge status={job.status} />
         <span className="text-xs font-medium">{jobKindLabel(t, job.kind)}</span>
-        {job.node_id ? (
-          <span className="font-mono text-[10px] text-muted-foreground">#{job.node_id}</span>
+        {job.node_name || job.node_id ? (
+          <span className="inline-flex min-w-0 max-w-[20rem] items-center gap-1.5 rounded-full border border-border/70 bg-muted/40 px-2 py-0.5">
+            <span className="truncate text-[11px] font-medium text-foreground/90">
+              {job.node_name ?? `#${job.node_id}`}
+            </span>
+            {job.node_name && job.node_id ? (
+              <span className="font-mono text-[9px] text-muted-foreground">#{job.node_id}</span>
+            ) : null}
+          </span>
         ) : null}
       </div>
       {job.status === "running" && total > 0 ? (

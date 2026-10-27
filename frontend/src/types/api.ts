@@ -457,6 +457,7 @@ export interface Job {
   status: JobStatus;
   progress: { done: number; total: number };
   node_id: number | null;
+  node_name: string | null;
   created_by: { id: number; username: string } | null;
   created_at: string;
   started_at: string | null;
@@ -568,6 +569,20 @@ export interface BackupSchedule {
   enabled: boolean;
   next_run_at: string | null;
   last_run_at: string | null;
+  node_count: number;
+}
+
+export interface BackupScheduleGroup {
+  name: string;
+  node_count: number;
+}
+
+export interface BackupScheduleList {
+  items: BackupSchedule[];
+  groups: BackupScheduleGroup[];
+  ungrouped_count: number;
+  total_nodes: number;
+  oxidized_interval_seconds: number | null;
 }
 
 export interface ScheduledApply {

@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 
 from ..audit import add_audit
 from ..auth_deps import get_auth_context, require_admin, require_operator
-from ..backup_schedule_service import create_schedule, delete_schedule
+from ..backup_schedule_service import count_nodes, create_schedule, delete_schedule
 from ..backup_schedule_service import serialize as serialize_schedule
 from ..backup_service import create_backup_all_job, run_backup_all_job
 from ..db import get_db
@@ -206,9 +206,34 @@ def cancel_job_route(
 def list_backup_schedules(db: Session = Depends(get_db), _context: AuthContext = Depends(require_operator)):
     from sqlalchemy import select
 
-    from ..models import BackupSchedule
+    from ..config_service import applied_config
+    from ..models import BackupSchedule, Node
     rows = db.scalars(select(BackupSchedule).order_by(BackupSchedule.id)).all()
-    return {"items": [serialize_schedule(row) for row in rows]}
+    counts: dict[str | None, int] = {
+        group_name: int(count)
+        for group_name, count in db.execute(
+            select(Node.group_name, func.count(Node.id)).group_by(Node.group_name)
+        ).all()
+    }
+    total_nodes = sum(counts.values())
+    config = applied_config(db)
+    configured_groups = config.get("groups") or {}
+    group_names = sorted(
+        {name for name in configured_groups if isinstance(name, str)} | {name for name in counts if name is not None}
+    )
+    items = []
+    for row in rows:
+        data = serialize_schedule(row)
+        data["node_count"] = counts.get(row.group_name, 0) if row.group_name else total_nodes
+        items.append(data)
+    interval = config.get("interval")
+    return {
+        "items": items,
+        "groups": [{"name": name, "node_count": counts.get(name, 0)} for name in group_names],
+        "ungrouped_count": counts.get(None, 0),
+        "total_nodes": total_nodes,
+        "oxidized_interval_seconds": int(interval) if isinstance(interval, (int, float)) else None,
+    }
 
 
 @router.post("/backups/schedules", status_code=201)
@@ -223,7 +248,9 @@ def create_backup_schedule(
         interval_minutes=payload.interval_minutes,
         actor_id=context.user_id,
     )
-    return serialize_schedule(row)
+    created = serialize_schedule(row)
+    created["node_count"] = count_nodes(db, row.group_name)
+    return created
 
 
 @router.delete("/backups/schedules/{schedule_id}", status_code=204)

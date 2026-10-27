@@ -765,15 +765,19 @@ single webhook setting is migrated automatically to a generic webhook channel.
 
 Open **Backups** in the sidebar:
 
-- leave the group empty for all nodes;
+- pick a group, or **All groups** (includes ungrouped nodes);
 - choose an interval in minutes;
 - create the schedule.
 
-A schedule creates a backup job for all nodes or for one group every N minutes.
-It is independent of Oxidized's polling interval: Oxidized decides when devices
-are read, while the schedule decides when the console asks for a backup. Every
-run is recorded in the job history and audit log. The poller runs the schedule
-and avoids starting a second global backup while one is queued or running.
+A schedule enqueues an immediate config read (`next` in Oxidized) for the nodes
+in scope every N minutes. It does not replace the Oxidized interval: Oxidized
+already reads every device on the interval configured in the YAML. A schedule is
+only useful to request extra reads on a different cadence, for example every 6 h
+for a critical group while the global interval is 24 h. If the schedule uses the
+same or a slower cadence than Oxidized, it adds nothing — the console warns you
+in that case. Every run is recorded in the job history and audit log. The poller
+runs due schedules and, if another bulk backup is queued or running, retries in a
+few minutes without marking the schedule as executed.
 
 ---
 
