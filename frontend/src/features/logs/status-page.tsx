@@ -39,6 +39,7 @@ import { useIntl, usePageTitle } from "@/hooks/use-app";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { errorCodeMessage, notifyError } from "@/lib/errors";
+import { formatBytes } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import type { LogLine } from "@/types/api";
 
@@ -138,6 +139,8 @@ export function StatusPage() {
     onError: (error) => notifyError(t, error),
   });
 
+  const healthQuery = useQuery({ queryKey: ["system-health"], queryFn: api.systemHealth });
+
   const status = statusQuery.data;
   const statusTone: "success" | "warning" | "destructive" =
     stream.status === "connected" ? "success" : stream.status === "paused" ? "warning" : "destructive";
@@ -174,6 +177,56 @@ export function StatusPage() {
           </>
         }
       />
+
+      {healthQuery.data ? (
+        <Card>
+          <CardHeader className="flex-row items-start justify-between space-y-0">
+            <div>
+              <CardTitle className="flex items-center gap-2 text-sm">
+                <Activity className="h-4 w-4 text-primary" />
+                {t("health.title")}
+              </CardTitle>
+              <CardDescription>{t("health.description")}</CardDescription>
+            </div>
+            <Badge variant={(healthQuery.data.warnings?.length ?? 0) > 0 ? "warning" : "success"}>
+              {(healthQuery.data.warnings?.length ?? 0) > 0 ? t("health.warning") : t("health.ok")}
+            </Badge>
+          </CardHeader>
+          <CardContent className="grid gap-3 text-xs sm:grid-cols-2 xl:grid-cols-4">
+            <div className="rounded-md border p-3">
+              <p className="text-[10px] uppercase tracking-[0.1em] text-muted-foreground">{t("health.disk")}</p>
+              <p className="mt-1 font-mono text-lg">{healthQuery.data.disk.percent}%</p>
+              <p className="text-[10px] text-muted-foreground">
+                {formatBytes(healthQuery.data.disk.free_bytes, intl.language)} {t("health.free")}
+              </p>
+            </div>
+            <div className="rounded-md border p-3">
+              <p className="text-[10px] uppercase tracking-[0.1em] text-muted-foreground">{t("health.database")}</p>
+              <p className="mt-1 font-mono text-lg">{formatBytes(healthQuery.data.database_bytes, intl.language)}</p>
+              <p className="text-[10px] text-muted-foreground">{t("health.migration", { version: healthQuery.data.migration ?? "—" })}</p>
+            </div>
+            <div className="rounded-md border p-3">
+              <p className="text-[10px] uppercase tracking-[0.1em] text-muted-foreground">{t("health.output")}</p>
+              <p className="mt-1 font-mono text-lg">{formatBytes(healthQuery.data.output_bytes, intl.language)}</p>
+              <p className="text-[10px] text-muted-foreground">{t("health.nodes", { count: healthQuery.data.backups.nodes })}</p>
+            </div>
+            <div className="rounded-md border p-3">
+              <p className="text-[10px] uppercase tracking-[0.1em] text-muted-foreground">{t("health.queue")}</p>
+              <p className="mt-1 font-mono text-lg">
+                {healthQuery.data.jobs.queued} / {healthQuery.data.jobs.running}
+              </p>
+              <p className="text-[10px] text-muted-foreground">
+                {t("health.failedToday", { count: healthQuery.data.jobs.failed_today })}
+              </p>
+            </div>
+            {healthQuery.data.warnings?.length ? (
+              <p className="text-[11px] text-warning sm:col-span-2 xl:col-span-4">
+                {healthQuery.data.warnings.map((warning) => t(`errors.${warning}`, { defaultValue: warning })).join(" · ")}
+              </p>
+            ) : null}
+          </CardContent>
+        </Card>
+      ) : null}
 
       {statusQuery.isLoading ? (
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">

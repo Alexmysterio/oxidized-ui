@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { CalendarClock, Check, Info, Pencil, Trash2, TriangleAlert } from "lucide-react";
+import { CalendarClock, Check, Info, ListOrdered, Pencil, Plus, Trash2, TriangleAlert } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -34,12 +34,47 @@ export function BackupsPage() {
   const [scheduleInterval, setScheduleInterval] = useState(1440);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editingValue, setEditingValue] = useState("");
+  const [ruleType, setRuleType] = useState<"group" | "tag">("group");
+  const [ruleKey, setRuleKey] = useState("");
+  const [ruleValue, setRuleValue] = useState("");
+  const [rulePriority, setRulePriority] = useState(1);
   usePageTitle("nav.backups");
 
   const schedulesQuery = useQuery({
     queryKey: ["backup-schedules"],
     queryFn: api.backupSchedules,
     enabled: can("backups.trigger"),
+  });
+  const rulesQuery = useQuery({
+    queryKey: ["priority-rules"],
+    queryFn: api.priorityRules,
+    enabled: can("backups.trigger"),
+  });
+
+  const createRule = useMutation({
+    mutationFn: () =>
+      api.createPriorityRule({
+        scope_type: ruleType,
+        scope_key: ruleKey.trim(),
+        scope_value: ruleType === "tag" ? ruleValue.trim() : null,
+        priority: rulePriority,
+      }),
+    onSuccess: () => {
+      toast.success(t("backups.ruleCreated"));
+      setRuleKey("");
+      setRuleValue("");
+      void queryClient.invalidateQueries({ queryKey: ["priority-rules"] });
+    },
+    onError: (error) => notifyError(t, error),
+  });
+
+  const deleteRule = useMutation({
+    mutationFn: (id: number) => api.deletePriorityRule(id),
+    onSuccess: () => {
+      toast.success(t("backups.ruleDeleted"));
+      void queryClient.invalidateQueries({ queryKey: ["priority-rules"] });
+    },
+    onError: (error) => notifyError(t, error),
   });
 
   const schedules = schedulesQuery.data;
@@ -250,6 +285,88 @@ export function BackupsPage() {
             ))}
             {(schedules?.items ?? []).length === 0 ? (
               <p className="text-xs text-muted-foreground">{t("logs.noSchedules")}</p>
+            ) : null}
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-sm">
+            <ListOrdered className="h-4 w-4 text-primary" />
+            {t("backups.priorityTitle")}
+          </CardTitle>
+          <CardDescription>{t("backups.priorityDescription")}</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="flex flex-wrap items-end gap-2">
+            <div className="space-y-1">
+              <Label>{t("backups.priorityScope")}</Label>
+              <Select value={ruleType} onValueChange={(value) => setRuleType(value as "group" | "tag")}>
+                <SelectTrigger className="w-36"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="group">{t("backups.priorityGroup")}</SelectItem>
+                  <SelectItem value="tag">{t("backups.priorityTag")}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1">
+              <Label>{ruleType === "group" ? t("backups.priorityGroupName") : t("nodes.tagKey")}</Label>
+              <Input value={ruleKey} maxLength={128} onChange={(event) => setRuleKey(event.target.value)} className="w-44" placeholder={ruleType === "group" ? "critical" : "tier"} />
+            </div>
+            {ruleType === "tag" ? (
+              <div className="space-y-1">
+                <Label>{t("nodes.tagValue")}</Label>
+                <Input value={ruleValue} maxLength={128} onChange={(event) => setRuleValue(event.target.value)} className="w-36" placeholder="edge" />
+              </div>
+            ) : null}
+            <div className="space-y-1">
+              <Label>{t("backups.priorityLevel")}</Label>
+              <Input
+                type="number"
+                min={1}
+                max={10}
+                value={rulePriority}
+                onChange={(event) => setRulePriority(Number(event.target.value))}
+                className="w-24"
+              />
+            </div>
+            <Button
+              type="button"
+              size="sm"
+              disabled={createRule.isPending || !ruleKey.trim() || (ruleType === "tag" && !ruleValue.trim())}
+              onClick={() => createRule.mutate()}
+            >
+              {createRule.isPending ? <Spinner /> : <Plus />}
+              {t("backups.priorityAdd")}
+            </Button>
+          </div>
+          <p className="text-[11px] text-muted-foreground">{t("backups.priorityHelp")}</p>
+          <div className="divide-y">
+            {(rulesQuery.data?.items ?? []).map((rule) => (
+              <div key={rule.id} className="flex items-center justify-between gap-3 py-2 text-xs">
+                <span className="font-mono">
+                  {rule.scope_type === "group"
+                    ? `${t("backups.priorityGroup")}: ${rule.scope_key}`
+                    : `${t("backups.priorityTag")}: ${rule.scope_key}=${rule.scope_value}`}
+                  <span className="ml-2 rounded-full border border-border/70 bg-muted/40 px-2 py-0.5 text-[10px]">
+                    {t("backups.priorityValue", { value: rule.priority })}
+                  </span>
+                </span>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="text-muted-foreground hover:text-destructive"
+                  onClick={() => deleteRule.mutate(rule.id)}
+                >
+                  <Trash2 />
+                  {t("common.delete")}
+                </Button>
+              </div>
+            ))}
+            {(rulesQuery.data?.items ?? []).length === 0 ? (
+              <p className="py-2 text-xs text-muted-foreground">{t("backups.priorityEmpty")}</p>
             ) : null}
           </div>
         </CardContent>

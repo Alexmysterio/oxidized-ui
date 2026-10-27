@@ -143,6 +143,8 @@ export interface Node {
   last_attempt_at: string | null;
   updated_at: string;
   warnings: string[];
+  tags?: Record<string, string>;
+  facts?: NodeFacts | null;
   maintenance?: boolean;
   retry?: { attempts: number; next_attempt_at: string | null; exhausted: boolean } | null;
   config_state?: { last_changed_at: string | null; last_checked_at: string | null } | null;
@@ -166,6 +168,8 @@ export interface NodeListParams {
   sort?: string;
   order?: "asc" | "desc";
   favorites?: boolean;
+  tag_key?: string;
+  tag_value?: string;
   page?: number;
   page_size?: number;
 }
@@ -186,6 +190,7 @@ export interface NodeInput {
   output?: string | null;
   prompt?: string | null;
   timeout_seconds?: number | null;
+  tags?: Record<string, string> | null;
 }
 
 export interface NodePingResult {
@@ -462,6 +467,7 @@ export interface Job {
   kind: string;
   status: JobStatus;
   progress: { done: number; total: number };
+  priority?: number;
   node_id: number | null;
   node_name: string | null;
   created_by: { id: number; username: string } | null;
@@ -537,6 +543,14 @@ export interface SystemSettings {
   retry_failed_enabled: boolean;
   retry_max_attempts: number;
   retry_base_minutes: number;
+  backup_batch_size: number;
+  backup_batch_delay_seconds: number;
+  health_alerts_enabled: boolean;
+  health_disk_warn_percent: number;
+  health_output_warn_mb: number;
+  report_enabled: boolean;
+  report_weekday: number;
+  report_hour: number;
   digest_enabled: boolean;
   digest_hour: number;
   site_name: string;
@@ -720,4 +734,103 @@ export interface ExportStatus {
   last_run_at: string | null;
   last_status: string | null;
   last_error: string | null;
+}
+
+export interface NodeFacts {
+  serial: string | null;
+  os_version: string | null;
+  uptime: string | null;
+  collected_at: string | null;
+}
+
+export interface NodeTagCount {
+  key: string;
+  value: string;
+  count: number;
+}
+
+export interface NodeTemplate {
+  id: number;
+  name: string;
+  model: string;
+  group_name: string | null;
+  input: string | null;
+  port: number | null;
+  username: string | null;
+  output: string | null;
+  prompt: string | null;
+  timeout_seconds: number | null;
+  vars: Record<string, unknown>;
+  created_at: string | null;
+  updated_at: string | null;
+}
+
+export interface JobPriorityRule {
+  id: number;
+  scope_type: "group" | "tag";
+  scope_key: string;
+  scope_value: string | null;
+  priority: number;
+  created_at: string | null;
+}
+
+export interface HealthSnapshot {
+  disk: {
+    total_bytes: number;
+    used_bytes: number;
+    free_bytes: number;
+    percent: number;
+    warn_percent: number;
+  };
+  database_bytes: number;
+  output_bytes: number;
+  output_warn_mb: number;
+  jobs: { queued: number; running: number; failed_today: number };
+  backups: { failed_24h: number; nodes: number };
+  migration: string | null;
+  warnings: string[];
+  alerts_enabled: boolean;
+  checked_at: string;
+}
+
+export interface ReportItem {
+  filename: string;
+  bytes: number;
+  created_at: string | null;
+}
+
+export interface ReportList {
+  items: ReportItem[];
+  last_run_at: string | null;
+}
+
+export interface ReconciliationReport {
+  missing_in_ui: { name: string; address: string | null; group_name: string | null; model: string | null }[];
+  missing_in_oxidized: { id: number; name: string; group_name: string | null; model: string }[];
+  drift: {
+    id: number;
+    name: string;
+    group_name: string | null;
+    model: string;
+    changes: Record<string, { ui: string | null; oxidized: string | null }>;
+  }[];
+  summary: {
+    missing_in_ui: number;
+    missing_in_oxidized: number;
+    drift: number;
+    oxidized_nodes: number;
+    ui_nodes: number;
+  };
+}
+
+export interface ExportVerification {
+  ok: boolean;
+  entries: number;
+  bytes: number;
+  sha256: string;
+  created_at: string | null;
+  has_database: boolean;
+  has_fernet_key: boolean;
+  has_metadata: boolean;
+  target: string;
 }

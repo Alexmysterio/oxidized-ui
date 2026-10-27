@@ -118,10 +118,23 @@ def update_system_settings(db: Session, patch: dict) -> SystemSettings:
         "retry_base_minutes",
         "digest_hour",
         "export_interval_hours",
+        "backup_batch_size",
+        "backup_batch_delay_seconds",
+        "health_disk_warn_percent",
+        "health_output_warn_mb",
+        "report_weekday",
+        "report_hour",
     ):
         if key in patch and patch[key] is not None:
             setattr(row, key, int(patch[key]))
-    for key in ("password_require_complexity", "retry_failed_enabled", "digest_enabled", "export_enabled"):
+    for key in (
+        "password_require_complexity",
+        "retry_failed_enabled",
+        "digest_enabled",
+        "export_enabled",
+        "health_alerts_enabled",
+        "report_enabled",
+    ):
         if key in patch and patch[key] is not None:
             setattr(row, key, bool(patch[key]))
     if "ip_allowlist" in patch and patch["ip_allowlist"] is not None:
@@ -168,6 +181,15 @@ def settings_public(row: SystemSettings) -> dict:
         "retry_base_minutes": row.retry_base_minutes,
         "digest_enabled": row.digest_enabled,
         "digest_hour": row.digest_hour,
+        "backup_batch_size": row.backup_batch_size,
+        "backup_batch_delay_seconds": row.backup_batch_delay_seconds,
+        "health_alerts_enabled": row.health_alerts_enabled,
+        "health_disk_warn_percent": row.health_disk_warn_percent,
+        "health_output_warn_mb": row.health_output_warn_mb,
+        "report_enabled": row.report_enabled,
+        "report_weekday": row.report_weekday,
+        "report_hour": row.report_hour,
+        "report_last_run_at": row.report_last_run_at.isoformat() if row.report_last_run_at else None,
         "site_name": row.site_name,
         "has_logo": bool(row.logo_filename),
         "environment": {

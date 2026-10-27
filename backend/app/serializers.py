@@ -124,6 +124,7 @@ def node_public(
         "last_attempt_at": to_iso(cache.last_finished_at) if cache else None,
         "updated_at": to_iso(node.updated_at),
         "warnings": [],
+        "tags": dict(node.tags or {}) if isinstance(node.tags, dict) else {},
     }
     if role in {"admin", "operator"}:
         data.update(

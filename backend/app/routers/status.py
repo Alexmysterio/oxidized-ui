@@ -18,7 +18,7 @@ from ..errors import AppError
 from ..jobs import Job, cancel_job, create_and_submit, serialize_job
 from ..models import Job as JobModel
 from ..oxidized import client_for as oxidized_client_for
-from ..schemas import BackupAllRequest, BackupScheduleCreate, BackupScheduleUpdate
+from ..schemas import BackupAllRequest, BackupScheduleCreate, BackupScheduleUpdate, JobPriorityRuleCreate
 from ..security import AuthContext
 from ..settings import settings
 from ..status_service import build_status
@@ -292,4 +292,66 @@ def delete_backup_schedule(
     _context: AuthContext = Depends(require_operator),
 ):
     delete_schedule(db, schedule_id)
+    return Response(status_code=204)
+
+
+@router.get("/backups/priority-rules")
+def list_priority_rules(
+    db: Session = Depends(get_db),
+    _context: AuthContext = Depends(require_operator),
+):
+    from ..priority_service import list_rules, serialize_rule
+
+    return {"items": [serialize_rule(row) for row in list_rules(db)]}
+
+
+@router.post("/backups/priority-rules", status_code=201)
+def create_priority_rule(
+    payload: JobPriorityRuleCreate,
+    request: Request,
+    db: Session = Depends(get_db),
+    context: AuthContext = Depends(require_operator),
+):
+    from ..priority_service import create_rule, serialize_rule
+
+    row = create_rule(
+        db,
+        scope_type=payload.scope_type,
+        scope_key=payload.scope_key,
+        scope_value=payload.scope_value,
+        priority=payload.priority,
+    )
+    add_audit(
+        db,
+        actor=context,
+        action_code="job.priority_created",
+        action_params={"scope_type": row.scope_type, "key": row.scope_key, "priority": row.priority},
+        target_type="job",
+        target_id=row.id,
+        request=request,
+    )
+    db.commit()
+    return serialize_rule(row)
+
+
+@router.delete("/backups/priority-rules/{rule_id}", status_code=204)
+def delete_priority_rule(
+    rule_id: int,
+    request: Request,
+    db: Session = Depends(get_db),
+    context: AuthContext = Depends(require_operator),
+):
+    from ..priority_service import delete_rule
+
+    delete_rule(db, rule_id)
+    add_audit(
+        db,
+        actor=context,
+        action_code="job.priority_deleted",
+        action_params={"rule_id": rule_id},
+        target_type="job",
+        target_id=rule_id,
+        request=request,
+    )
+    db.commit()
     return Response(status_code=204)

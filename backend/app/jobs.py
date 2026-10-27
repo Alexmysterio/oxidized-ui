@@ -1,6 +1,9 @@
 from __future__ import annotations
 
+import itertools
 import logging
+import queue
+import threading
 from collections.abc import Callable
 from concurrent.futures import Future, ThreadPoolExecutor
 from typing import Any
@@ -20,6 +23,11 @@ JobRunner = Callable[[Session, Job], dict[str, Any] | None]
 _executor: ThreadPoolExecutor | None = None
 _futures: dict[int, Future] = {}
 _cancelled: set[int] = set()
+_priority_queue: queue.PriorityQueue | None = None
+_dispatcher: threading.Thread | None = None
+_sequence = itertools.count()
+_sentinel = (-1, 0, 0, None)
+_stopping = threading.Event()
 
 
 def _get_executor() -> ThreadPoolExecutor:
@@ -29,11 +37,49 @@ def _get_executor() -> ThreadPoolExecutor:
     return _executor
 
 
+def _get_queue() -> queue.PriorityQueue:
+    global _priority_queue, _dispatcher
+    if _priority_queue is None:
+        _priority_queue = queue.PriorityQueue()
+    if _dispatcher is None or not _dispatcher.is_alive():
+        _stopping.clear()
+        _dispatcher = threading.Thread(target=_dispatch, name="oxidized-job-queue", daemon=True)
+        _dispatcher.start()
+    return _priority_queue
+
+
+def _dispatch() -> None:
+    assert _priority_queue is not None
+    while not _stopping.is_set():
+        item = _priority_queue.get()
+        if item is _sentinel or item[3] is None:
+            _priority_queue.task_done()
+            break
+        priority, _, job_id, runner = item
+        try:
+            if job_id in _cancelled:
+                continue
+            with SessionLocal() as db:
+                job = db.get(Job, job_id)
+                if job is None or job.status == "cancelled":
+                    continue
+            _futures[job_id] = _get_executor().submit(_execute, job_id, runner)
+        finally:
+            _priority_queue.task_done()
+
+
 def shutdown_jobs() -> None:
-    global _executor
+    global _executor, _priority_queue, _dispatcher
+    _stopping.set()
+    if _priority_queue is not None:
+        _priority_queue.put(_sentinel)
+    if _dispatcher is not None:
+        _dispatcher.join(timeout=2)
+        _dispatcher = None
     if _executor is not None:
         _executor.shutdown(wait=False, cancel_futures=True)
         _executor = None
+    _priority_queue = None
 
 
 def create_job(
@@ -44,6 +90,7 @@ def create_job(
     payload: dict[str, Any] | None = None,
     node_id: int | None = None,
     progress_total: int = 0,
+    priority: int = 5,
 ) -> Job:
     job = Job(
         kind=kind,
@@ -53,6 +100,7 @@ def create_job(
         progress_total=progress_total,
         progress_done=0,
         payload=payload or {},
+        priority=max(1, min(10, priority)),
     )
     db.add(job)
     db.commit()
@@ -64,12 +112,15 @@ def create_and_submit(
     db: Session,
     *,
     kind: str,
-    actor_id: int | None,
+    actor_id: int,
     runner: JobRunner,
     payload: dict[str, Any] | None = None,
     node_id: int | None = None,
     progress_total: int = 0,
 ) -> Job:
+    from .priority_service import priority_for
+
+    priority = priority_for(db, node_id=node_id, payload=payload)
     job = create_job(
         db,
         kind=kind,
@@ -77,13 +128,14 @@ def create_and_submit(
         payload=payload,
         node_id=node_id,
         progress_total=progress_total,
+        priority=priority,
     )
-    submit(job.id, runner)
+    submit(job.id, runner, priority=priority)
     return job
 
 
-def submit(job_id: int, runner: JobRunner) -> None:
-    _futures[job_id] = _get_executor().submit(_execute, job_id, runner)
+def submit(job_id: int, runner: JobRunner, *, priority: int = 5) -> None:
+    _get_queue().put((max(1, min(10, priority)), next(_sequence), job_id, runner))
 
 
 def cancel_job(db: Session, job_id: int) -> Job:
@@ -166,11 +218,20 @@ def _execute(job_id: int, runner: JobRunner) -> None:
 def _runner_for_kind(kind: str):
     from .backup_service import run_backup_all_job, run_backup_node_job
     from .config_service import run_config_apply_job
+    from .export_service import run_export_job
+    from .facts_service import run_facts_job
+    from .report_service import run_report_job
 
     if kind == "backup_node":
         return run_backup_node_job
     if kind == "backup_all":
         return run_backup_all_job
+    if kind == "backup_export":
+        return run_export_job
+    if kind == "facts_collect":
+        return run_facts_job
+    if kind == "report":
+        return run_report_job
     if kind == "config_apply":
         return run_config_apply_job
     if kind == "oxidized_restart":
@@ -189,7 +250,7 @@ def interrupt_incomplete_jobs(db: Session) -> int:
         if job.status == "queued":
             runner = _runner_for_kind(job.kind)
             if runner is not None:
-                submit(job.id, runner)
+                submit(job.id, runner, priority=job.priority)
                 queued += 1
                 continue
         job.status = "failed"
@@ -219,6 +280,7 @@ def serialize_job(db: Session, job: Job) -> dict[str, Any]:
         "kind": job.kind,
         "status": job.status,
         "progress": {"done": job.progress_done, "total": job.progress_total},
+        "priority": job.priority,
         "node_id": job.node_id,
         "node_name": node.name if node is not None else (job.payload or {}).get("name"),
         "created_by": ({"id": actor.id, "username": actor.username} if actor is not None else None),

@@ -277,6 +277,7 @@ class NodeCreate(StrictModel):
     output: str | None = Field(default=None, max_length=128)
     prompt: str | None = Field(default=None, max_length=512)
     timeout_seconds: int | None = None
+    tags: dict[str, str] | None = None
 
     @field_validator("name")
     @classmethod
@@ -343,6 +344,7 @@ class NodeUpdate(StrictModel):
     output: str | None = Field(default=None, max_length=128)
     prompt: str | None = Field(default=None, max_length=512)
     timeout_seconds: int | None = None
+    tags: dict[str, str] | None = None
 
     @field_validator("name")
     @classmethod
@@ -405,14 +407,56 @@ class NodeUpdate(StrictModel):
         return self
 
 
+class NodeIdsRequest(StrictModel):
+    ids: list[int] = Field(min_length=1, max_length=1000)
+
+
+class NodeTemplateCreate(StrictModel):
+    name: str = Field(min_length=1, max_length=100)
+    model: str = Field(min_length=1, max_length=128)
+    group_name: str | None = Field(default=None, max_length=128)
+    input: str | None = Field(default=None, max_length=128)
+    port: int | None = Field(default=None, ge=1, le=65535)
+    username: str | None = Field(default=None, max_length=128)
+    output: str | None = Field(default=None, max_length=128)
+    prompt: str | None = Field(default=None, max_length=512)
+    timeout_seconds: int | None = Field(default=None, ge=1, le=3600)
+    vars: dict[str, Any] | None = None
+
+
+class NodeTemplateUpdate(StrictModel):
+    name: str | None = Field(default=None, min_length=1, max_length=100)
+    model: str | None = Field(default=None, min_length=1, max_length=128)
+    group_name: str | None = Field(default=None, max_length=128)
+    input: str | None = Field(default=None, max_length=128)
+    port: int | None = Field(default=None, ge=1, le=65535)
+    username: str | None = Field(default=None, max_length=128)
+    output: str | None = Field(default=None, max_length=128)
+    prompt: str | None = Field(default=None, max_length=512)
+    timeout_seconds: int | None = Field(default=None, ge=1, le=3600)
+    vars: dict[str, Any] | None = None
+
+
+class NodeTemplateApply(StrictModel):
+    name: str = Field(min_length=1, max_length=253)
+    address: str | None = Field(default=None, max_length=253)
+    tags: dict[str, str] | None = None
+
+
+class ReconciliationImport(StrictModel):
+    names: list[str] = Field(min_length=1, max_length=200)
+
+
 class NodeBulkRequest(StrictModel):
-    action: Literal["backup", "change_group", "delete", "update", "trust_host_key"]
+    action: Literal["backup", "change_group", "delete", "update", "trust_host_key", "set_tags"]
     ids: list[int] = Field(min_length=1, max_length=1000)
     group_name: str | None = None
     model: str | None = Field(default=None, max_length=64)
     input: str | None = Field(default=None, max_length=32)
     port: int | None = Field(default=None, ge=1, le=65535)
     vars: dict[str, Any] | None = None
+    tags: dict[str, str] | None = None
+    tags_mode: Literal["merge", "replace"] = "merge"
 
     @field_validator("group_name")
     @classmethod
@@ -529,6 +573,14 @@ class SystemSettingsUpdate(StrictModel):
     retry_failed_enabled: bool | None = None
     retry_max_attempts: int | None = Field(default=None, ge=1, le=10)
     retry_base_minutes: int | None = Field(default=None, ge=1, le=1440)
+    backup_batch_size: int | None = Field(default=None, ge=1, le=100)
+    backup_batch_delay_seconds: int | None = Field(default=None, ge=0, le=300)
+    health_alerts_enabled: bool | None = None
+    health_disk_warn_percent: int | None = Field(default=None, ge=0, le=100)
+    health_output_warn_mb: int | None = Field(default=None, ge=0, le=1_000_000)
+    report_enabled: bool | None = None
+    report_weekday: int | None = Field(default=None, ge=0, le=6)
+    report_hour: int | None = Field(default=None, ge=0, le=23)
     digest_enabled: bool | None = None
     digest_hour: int | None = Field(default=None, ge=0, le=23)
     export_enabled: bool | None = None
@@ -614,3 +666,14 @@ class ExportConfigPayload(StrictModel):
     interval_hours: int = Field(default=24, ge=1, le=720)
     enabled: bool = True
     config: dict[str, Any] = Field(default_factory=dict)
+
+
+class ExportVerifyRequest(StrictModel):
+    passphrase: str | None = Field(default=None, max_length=512)
+
+
+class JobPriorityRuleCreate(StrictModel):
+    scope_type: Literal["group", "tag"] = "group"
+    scope_key: str = Field(min_length=1, max_length=128)
+    scope_value: str | None = Field(default=None, max_length=128)
+    priority: int = Field(default=5, ge=1, le=10)

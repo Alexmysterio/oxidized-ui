@@ -146,6 +146,7 @@ function NodeForm({
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [vars, setVars] = useState<Record<string, unknown>>(node?.vars ?? {});
+  const [tags, setTags] = useState<Record<string, unknown>>(node?.tags ?? {});
   const [passwordMode, setPasswordMode] = useState<SecretMode>(node ? "keep" : "replace");
   const [enableMode, setEnableMode] = useState<SecretMode>(node ? "keep" : "replace");
   const [password, setPassword] = useState("");
@@ -162,6 +163,8 @@ function NodeForm({
 
   useEffect(() => {
     form.reset(toFormValues(node));
+    setVars(node?.vars ?? {});
+    setTags(node?.tags ?? {});
   }, [node, form]);
 
   const appliedGroups = groups.filter((group) => group.state === "applied" || group.name === node?.group_name);
@@ -179,6 +182,11 @@ function NodeForm({
         port: Number.isNaN(values.port) ? null : Number(values.port),
         username: values.username.trim() || null,
         vars,
+        tags: Object.fromEntries(
+          Object.entries(tags)
+            .map(([key, value]) => [key, String(value).trim()] as const)
+            .filter(([key, value]) => key.trim() && value),
+        ),
         output: values.output.trim() || null,
         prompt: values.prompt.trim() || null,
         timeout_seconds: Number.isNaN(values.timeout_seconds) ? null : Number(values.timeout_seconds),
@@ -441,6 +449,24 @@ function NodeForm({
             suggestions={variables.map((variable) => variable.name)}
           />
           <KnownVariables variables={variables} />
+        </section>
+
+        <section className="space-y-3 border-t pt-6">
+          <div className="flex items-center gap-2">
+            <span className="flex h-6 w-6 items-center justify-center rounded-md border bg-muted/40 font-mono text-[10px] text-muted-foreground">
+              05
+            </span>
+            <h3 className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+              {t("nodeForm.tags")}
+            </h3>
+          </div>
+          <p className="text-[11px] leading-relaxed text-muted-foreground">{t("nodeForm.tagsHelp")}</p>
+          <KeyValueEditor
+            value={tags}
+            onChange={setTags}
+            addLabel={t("nodeForm.addTag")}
+            suggestions={["site", "criticality", "vendor", "tier"]}
+          />
         </section>
 
         <details className="group rounded-lg border bg-muted/20">

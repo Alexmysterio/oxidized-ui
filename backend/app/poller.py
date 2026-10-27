@@ -14,12 +14,14 @@ from .config_service import run_due_scheduled
 from .db import SessionLocal
 from .errors import AppError
 from .export_service import run_due_export
+from .health_service import snapshot as health_snapshot
 from .maintenance_service import scoped_node_ids
 from .models import AuditLog, BackupRun, Job, LoginAttempt, Node, NodeStatusCache
 from .node_service import update_status_cache
-from .notifications import notify_stale, send_due_digests
+from .notifications import notify_health, notify_stale, send_due_digests
 from .oxidized import OxidizedNode
 from .oxidized import client_for as oxidized_client_for
+from .report_service import run_due_report
 from .retry_service import plan_retries, run_due_retries
 from .serializers import status_bucket
 from .system_service import ensure_system_settings, ensure_system_state
@@ -57,6 +59,8 @@ def _loop() -> None:
                 run_due_retries(db)
                 run_due_export(db)
                 check_stale_backups(db)
+                check_health(db)
+                run_due_report(db)
                 send_due_digests(db)
                 cleanup_retention(db)
                 settings_row = ensure_system_settings(db)
@@ -85,6 +89,28 @@ def cleanup_retention(db: Session) -> None:
     db.execute(delete(LoginAttempt).where(LoginAttempt.created_at < now - timedelta(days=30)))
     db.commit()
     _last_retention = now
+
+
+_last_health: datetime | None = None
+
+
+def check_health(db: Session) -> None:
+    global _last_health
+    row = ensure_system_settings(db)
+    if not row.health_alerts_enabled:
+        return
+    now = utcnow()
+    if _last_health is not None and now - _last_health < timedelta(hours=1):
+        return
+    _last_health = now
+    snapshot = health_snapshot(db)
+    if snapshot.get("warnings"):
+        notify_health(
+            db,
+            list(snapshot["warnings"]),
+            float(snapshot["disk"]["percent"]),
+            int(snapshot["output_bytes"]),
+        )
 
 
 def check_stale_backups(db: Session) -> None:

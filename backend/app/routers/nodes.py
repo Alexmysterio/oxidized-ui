@@ -28,7 +28,7 @@ from ..node_service import (
 )
 from ..node_test_service import test_connection
 from ..ping_service import ping_host
-from ..schemas import NodeBulkRequest, NodeCreate, NodeUpdate
+from ..schemas import NodeBulkRequest, NodeCreate, NodeIdsRequest, NodeUpdate
 from ..scope_service import require_group, scoped_node
 from ..security import AuthContext
 from ..version_service import current_config
@@ -45,6 +45,8 @@ def nodes_list(
     sort: str = Query(default="name"),
     order: Literal["asc", "desc"] = "asc",
     favorites: bool = Query(default=False),
+    tag_key: str | None = Query(default=None, max_length=32),
+    tag_value: str | None = Query(default=None, max_length=64),
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=25, ge=1, le=100),
     db: Session = Depends(get_db),
@@ -65,6 +67,8 @@ def nodes_list(
         page_size=page_size,
         allowed_groups=context.scope_groups,
         favorite_ids=favorite_ids(db, context.user_id) if favorites else None,
+        tag_key=tag_key,
+        tag_value=tag_value,
     )
 
 
@@ -130,6 +134,8 @@ def bulk_nodes(
         input=payload.input,
         port=payload.port,
         vars=payload.vars,
+        tags=payload.tags,
+        tags_mode=payload.tags_mode,
     )
     if "job_id" in result:
         response.status_code = 202
@@ -160,6 +166,66 @@ def import_nodes(
     )
 
 
+
+
+@router.get("/tags")
+def node_tags(
+    db: Session = Depends(get_db),
+    context: AuthContext = Depends(get_auth_context),
+):
+    from ..node_service import tags_catalog
+
+    return {"items": tags_catalog(db, allowed_groups=context.scope_groups)}
+
+
+@router.post("/facts/collect", status_code=202)
+def collect_facts(
+    payload: NodeIdsRequest,
+    db: Session = Depends(get_db),
+    context: AuthContext = Depends(require_operator),
+):
+    from ..facts_service import run_facts_job
+    from ..jobs import create_and_submit
+
+    ids = payload.ids
+    if context.scope_groups is not None:
+        allowed = {node.id for node in db.scalars(select(Node)).all() if node.group_name in context.scope_groups}
+        ids = [node_id for node_id in ids if node_id in allowed]
+    if not ids:
+        raise AppError("node.not_found", params={"reason": "no_nodes"})
+    job = create_and_submit(
+        db,
+        kind="facts_collect",
+        actor_id=context.user_id,
+        payload={"node_ids": ids},
+        progress_total=len(ids),
+        runner=run_facts_job,
+    )
+    return serialize_job(db, job)
+
+
+@router.get("/{node_id}/facts")
+def node_facts(
+    node_id: int,
+    db: Session = Depends(get_db),
+    context: AuthContext = Depends(get_auth_context),
+):
+    from ..facts_service import facts_public
+
+    node = scoped_node(db, context, node_id)
+    return {"facts": facts_public(db, node.id)}
+
+
+@router.post("/{node_id}/facts/collect")
+def collect_node_facts(
+    node_id: int,
+    db: Session = Depends(get_db),
+    context: AuthContext = Depends(require_operator),
+):
+    from ..facts_service import collect_node
+
+    node = scoped_node(db, context, node_id)
+    return collect_node(db, node)
 
 
 @router.get("/compare")

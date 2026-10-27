@@ -31,12 +31,12 @@ def build_bundle(db_path: Path) -> bytes:
         # sqlite3 backup target must be a file; use a temporary file for portability
         import tempfile
 
-        with tempfile.TemporaryDirectory() as temp:
+        with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as temp:
             target = Path(temp) / "database.sqlite3"
             with sqlite3.connect(db_path) as source, sqlite3.connect(target) as snapshot:
                 source.backup(snapshot)
             archive.write(target, "database.sqlite3")
-        config = _read_optional(settings.oxidized_config_path)
+        config = _read_optional(settings.oxidized_config_dir / "config")
         if config is not None:
             archive.writestr("config.yaml", config)
         known_hosts = _read_optional(settings.oxidized_config_dir / ".ssh" / "known_hosts")
@@ -73,3 +73,39 @@ def encrypt(passphrase: str, payload: bytes) -> bytes:
 def create_export(passphrase: str) -> bytes:
     db_path = settings.data_dir / "oxidized-ui.sqlite3"
     return encrypt(passphrase, build_bundle(db_path))
+
+
+def decrypt(passphrase: str, payload: bytes) -> bytes:
+    if not payload.startswith(MAGIC):
+        raise ValueError("invalid bundle")
+    salt = payload[len(MAGIC) : len(MAGIC) + 16]
+    nonce = payload[len(MAGIC) + 16 : len(MAGIC) + 28]
+    ciphertext = payload[len(MAGIC) + 28 :]
+    key = PBKDF2HMAC(algorithm=hashes.SHA256(), length=32, salt=salt, iterations=ITERATIONS).derive(
+        passphrase.encode("utf-8")
+    )
+    return AESGCM(key).decrypt(nonce, ciphertext, MAGIC)
+
+
+def verify(passphrase: str, payload: bytes) -> dict[str, object]:
+    import hashlib
+
+    plain = decrypt(passphrase, payload)
+    with zipfile.ZipFile(io.BytesIO(plain)) as archive:
+        bad = archive.testzip()
+        if bad is not None:
+            raise ValueError(f"corrupt entry: {bad}")
+        names = archive.namelist()
+        metadata = {}
+        if "metadata.json" in names:
+            metadata = json.loads(archive.read("metadata.json") or b"{}")
+    return {
+        "ok": True,
+        "entries": len(names),
+        "bytes": len(payload),
+        "sha256": hashlib.sha256(payload).hexdigest(),
+        "created_at": metadata.get("created_at"),
+        "has_database": "database.sqlite3" in names,
+        "has_fernet_key": "fernet.key" in names,
+        "has_metadata": "metadata.json" in names,
+    }

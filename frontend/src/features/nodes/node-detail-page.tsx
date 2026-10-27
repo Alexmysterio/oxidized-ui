@@ -13,6 +13,7 @@ import {
   Pencil,
   Radar,
   RefreshCw,
+  ScanSearch,
   ServerCog,
   Trash2,
   TriangleAlert,
@@ -241,6 +242,15 @@ export function NodeDetailPage() {
                 : result.message ?? t("errors.generic");
         toast.error(t("nodeDetail.connectionFailed", { reason }));
       }
+    },
+    onError: (error) => notifyError(t, error),
+  });
+
+  const collectFacts = useMutation({
+    mutationFn: () => api.collectNodeFacts(nodeId),
+    onSuccess: (facts) => {
+      toast.success(t("nodeDetail.factsCollected", { serial: facts.serial ?? "—" }));
+      void queryClient.invalidateQueries({ queryKey: ["node", nodeId] });
     },
     onError: (error) => notifyError(t, error),
   });
@@ -518,6 +528,25 @@ export function NodeDetailPage() {
                 <InfoRow label={t("nodeDetail.observed")}>{status?.observed_at ? intl.relative(status.observed_at) : "-"}</InfoRow>
                 <InfoRow label={t("nodeDetail.lastConfigChange")}>
                   {node.config_state?.last_changed_at ? intl.dateTime(node.config_state.last_changed_at) : t("common.never")}
+                </InfoRow>
+                <InfoRow label={t("nodeDetail.serial")} mono>
+                  <span className="inline-flex items-center gap-2">
+                    {node.facts?.serial ?? "—"}
+                    <Button
+                      variant="ghost"
+                      size="icon-xs"
+                      title={t("nodeDetail.collectFacts")}
+                      onClick={() => collectFacts.mutate()}
+                      disabled={collectFacts.isPending}
+                    >
+                      {collectFacts.isPending ? <Spinner /> : <ScanSearch />}
+                    </Button>
+                  </span>
+                </InfoRow>
+                <InfoRow label={t("nodeDetail.osVersion")} mono>{node.facts?.os_version ?? "—"}</InfoRow>
+                <InfoRow label={t("nodeDetail.uptime")}>{node.facts?.uptime ?? "—"}</InfoRow>
+                <InfoRow label={t("nodeDetail.factsCollectedAt")}>
+                  {node.facts?.collected_at ? intl.dateTime(node.facts.collected_at) : t("common.never")}
                 </InfoRow>
                 {status?.last_status_raw ? (
                   <InfoRow label={t("nodeDetail.rawStatus")} mono>{status.last_status_raw}</InfoRow>

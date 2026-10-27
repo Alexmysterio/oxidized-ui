@@ -120,6 +120,13 @@ def run_backup_node_job(db: Session, job: Job) -> dict[str, Any]:
 
 
 def run_backup_all_job(db: Session, job: Job) -> dict[str, Any]:
+    import time
+
+    from .system_service import ensure_system_settings
+
+    settings_row = ensure_system_settings(db)
+    batch_size = max(1, int(settings_row.backup_batch_size or 10))
+    batch_delay = max(0, int(settings_row.backup_batch_delay_seconds or 0))
     node_ids = [int(node_id) for node_id in job.payload.get("node_ids", [])]
     nodes = list(db.scalars(select(Node).where(Node.id.in_(node_ids))).all())
     client = oxidized_client_for(db)
@@ -132,6 +139,8 @@ def run_backup_all_job(db: Session, job: Job) -> dict[str, Any]:
         except AppError as exc:
             failures.append({"id": node.id, "name": node.name, "code": exc.code})
         update_progress(db, job, done=index, total=len(nodes))
+        if batch_delay and index % batch_size == 0 and index < len(nodes):
+            time.sleep(batch_delay)
     result: dict[str, Any] = {
         "requested": len(nodes),
         "queued": queued,

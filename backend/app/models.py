@@ -25,6 +25,8 @@ JOB_KINDS = (
     "backup_node",
     "backup_all",
     "backup_export",
+    "facts_collect",
+    "report",
     "oxidized_reload",
     "oxidized_restart",
     "config_apply",
@@ -154,6 +156,7 @@ class Node(Base):
     output: Mapped[str | None] = mapped_column(String(128), nullable=True)
     prompt: Mapped[str | None] = mapped_column(String(512), nullable=True)
     timeout_seconds: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    tags: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
     created_at: Mapped[Any] = mapped_column(UTCDateTime, nullable=False, default=utcnow)
     updated_at: Mapped[Any] = mapped_column(UTCDateTime, nullable=False, default=utcnow, onupdate=utcnow)
     created_by_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
@@ -190,6 +193,7 @@ class Job(Base):
     created_by_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
     progress_total: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     progress_done: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    priority: Mapped[int] = mapped_column(Integer, nullable=False, default=5)
     payload: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False, default=dict)
     result: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
     error_code: Mapped[str | None] = mapped_column(String(128), nullable=True)
@@ -362,6 +366,15 @@ class SystemSettings(Base):
     export_last_run_at: Mapped[Any | None] = mapped_column(UTCDateTime, nullable=True)
     export_last_status: Mapped[str | None] = mapped_column(String(32), nullable=True)
     export_last_error: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    backup_batch_size: Mapped[int] = mapped_column(Integer, nullable=False, default=10)
+    backup_batch_delay_seconds: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    health_alerts_enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    health_disk_warn_percent: Mapped[int] = mapped_column(Integer, nullable=False, default=85)
+    health_output_warn_mb: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    report_enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    report_weekday: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    report_hour: Mapped[int] = mapped_column(Integer, nullable=False, default=8)
+    report_last_run_at: Mapped[Any | None] = mapped_column(UTCDateTime, nullable=True)
     site_name: Mapped[str] = mapped_column(String(100), nullable=False, default="Oxidized UI")
     logo_filename: Mapped[str | None] = mapped_column(String(255), nullable=True)
     updated_by_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
@@ -465,3 +478,46 @@ class UserPreference(Base):
     favorites: Mapped[list[int]] = mapped_column(JSON, nullable=False, default=list)
     saved_filters: Mapped[list[dict[str, Any]]] = mapped_column(JSON, nullable=False, default=list)
     updated_at: Mapped[Any] = mapped_column(UTCDateTime, nullable=False, default=utcnow, onupdate=utcnow)
+
+
+class NodeTemplate(Base):
+    __tablename__ = "node_templates"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    name: Mapped[str] = mapped_column(String(100), nullable=False, unique=True)
+    model: Mapped[str] = mapped_column(String(128), nullable=False)
+    group_name: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    input: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    port: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    username: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    output: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    prompt: Mapped[str | None] = mapped_column(String(512), nullable=True)
+    timeout_seconds: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    vars: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
+    created_by_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    created_at: Mapped[Any] = mapped_column(UTCDateTime, nullable=False, default=utcnow)
+    updated_at: Mapped[Any] = mapped_column(UTCDateTime, nullable=False, default=utcnow, onupdate=utcnow)
+
+
+class NodeFacts(Base):
+    __tablename__ = "node_facts"
+
+    node_id: Mapped[int] = mapped_column(ForeignKey("nodes.id", ondelete="CASCADE"), primary_key=True)
+    serial: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    os_version: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    uptime: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    collected_at: Mapped[Any] = mapped_column(UTCDateTime, nullable=False, default=utcnow)
+
+
+class JobPriorityRule(Base):
+    __tablename__ = "job_priority_rules"
+    __table_args__ = (
+        UniqueConstraint("scope_type", "scope_key", "scope_value", name="uq_job_priority_rule"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    scope_type: Mapped[str] = mapped_column(String(16), nullable=False, default="group")
+    scope_key: Mapped[str] = mapped_column(String(128), nullable=False)
+    scope_value: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    priority: Mapped[int] = mapped_column(Integer, nullable=False, default=5)
+    created_at: Mapped[Any] = mapped_column(UTCDateTime, nullable=False, default=utcnow)

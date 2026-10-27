@@ -4,6 +4,7 @@ import csv
 import io
 import json
 import logging
+import re
 from typing import Any
 
 from fastapi import Request
@@ -30,6 +31,27 @@ from .settings import settings
 from .timeutil import ensure_utc, to_iso, utcnow
 
 logger = logging.getLogger("oxidized_ui.nodes")
+
+TAG_KEY_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.:-]{0,31}$")
+MAX_TAGS = 20
+
+
+def normalize_tags(tags: dict[str, Any] | None) -> dict[str, str] | None:
+    if not tags:
+        return None
+    if len(tags) > MAX_TAGS:
+        raise AppError("validation.too_long", params={"field": "tags"})
+    cleaned: dict[str, str] = {}
+    for raw_key, raw_value in tags.items():
+        key = str(raw_key).strip()
+        value = str(raw_value).strip()
+        if not value:
+            continue
+        if not TAG_KEY_RE.fullmatch(key) or len(value) > 64:
+            raise AppError("validation.invalid_format", params={"field": "tags"})
+        cleaned[key] = value
+    return cleaned or None
+
 
 NODE_SORT_FIELDS = {
     "name",
@@ -129,12 +151,14 @@ def serialize_node(db: Session, node: Node, *, role: str, include_effective: boo
     if include_effective and role in {"admin", "operator"}:
         data["effective"] = effective_node_settings(db, node)
     from .config_alert_service import state_public
+    from .facts_service import facts_public
     from .maintenance_service import node_in_maintenance
     from .retry_service import retry_public
 
     data["maintenance"] = node_in_maintenance(db, node)
     data["retry"] = retry_public(db, node.id)
     data["config_state"] = state_public(db, node.id)
+    data["facts"] = facts_public(db, node.id)
     return data
 
 
@@ -152,6 +176,8 @@ def list_nodes(
     page_size: int = 25,
     allowed_groups: list[str] | None = None,
     favorite_ids: set[int] | None = None,
+    tag_key: str | None = None,
+    tag_value: str | None = None,
 ) -> dict[str, Any]:
     if sort not in NODE_SORT_FIELDS:
         sort = "name"
@@ -186,6 +212,14 @@ def list_nodes(
         node._last_failure = cache.last_failure_at if cache else None  # type: ignore[attr-defined]
     if status_filter:
         rows = [node for node in rows if node._status_bucket == status_filter]  # type: ignore[attr-defined]
+    if tag_key:
+        rows = [
+            node
+            for node in rows
+            if isinstance(node.tags, dict)
+            and tag_key in node.tags
+            and (tag_value is None or str(node.tags[tag_key]).casefold() == tag_value.casefold())
+        ]
 
     if sort == "status":
         rows.sort(key=lambda node: node._status_bucket, reverse=order == "desc")  # type: ignore[attr-defined]
@@ -261,6 +295,7 @@ def create_node(
         prompt=payload.prompt,
         timeout_seconds=payload.timeout_seconds,
         vars_ciphertext=encrypt_json(payload.vars or {}),
+        tags=normalize_tags(payload.tags),
         created_by_id=actor.user_id,
         updated_by_id=actor.user_id,
     )
@@ -306,6 +341,8 @@ def update_node(
     for field in ("address", "model", "group_name", "input", "port", "username", "output", "prompt", "timeout_seconds"):
         if field in data:
             setattr(node, field, data[field])
+    if "tags" in data:
+        node.tags = normalize_tags(data["tags"])
     if "vars" in data:
         node.vars_ciphertext = encrypt_json(data["vars"] or {})
     _set_secret_from_payload(node, data)
@@ -413,6 +450,8 @@ def bulk_action(
     input: str | None = None,
     port: int | None = None,
     vars: dict[str, Any] | None = None,
+    tags: dict[str, str] | None = None,
+    tags_mode: str = "merge",
 ) -> dict[str, Any]:
     nodes = list(db.scalars(select(Node).where(Node.id.in_(ids))).all())
     found = {node.id for node in nodes}
@@ -506,6 +545,25 @@ def bulk_action(
         db.commit()
         reload_status, warnings = reload_after_node_change(db, previous_count=1)
         return {"updated": len(nodes), "failed": failed, "reload_status": reload_status, "warnings": warnings}
+    if action == "set_tags":
+        if tags is None:
+            raise AppError("validation.required", params={"field": "tags"})
+        cleaned = normalize_tags(tags)
+        for node in nodes:
+            current = node.tags if isinstance(node.tags, dict) else {}
+            node.tags = cleaned if tags_mode == "replace" else {**current, **cleaned}
+            node.updated_by_id = actor.user_id
+        db.commit()
+        add_audit(
+            db,
+            actor=actor,
+            action_code="node.bulk_updated",
+            action_params={"count": len(nodes), "change": "tags", "mode": tags_mode},
+            target_type="node",
+            request=request,
+        )
+        db.commit()
+        return {"updated": len(nodes), "failed": failed}
     if action == "delete":
         for node in nodes:
             db.delete(node)
@@ -648,6 +706,22 @@ def _csv_cell(value: Any) -> str:
     if text.startswith(("=", "+", "-", "@")):
         return "'" + text
     return text
+
+
+def tags_catalog(db: Session, *, allowed_groups: list[str] | None = None) -> list[dict[str, Any]]:
+    query = select(Node)
+    if allowed_groups is not None:
+        query = query.where(Node.group_name.in_(allowed_groups))
+    counts: dict[tuple[str, str], int] = {}
+    for node in db.scalars(query).all():
+        if not isinstance(node.tags, dict):
+            continue
+        for key, value in node.tags.items():
+            counts[(str(key), str(value))] = counts.get((str(key), str(value)), 0) + 1
+    return [
+        {"key": key, "value": value, "count": count}
+        for (key, value), count in sorted(counts.items())
+    ]
 
 
 def export_csv(db: Session, *, allowed_groups: list[str] | None = None) -> str:

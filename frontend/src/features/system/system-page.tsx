@@ -1,6 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { CheckCircle2, Clock3, Download, Image as ImageIcon, PlugZap, RotateCcw, Save, ServerCog, Settings2, ShieldCheck, TriangleAlert, Upload, XCircle } from "lucide-react";
+import { CheckCircle2, Clock3, Download, Gauge, HeartPulse, Image as ImageIcon, PlugZap, RotateCcw, Save, ServerCog, Settings2, ShieldCheck, TriangleAlert, Upload, XCircle } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
@@ -17,6 +17,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { NotificationsCard } from "@/features/system/notifications-card";
 import { ExportCard } from "@/features/system/export-card";
+import { ReportsCard } from "@/features/system/reports-card";
 import { usePageTitle } from "@/hooks/use-app";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
@@ -47,6 +48,14 @@ interface FormValues {
   retry_failed_enabled: boolean;
   retry_max_attempts: number;
   retry_base_minutes: number;
+  backup_batch_size: number;
+  backup_batch_delay_seconds: number;
+  health_alerts_enabled: boolean;
+  health_disk_warn_percent: number;
+  health_output_warn_mb: number;
+  report_enabled: boolean;
+  report_weekday: number;
+  report_hour: number;
   digest_enabled: boolean;
   digest_hour: number;
   site_name: string;
@@ -77,6 +86,14 @@ function valuesFrom(settings: SystemSettings): FormValues {
     retry_failed_enabled: settings.retry_failed_enabled,
     retry_max_attempts: settings.retry_max_attempts,
     retry_base_minutes: settings.retry_base_minutes,
+    backup_batch_size: settings.backup_batch_size,
+    backup_batch_delay_seconds: settings.backup_batch_delay_seconds,
+    health_alerts_enabled: settings.health_alerts_enabled,
+    health_disk_warn_percent: settings.health_disk_warn_percent,
+    health_output_warn_mb: settings.health_output_warn_mb,
+    report_enabled: settings.report_enabled,
+    report_weekday: settings.report_weekday,
+    report_hour: settings.report_hour,
     digest_enabled: settings.digest_enabled,
     digest_hour: settings.digest_hour,
     site_name: settings.site_name ?? "Oxidized UI",
@@ -134,6 +151,14 @@ export function SystemPage() {
     retry_failed_enabled: z.boolean(),
     retry_max_attempts: z.coerce.number<number>().int().min(1).max(10),
     retry_base_minutes: z.coerce.number<number>().int().min(1).max(1440),
+    backup_batch_size: z.coerce.number<number>().int().min(1).max(100),
+    backup_batch_delay_seconds: z.coerce.number<number>().int().min(0).max(300),
+    health_alerts_enabled: z.boolean(),
+    health_disk_warn_percent: z.coerce.number<number>().int().min(0).max(100),
+    health_output_warn_mb: z.coerce.number<number>().int().min(0),
+    report_enabled: z.boolean(),
+    report_weekday: z.coerce.number<number>().int().min(0).max(6),
+    report_hour: z.coerce.number<number>().int().min(0).max(23),
     digest_enabled: z.boolean(),
     digest_hour: z.coerce.number<number>().int().min(0).max(23),
     site_name: z.string().min(1).max(100),
@@ -166,6 +191,14 @@ export function SystemPage() {
       retry_failed_enabled: true,
       retry_max_attempts: 3,
       retry_base_minutes: 15,
+      backup_batch_size: 10,
+      backup_batch_delay_seconds: 0,
+      health_alerts_enabled: true,
+      health_disk_warn_percent: 85,
+      health_output_warn_mb: 0,
+      report_enabled: false,
+      report_weekday: 0,
+      report_hour: 8,
       digest_enabled: false,
       digest_hour: 8,
       site_name: "Oxidized UI",
@@ -495,8 +528,50 @@ export function SystemPage() {
           </CardContent>
         </Card>
 
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2"><Gauge className="h-4 w-4 text-primary" />{t("system.pacingTitle")}</CardTitle>
+            <CardDescription>{t("system.pacingDescription")}</CardDescription>
+          </CardHeader>
+          <CardContent className="grid gap-3 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="batch-size">{t("system.batchSize")}</Label>
+              <Input id="batch-size" type="number" min={1} max={100} {...form.register("backup_batch_size", { valueAsNumber: true })} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="batch-delay">{t("system.batchDelay")}</Label>
+              <Input id="batch-delay" type="number" min={0} max={300} {...form.register("backup_batch_delay_seconds", { valueAsNumber: true })} />
+            </div>
+            <p className="text-[11px] leading-relaxed text-muted-foreground sm:col-span-2">{t("system.pacingHelp")}</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2"><HeartPulse className="h-4 w-4 text-primary" />{t("system.healthCardTitle")}</CardTitle>
+            <CardDescription>{t("system.healthCardDescription")}</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <label className="flex items-center gap-2 text-xs">
+              <Switch checked={form.watch("health_alerts_enabled")} onCheckedChange={(value) => form.setValue("health_alerts_enabled", value, { shouldDirty: true })} />
+              {t("system.healthAlerts")}
+            </label>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="health-disk">{t("system.healthDisk")}</Label>
+                <Input id="health-disk" type="number" min={0} max={100} {...form.register("health_disk_warn_percent", { valueAsNumber: true })} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="health-output">{t("system.healthOutput")}</Label>
+                <Input id="health-output" type="number" min={0} {...form.register("health_output_warn_mb", { valueAsNumber: true })} />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         <NotificationsCard />
         <ExportCard />
+        <ReportsCard />
 
         <div className="flex justify-end">
           <Button type="submit" size="sm" disabled={save.isPending || !form.formState.isDirty}>

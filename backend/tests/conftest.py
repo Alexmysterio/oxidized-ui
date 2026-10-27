@@ -55,6 +55,7 @@ from app import (  # noqa: E402
     docker_api,
     log_service,
     node_service,
+    reconciliation_service,
     search_service,
     status_service,
     version_service,
@@ -186,6 +187,7 @@ def fake_clients(monkeypatch):
     monkeypatch.setattr(status_service, "docker_client_for", lambda db=None: docker)
     monkeypatch.setattr(version_service, "client_for", lambda db=None: oxidized)
     monkeypatch.setattr(config_alert_service, "oxidized_client_for", lambda db=None: oxidized)
+    monkeypatch.setattr(reconciliation_service, "oxidized_client_for", lambda db=None: oxidized)
     monkeypatch.setattr(search_service, "client_for", lambda db=None: oxidized)
     monkeypatch.setattr(log_service, "client_for", lambda db=None: docker)
     monkeypatch.setattr(config_service, "docker_client_for", lambda db=None: docker)

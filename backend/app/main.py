@@ -34,9 +34,11 @@ from .routers import (
     metrics,
     nodes,
     preferences,
+    reconciliation,
     search,
     status,
     system,
+    templates,
     users,
     versions,
 )
@@ -209,6 +211,8 @@ def create_app() -> FastAPI:
     app.include_router(maintenance.router, prefix=api_prefix)
     app.include_router(compliance.router, prefix=api_prefix)
     app.include_router(preferences.router, prefix=api_prefix)
+    app.include_router(templates.router, prefix=api_prefix)
+    app.include_router(reconciliation.router, prefix=api_prefix)
     app.include_router(logs.router, prefix=api_prefix)
     app.include_router(metrics.router, prefix=api_prefix)
     app.include_router(audit.router, prefix=api_prefix)

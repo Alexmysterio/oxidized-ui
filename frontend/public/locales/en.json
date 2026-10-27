@@ -109,7 +109,9 @@
     "searchHint": "Search nodes, groups or pages",
     "skipToContent": "Skip to content",
     "maintenance": "Maintenance",
-    "compliance": "Compliance"
+    "compliance": "Compliance",
+    "nodeTemplates": "Templates",
+    "reconciliation": "Reconciliation"
   },
   "status": {
     "online": "Online",
@@ -315,7 +317,21 @@
     "compareDescription": "Differences between the current configurations of two nodes.",
     "favoritesOnly": "Favorites",
     "toggleFavorite": "Toggle favorite",
-    "lastFailure": "Last failure"
+    "lastFailure": "Last failure",
+    "filterTag": "Tag",
+    "allTags": "All tags",
+    "allValues": "All values",
+    "bulkTags": "Tags",
+    "bulkTagsTitle": "Apply tag",
+    "bulkTagsDescription": "It will be applied to {{count}} selected nodes.",
+    "tagKey": "Key",
+    "tagValue": "Value",
+    "tagsMode": "Mode",
+    "tagsMerge": "Merge with existing",
+    "tagsReplace": "Replace all",
+    "bulkTagsSuccess": "Tags applied to {{count}} nodes.",
+    "bulkFacts": "Scan inventory",
+    "factsQueued": "Inventory scan queued."
   },
   "nodeForm": {
     "createTitle": "New node",
@@ -378,7 +394,10 @@
     "secretReplaceHint": "Enter a new value to replace the existing one.",
     "modelPlaceholder": "Search model…",
     "modelNoResults": "No models found.",
-    "modelCustomHint": "It will be used as a custom model."
+    "modelCustomHint": "It will be used as a custom model.",
+    "tags": "Tags",
+    "tagsHelp": "Free metadata for filtering and prioritising (site, criticality, vendor). It is not written to Oxidized.",
+    "addTag": "Add tag"
   },
   "nodeDetail": {
     "back": "Back to nodes",
@@ -452,7 +471,13 @@
     "maintenanceActive": "This node is in a maintenance window: scheduled backups and retries are skipped and alerts are muted.",
     "retryScheduled": "Retry {{attempts}} scheduled ({{value}}).",
     "retryExhausted": "All {{attempts}} automatic retries were exhausted.",
-    "lastConfigChange": "Last config change"
+    "lastConfigChange": "Last config change",
+    "serial": "Serial number",
+    "osVersion": "Software version",
+    "uptime": "Uptime",
+    "collectFacts": "Scan configuration",
+    "factsCollected": "Inventory scanned (serial {{serial}}).",
+    "factsCollectedAt": "Inventory read"
   },
   "groups": {
     "title": "Groups & credentials",
@@ -615,7 +640,20 @@
     "never": "never",
     "scheduleUpdated": "Schedule updated.",
     "paused": "Paused",
-    "enabled": "Enabled"
+    "enabled": "Enabled",
+    "priorityTitle": "Queue priority",
+    "priorityDescription": "Jobs with the lowest priority number (1 is highest) run first.",
+    "priorityScope": "Scope",
+    "priorityGroup": "Group",
+    "priorityTag": "Tag",
+    "priorityGroupName": "Group name",
+    "priorityLevel": "Priority",
+    "priorityAdd": "Add rule",
+    "priorityHelp": "Applied when the job is created. When several rules match, the highest priority (lowest number) wins.",
+    "priorityValue": "priority {{value}}",
+    "priorityEmpty": "No rules; everything runs with priority 5.",
+    "ruleCreated": "Priority rule created.",
+    "ruleDeleted": "Priority rule deleted."
   },
   "logs": {
     "title": "Status & logs",
@@ -814,7 +852,16 @@
       "compliance.template_updated": "Compliance template updated",
       "compliance.template_deleted": "Compliance template deleted",
       "system.export_configured": "Scheduled export configured",
-      "system.export_requested": "Export requested"
+      "system.export_requested": "Export requested",
+      "node.template_created": "Node template created",
+      "node.template_updated": "Node template updated",
+      "node.template_deleted": "Node template deleted",
+      "node.template_applied": "Node template applied",
+      "node.facts_collected": "Node inventory scanned",
+      "job.priority_created": "Priority rule created",
+      "job.priority_deleted": "Priority rule deleted",
+      "report.generated": "Report generated",
+      "system.export_verified": "Export verified"
     },
     "export": "Export CSV"
   },
@@ -1021,7 +1068,19 @@
     "exportQueued": "Export queued.",
     "exportNeverRun": "Never run",
     "exportNotConfigured": "Not configured",
-    "exportNextRun": "Next: {{value}}"
+    "exportNextRun": "Next: {{value}}",
+    "pacingTitle": "Bulk backup pacing",
+    "pacingDescription": "Avoid saturating the network and devices when backing up the whole inventory.",
+    "batchSize": "Nodes per batch",
+    "batchDelay": "Pause between batches (s)",
+    "pacingHelp": "After each batch the console waits before requesting the next one. 0 disables the pause.",
+    "healthCardTitle": "Health thresholds",
+    "healthCardDescription": "When to warn about disk and Oxidized data size.",
+    "healthAlerts": "Notify channels subscribed to system health",
+    "healthDisk": "Warn when disk exceeds (%)",
+    "healthOutput": "Warn when Oxidized data exceeds (MB, 0 = off)",
+    "exportVerify": "Verify",
+    "exportVerified": "Bundle verified: {{entries}} files, {{bytes}} KB."
   },
   "search": {
     "title": "Global search",
@@ -1241,7 +1300,10 @@
     },
     "export.failed": "The export could not be uploaded.",
     "export.not_configured": "Configure an export target first.",
-    "compliance.template_missing": "No template applies to this node."
+    "compliance.template_missing": "No template applies to this node.",
+    "health.disk": "Disk usage is above the configured threshold.",
+    "health.output": "Oxidized data is larger than expected.",
+    "facts.collect_failed": "The node configuration could not be read to extract inventory data."
   },
   "validation": {
     "required": "This field is required.",
@@ -1850,5 +1912,85 @@
       "no_template": "No template",
       "error": "Error"
     }
+  },
+  "templates": {
+    "subtitle": "Create new nodes from proven settings (model, group, input and variables).",
+    "list": "Node templates",
+    "listDescription": "No passwords are stored; creation reuses the group credential or the one you set on the node.",
+    "empty": "No templates yet.",
+    "createTitle": "New template",
+    "editTitle": "Edit template",
+    "createDescription": "Set the defaults applied when a node is created.",
+    "name": "Name",
+    "model": "Model",
+    "group": "Group",
+    "noGroup": "No group",
+    "input": "Input",
+    "port": "Port",
+    "username": "Username",
+    "vars": "Variables",
+    "use": "Use",
+    "create": "Create template",
+    "update": "Update",
+    "saved": "Template saved.",
+    "deleted": "Template deleted.",
+    "applyTitle": "Create node from {{name}}",
+    "applyHelp": "The node and its configuration are created; the password is inherited from the group or can be added later.",
+    "createNode": "Create node",
+    "applied": "Node {{name}} created from the template."
+  },
+  "reconciliation": {
+    "subtitle": "Compare Oxidized's inventory with the console and detect orphans and differences.",
+    "missingInUi": "In Oxidized, not in console",
+    "missingInOxidized": "In console, not in Oxidized",
+    "drift": "Data differences",
+    "missingInUiTitle": "Nodes to import",
+    "missingInUiDescription": "They exist in Oxidized but not in the console. Import the ones you want to manage here.",
+    "importSelected": "Import ({{count}})",
+    "noMissing": "No pending nodes",
+    "noMissingDescription": "Every Oxidized node is in the console.",
+    "imported": "{{count}} nodes imported.",
+    "driftTitle": "Differences between Oxidized and the console",
+    "driftDescription": "The console is the configuration source; review these differences before re-applying.",
+    "noDrift": "No differences.",
+    "missingInOxidizedTitle": "Orphan nodes in the console",
+    "missingInOxidizedDescription": "They are in the console but Oxidized no longer loads them. Review them before deleting.",
+    "noOrphans": "No orphans."
+  },
+  "reports": {
+    "title": "Weekly reports",
+    "description": "Summary of backups, failed jobs, configuration changes and compliance.",
+    "enabled": "Generate weekly report",
+    "weekday": "Day",
+    "hour": "Hour (0-23)",
+    "runNow": "Generate now",
+    "queued": "Report queued.",
+    "saved": "Report schedule saved.",
+    "help": "Stored under data/reports and, when an export target exists, uploaded too. The report.ready event notifies channels.",
+    "history": "Generated reports",
+    "empty": "No reports yet.",
+    "weekdays": {
+      "0": "Monday",
+      "1": "Tuesday",
+      "2": "Wednesday",
+      "3": "Thursday",
+      "4": "Friday",
+      "5": "Saturday",
+      "6": "Sunday"
+    }
+  },
+  "health": {
+    "title": "System health",
+    "description": "Disk, database, Oxidized data and job queue.",
+    "ok": "Healthy",
+    "warning": "Review",
+    "disk": "Disk",
+    "free": "free",
+    "database": "Database",
+    "migration": "migration {{version}}",
+    "output": "Oxidized data",
+    "nodes": "{{count}} nodes",
+    "queue": "Queue",
+    "failedToday": "{{count}} failed today"
   }
 }

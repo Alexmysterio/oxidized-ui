@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { CloudUpload, HardDriveDownload, Play } from "lucide-react";
+import { CloudUpload, HardDriveDownload, Play, ShieldCheck } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -103,6 +103,14 @@ export function ExportCard() {
     onError: (error) => notifyError(t, error),
   });
 
+  const verify = useMutation({
+    mutationFn: () => api.verifyExport(),
+    onSuccess: (result) => {
+      toast.success(t("system.exportVerified", { entries: result.entries, bytes: (result.bytes / 1024).toFixed(1) }));
+    },
+    onError: (error) => notifyError(t, error),
+  });
+
   const update = (key: string, value: string) => setFields((current) => ({ ...current, [key]: value }));
   const canSave = Boolean(passphrase.length >= 12) && (kind === "s3" ? Boolean(fields.bucket) : Boolean(fields.host && fields.username));
 
@@ -183,6 +191,16 @@ export function ExportCard() {
           <Button type="button" variant="outline" size="sm" disabled={runNow.isPending} onClick={() => runNow.mutate()}>
             {runNow.isPending ? <Spinner /> : <Play />}
             {t("system.exportRunNow")}
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={!status?.configured || verify.isPending}
+            onClick={() => verify.mutate()}
+          >
+            {verify.isPending ? <Spinner /> : <ShieldCheck />}
+            {t("system.exportVerify")}
           </Button>
           {status?.configured ? (
             <Badge variant={status.last_status === "failed" ? "destructive" : status.enabled ? "success" : "outline"}>

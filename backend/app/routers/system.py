@@ -4,15 +4,16 @@ from fastapi import APIRouter, Depends, File, Request, Response, UploadFile
 from sqlalchemy.orm import Session
 
 from ..audit import add_audit
-from ..auth_deps import require_admin
+from ..auth_deps import require_admin, require_capability
 from ..branding_service import delete_logo, save_logo
 from ..db import get_db
 from ..docker_api import client_for as docker_client_for
 from ..encrypted_export import create_export
 from ..errors import AppError
 from ..export_service import configure as configure_export_target
-from ..export_service import export_now
+from ..export_service import export_now, verify_bundle
 from ..export_service import public_status as export_status
+from ..health_service import snapshot as health_snapshot
 from ..jobs import serialize_job
 from ..notifications import (
     channel_public,
@@ -27,6 +28,7 @@ from ..schemas import (
     ConnectionTestRequest,
     ExportConfigPayload,
     ExportRequest,
+    ExportVerifyRequest,
     NotificationChannelCreate,
     NotificationChannelUpdate,
     SystemSettingsUpdate,
@@ -182,6 +184,88 @@ def run_export(
     )
     db.commit()
     return serialize_job(db, job)
+
+
+@router.get("/health")
+def read_health(
+    db: Session = Depends(get_db),
+    _context: AuthContext = Depends(require_capability("logs.read")),
+):
+    return health_snapshot(db)
+
+
+@router.post("/export/verify")
+def verify_export(
+    payload: ExportVerifyRequest,
+    request: Request,
+    db: Session = Depends(get_db),
+    context: AuthContext = Depends(require_admin),
+):
+    result = verify_bundle(db, payload.passphrase)
+    add_audit(
+        db,
+        actor=context,
+        action_code="system.export_verified",
+        action_params={"ok": True, "entries": result.get("entries")},
+        target_type="system",
+        target_id="export",
+        request=request,
+    )
+    db.commit()
+    return result
+
+
+@router.get("/reports")
+def list_reports_route(
+    db: Session = Depends(get_db),
+    _context: AuthContext = Depends(require_admin),
+):
+    from ..report_service import list_reports
+    from ..system_service import get_settings_row
+
+    row = get_settings_row(db)
+    return {
+        "items": list_reports(),
+        "last_run_at": row.report_last_run_at.isoformat() if row.report_last_run_at else None,
+    }
+
+
+@router.post("/reports/run", status_code=202)
+def run_report_route(
+    request: Request,
+    db: Session = Depends(get_db),
+    context: AuthContext = Depends(require_admin),
+):
+    from ..report_service import run_report_now
+
+    job = run_report_now(db, actor=context)
+    add_audit(
+        db,
+        actor=context,
+        action_code="report.generated",
+        action_params={"job_id": job.id},
+        target_type="system",
+        target_id="report",
+        request=request,
+    )
+    db.commit()
+    return serialize_job(db, job)
+
+
+@router.get("/reports/{filename}")
+def download_report(
+    filename: str,
+    db: Session = Depends(get_db),
+    _context: AuthContext = Depends(require_admin),
+):
+    from ..report_service import report_path
+
+    path = report_path(filename)
+    return Response(
+        content=path.read_bytes(),
+        media_type="text/csv; charset=utf-8",
+        headers={"Content-Disposition": f'attachment; filename="{path.name}"'},
+    )
 
 
 @router.get("/notifications")

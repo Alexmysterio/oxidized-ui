@@ -68,6 +68,10 @@ office, or a trusted internal network.
 - [Certificates explained](#certificates-explained)
 - [Notifications](#notifications)
 - [Backup schedules](#backup-schedules)
+- [Nodes, tags and templates](#nodes-tags-and-templates)
+- [Reconciliation](#reconciliation)
+- [Queue priority and pacing](#queue-priority-and-pacing)
+- [System health and reports](#system-health-and-reports)
 - [Automatic retries](#automatic-retries)
 - [Maintenance windows](#maintenance-windows)
 - [Compliance](#compliance)
@@ -106,7 +110,11 @@ office, or a trusted internal network.
 - Audit log with CSV export.
 - Outgoing alerts to Telegram, Slack, Discord, or any webhook, plus an incoming backup webhook.
 - Optional daily notification digest.
-- Scheduled encrypted export to SFTP or S3.
+- Node tags, node templates, and inventory facts (serial, OS version, uptime).
+- Reconciliation with Oxidized: missing nodes, orphans and field drift.
+- Queue priority rules and pacing for bulk backups.
+- System health panel and weekly CSV reports.
+- Scheduled encrypted export to SFTP or S3, with bundle verification.
 - Custom site name and logo, user avatars, and full name/email on user profiles.
 - API tokens for automation.
 - Optional generic OIDC login.
@@ -791,6 +799,69 @@ runs due schedules and, if another bulk backup is queued or running, retries in 
 few minutes without marking the schedule as executed.
 
 Schedules can be paused and re-timed in place from the same page.
+
+---
+
+## Nodes, tags and templates
+
+Nodes accept free-form tags (for example `site=madrid`, `criticality=high`,
+`vendor=cisco`). Tags are metadata used by the console to filter, group actions
+and match queue-priority rules; they are not written to the Oxidized YAML. Tag a
+selection in bulk from the nodes table or edit them per node.
+
+**Node templates** (Inventory -> Templates) store the reusable part of onboarding:
+model, group, input, port, username, output, prompt, timeout and vars. Creating a
+node from a template asks only for the name and address; credentials are inherited
+from the group or added afterwards.
+
+**Inventory facts** are extracted from the current configuration on demand (single
+node or a selection): serial number, software version and uptime. They are shown
+on the node detail page and included in the global search, so a serial number
+finds its node.
+
+---
+
+## Reconciliation
+
+**Inventory -> Reconciliation** compares Oxidized's live inventory with the
+console database:
+
+- **Missing in the console**: present in Oxidized but not managed here; import the
+  selected ones in bulk (model, address and group are copied when the group exists).
+- **Orphans**: present in the console but not loaded by Oxidized; review before deleting.
+- **Drift**: address, group or model differ between both sides.
+
+The console remains the source of truth for configuration; reconciliation only
+reports and offers the import.
+
+---
+
+## Queue priority and pacing
+
+**Backups -> Queue priority** maps a group or a tag to a priority from 1 (highest)
+to 10. The priority is resolved when a job is created and used by the internal
+priority queue, so critical devices are not stuck behind a bulk run. Matching rules
+use the lowest number.
+
+**System -> Bulk backup pacing** sets how many nodes are queued per batch and how
+long to wait between batches. This prevents a full-inventory backup from hitting
+hundreds of devices at once.
+
+---
+
+## System health and reports
+
+**Status & logs** shows disk usage, database size, Oxidized data size, queue depth,
+failed jobs today and the applied migration, with configurable warning thresholds.
+Threshold alerts use the `system.health` event.
+
+**System -> Weekly reports** generates a CSV with backup success/failure per node,
+failed jobs, configuration changes and the compliance summary. It is stored under
+`data/reports`, downloadable from the UI, and uploaded to the export target when
+one is configured. The `report.ready` event notifies subscribed channels.
+
+The encrypted export page also has **Verify**: it builds and decrypts a bundle to
+check the ZIP, database, metadata and Fernet key are intact.
 
 ---
 

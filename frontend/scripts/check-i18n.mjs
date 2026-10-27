@@ -60,6 +60,7 @@ const dynamicPrefixes = [
   "nodeDetail.sources.",
   "nodeStatus.",
   "oxidized.",
+  "reports.weekdays.",
   "roles.",
   "status.",
   "theme.",

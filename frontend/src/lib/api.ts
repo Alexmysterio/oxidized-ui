@@ -16,11 +16,14 @@ import type {
   ConfigValidation,
   DiffResult,
   ExportStatus,
+  ExportVerification,
   Group,
   GroupInput,
   GroupList,
+  HealthSnapshot,
   ImportSummary,
   Job,
+  JobPriorityRule,
   LogSnapshot,
   MaintenanceWindow,
   Meta,
@@ -32,15 +35,20 @@ import type {
   NodeCompare,
   NodeConnectionTest,
   NodeDiff,
+  NodeFacts,
   NodeHistory,
   NodeInput,
   NodeListParams,
   NodePingResult,
   NodeStatusDetail,
+  NodeTagCount,
+  NodeTemplate,
   NotificationChannel,
   NotificationEvent,
   NotificationKind,
   Paginated,
+  ReconciliationReport,
+  ReportList,
   Revision,
   Role,
   SavedFilter,
@@ -322,18 +330,23 @@ export const api = {
 
   nodes: (query?: NodeListParams) => request<Paginated<Node>>("/nodes", { query: query as Query }),
   node: (id: number) => request<Node>(`/nodes/${id}`),
+  nodeTags: () => request<{ items: NodeTagCount[] }>("/nodes/tags"),
+  collectFacts: (ids: number[]) => request<Job>("/nodes/facts/collect", { method: "POST", body: { ids } }),
+  collectNodeFacts: (id: number) => request<NodeFacts>(`/nodes/${id}/facts/collect`, { method: "POST" }),
   createNode: (payload: NodeInput) => request<{ node: Node; reload_status: string; warnings: string[] }>("/nodes", { method: "POST", body: payload }),
   updateNode: (id: number, payload: Partial<NodeInput>) =>
     request<{ node: Node; reload_status: string; warnings: string[] }>(`/nodes/${id}`, { method: "PATCH", body: payload }),
   deleteNode: (id: number) => request<{ deleted: number; reload_status: string; warnings: string[] }>(`/nodes/${id}`, { method: "DELETE" }),
   bulkNodes: (payload: {
-    action: "backup" | "change_group" | "delete" | "update" | "trust_host_key";
+    action: "backup" | "change_group" | "delete" | "update" | "trust_host_key" | "set_tags";
     ids: number[];
     group_name?: string | null;
     model?: string | null;
     input?: string | null;
     port?: number | null;
     vars?: Record<string, unknown> | null;
+    tags?: Record<string, string> | null;
+    tags_mode?: "merge" | "replace";
   }) =>
     request<{ job_id?: number; updated?: number; deleted?: number; requested?: number; trusted?: number; failed?: unknown[]; reload_status?: string; warnings?: string[] }>("/nodes/bulk", { method: "POST", body: payload }),
   importNodes: (formData: FormData) => request<ImportSummary>("/nodes/import", { method: "POST", formData }),
@@ -406,6 +419,40 @@ export const api = {
   updateBackupSchedule: (id: number, payload: { interval_minutes?: number; enabled?: boolean }) =>
     request<BackupSchedule>(`/backups/schedules/${id}`, { method: "PATCH", body: payload }),
   deleteBackupSchedule: (id: number) => request<void>(`/backups/schedules/${id}`, { method: "DELETE" }),
+  priorityRules: () => request<{ items: JobPriorityRule[] }>("/backups/priority-rules"),
+  createPriorityRule: (payload: {
+    scope_type: "group" | "tag";
+    scope_key: string;
+    scope_value?: string | null;
+    priority: number;
+  }) => request<JobPriorityRule>("/backups/priority-rules", { method: "POST", body: payload }),
+  deletePriorityRule: (id: number) => request<void>(`/backups/priority-rules/${id}`, { method: "DELETE" }),
+
+  nodeTemplates: () => request<{ items: NodeTemplate[] }>("/node-templates"),
+  createNodeTemplate: (payload: Omit<NodeTemplate, "id" | "created_at" | "updated_at">) =>
+    request<NodeTemplate>("/node-templates", { method: "POST", body: payload }),
+  updateNodeTemplate: (id: number, payload: Partial<NodeTemplate>) =>
+    request<NodeTemplate>(`/node-templates/${id}`, { method: "PATCH", body: payload }),
+  deleteNodeTemplate: (id: number) => request<void>(`/node-templates/${id}`, { method: "DELETE" }),
+  applyNodeTemplate: (id: number, payload: { name: string; address?: string | null; tags?: Record<string, string> }) =>
+    request<{ node: Node; reload_status: string; warnings: string[] }>(`/node-templates/${id}/apply`, {
+      method: "POST",
+      body: payload,
+    }),
+
+  reconciliation: () => request<ReconciliationReport>("/reconciliation"),
+  importReconciled: (names: string[]) =>
+    request<{ imported: { id: number; name: string }[]; errors: { name: string; code: string }[] }>(
+      "/reconciliation/import",
+      { method: "POST", body: { names } },
+    ),
+
+  systemHealth: () => request<HealthSnapshot>("/system/health"),
+  reports: () => request<ReportList>("/system/reports"),
+  runReport: () => request<Job>("/system/reports/run", { method: "POST" }),
+  downloadReport: (filename: string) => download(`/system/reports/${encodeURIComponent(filename)}`, undefined, filename),
+  verifyExport: (passphrase?: string) =>
+    request<ExportVerification>("/system/export/verify", { method: "POST", body: { passphrase: passphrase ?? null } }),
 
   maintenanceWindows: (include_finished = false) =>
     request<{ items: MaintenanceWindow[] }>("/maintenance", { query: { include_finished } }),

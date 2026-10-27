@@ -136,8 +136,43 @@ def public_status(row: SystemSettings) -> dict[str, Any]:
 
 def _bundle(passphrase: str) -> tuple[str, bytes]:
     payload = create_export(passphrase)
+    from .encrypted_export import verify
+
+    verify(passphrase, payload)
     filename = f"oxidized-ui-{utcnow().strftime('%Y%m%d-%H%M%S')}.oxui"
     return filename, payload
+
+
+def configured(db: Session) -> bool:
+    row = ensure_system_settings(db)
+    return bool(row.export_config_ciphertext)
+
+
+def _target_config(db: Session) -> dict[str, Any]:
+    row = ensure_system_settings(db)
+    if not row.export_config_ciphertext:
+        raise AppError("export.not_configured")
+    config = decrypt_json(row.export_config_ciphertext, default={})
+    if not isinstance(config, dict) or not config.get("kind"):
+        raise AppError("export.not_configured")
+    return config
+
+
+def upload_bytes(db: Session, filename: str, payload: bytes, *, passphrase: str | None = None) -> str:
+    config = _target_config(db)
+    try:
+        if config["kind"] == "sftp":
+            _upload_sftp(config, filename, payload)
+        elif config["kind"] == "s3":
+            _upload_s3(config, filename, payload)
+        else:
+            raise AppError("export.not_configured")
+    except AppError:
+        raise
+    except Exception as exc:  # noqa: BLE001 - surface a stable error code
+        logger.warning("Export upload failed: %s", exc)
+        raise AppError("export.failed") from exc
+    return config["kind"]
 
 
 def _upload_sftp(config: dict[str, Any], filename: str, payload: bytes) -> None:
@@ -178,26 +213,22 @@ def _upload_s3(config: dict[str, Any], filename: str, payload: bytes) -> None:
 
 
 def upload(db: Session) -> dict[str, Any]:
-    row = ensure_system_settings(db)
-    if not row.export_config_ciphertext:
-        raise AppError("export.not_configured")
-    config = decrypt_json(row.export_config_ciphertext, default={})
-    if not isinstance(config, dict) or not config.get("kind"):
-        raise AppError("export.not_configured")
+    config = _target_config(db)
     filename, payload = _bundle(str(config.get("passphrase") or ""))
-    try:
-        if config["kind"] == "sftp":
-            _upload_sftp(config, filename, payload)
-        elif config["kind"] == "s3":
-            _upload_s3(config, filename, payload)
-        else:
-            raise AppError("export.not_configured")
-    except AppError:
-        raise
-    except Exception as exc:  # noqa: BLE001 - surface a stable error code
-        logger.warning("Scheduled export failed: %s", exc)
-        raise AppError("export.failed") from exc
-    return {"filename": filename, "bytes": len(payload), "target": config["kind"]}
+    target = upload_bytes(db, filename, payload)
+    return {"filename": filename, "bytes": len(payload), "target": target}
+
+
+def verify_bundle(db: Session, passphrase: str | None = None) -> dict[str, Any]:
+    from .encrypted_export import verify
+
+    config = _target_config(db)
+    secret = (passphrase or "").strip() or str(config.get("passphrase") or "")
+    if len(secret) < 12:
+        raise AppError("validation.min", params={"field": "passphrase", "min": 12})
+    payload = create_export(secret)
+    result = verify(secret, payload)
+    return {**result, "target": config["kind"]}
 
 
 def run_export_job(db: Session, job: Job) -> dict[str, Any]:

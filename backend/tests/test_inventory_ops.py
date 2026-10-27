@@ -1,0 +1,220 @@
+from __future__ import annotations
+
+from fastapi.testclient import TestClient
+from sqlalchemy import select
+
+from app.db import SessionLocal
+from app.facts_service import parse_facts
+from app.models import Node
+from app.oxidized import OxidizedNode
+from app.timeutil import utcnow
+from tests.conftest import make_node
+
+
+def _node(admin, name: str, group: str | None = None, model: str = "ios") -> int:
+    response = admin.post("/api/nodes", json=make_node(name=name, model=model))
+    assert response.status_code == 201, response.text
+    node_id = int(response.json()["node"]["id"])
+    if group:
+        with SessionLocal() as db:
+            node = db.get(Node, node_id)
+            assert node is not None
+            node.group_name = group
+            db.commit()
+    return node_id
+
+
+def _live(name: str, group: str | None = None, model: str = "ios") -> OxidizedNode:
+    return OxidizedNode(
+        name=name,
+        full_name=name,
+        address="10.0.0.1",
+        group=group,
+        model=model,
+        status="success",
+        last_started=utcnow(),
+        last_finished=utcnow(),
+        last_time=1.0,
+        mtime=utcnow(),
+    )
+
+
+def _wait(admin, job_id: int) -> dict:
+    job: dict = {}
+    for _ in range(100):
+        job = admin.get(f"/api/jobs/{job_id}").json()
+        if job["status"] in {"succeeded", "failed", "cancelled"}:
+            break
+        import time
+
+        time.sleep(0.05)
+    return job
+
+
+def test_node_tags_filter_and_bulk(client: TestClient, admin):
+    created = admin.post(
+        "/api/nodes",
+        json=make_node(name="tagged-1", tags={"site": "madrid", "criticality": "high"}),
+    )
+    assert created.status_code == 201, created.text
+    assert created.json()["node"]["tags"] == {"site": "madrid", "criticality": "high"}
+
+    listed = admin.get("/api/nodes", params={"tag_key": "site", "tag_value": "madrid"}).json()
+    assert [item["name"] for item in listed["items"]] == ["tagged-1"]
+
+    other = _node(admin, "tagged-2")
+    updated = admin.post(
+        "/api/nodes/bulk",
+        json={"action": "set_tags", "ids": [other], "tags": {"site": "barcelona"}},
+    )
+    assert updated.status_code == 200, updated.text
+    assert updated.json()["updated"] == 1
+
+    catalog = admin.get("/api/nodes/tags").json()["items"]
+    assert {"key": "site", "value": "barcelona", "count": 1} in catalog
+    filtered = admin.get("/api/nodes", params={"tag_key": "site", "tag_value": "barcelona"}).json()
+    assert filtered["items"][0]["name"] == "tagged-2"
+
+
+def test_node_templates_crud_and_apply(client: TestClient, admin, fake_clients):
+    created = admin.post(
+        "/api/node-templates",
+        json={
+            "name": "ios-access",
+            "model": "ios",
+            "input": "ssh",
+            "port": 22,
+            "username": "netops",
+            "vars": {"ssh_no_keepalive": True},
+        },
+    )
+    assert created.status_code == 201, created.text
+    template_id = created.json()["id"]
+
+    applied = admin.post(f"/api/node-templates/{template_id}/apply", json={"name": "access-1", "address": "10.0.0.9"})
+    assert applied.status_code == 201, applied.text
+    node = applied.json()["node"]
+    assert node["model"] == "ios"
+    assert node["port"] == 22
+    assert node["tags"] == {}
+
+    templates = admin.get("/api/node-templates").json()["items"]
+    assert templates[0]["name"] == "ios-access"
+    assert admin.delete(f"/api/node-templates/{template_id}").status_code == 204
+
+
+def test_facts_parse_collect_and_search(client: TestClient, admin, fake_clients):
+    parsed = parse_facts(
+        "Cisco IOS Software, Version 15.2(4)E7\nProcessor board ID FTX1234ABCD\nrouter uptime is 3 weeks, 2 days\n"
+    )
+    assert parsed["serial"] == "FTX1234ABCD"
+    assert parsed["os_version"].startswith("15.2")
+    assert "3 weeks" in (parsed["uptime"] or "")
+
+    node_id = _node(admin, "facts-1")
+    fake_clients.oxidized.nodes = [_live("facts-1")]
+    fake_clients.oxidized.current_configs["facts-1"] = (
+        "hostname facts-1\nCisco IOS Software, Version 17.3.4\nProcessor board ID ABC123XYZ\n"
+        "facts-1 uptime is 1 day, 2 hours\n"
+    )
+
+    collected = admin.post(f"/api/nodes/{node_id}/facts/collect")
+    assert collected.status_code == 200, collected.text
+    assert collected.json()["serial"] == "ABC123XYZ"
+
+    detail = admin.get(f"/api/nodes/{node_id}").json()
+    assert detail["facts"]["os_version"] == "17.3.4"
+
+    search = admin.get("/api/search", params={"q": "ABC123XYZ"}).json()
+    assert [item["name"] for item in search["nodes"]] == ["facts-1"]
+
+
+def test_job_priority_rules_apply(client: TestClient, admin):
+    node_id = _node(admin, "prio-1", group="critical")
+    rule = admin.post(
+        "/api/backups/priority-rules",
+        json={"scope_type": "group", "scope_key": "critical", "priority": 1},
+    )
+    assert rule.status_code == 201, rule.text
+
+    tag_rule = admin.post(
+        "/api/backups/priority-rules",
+        json={"scope_type": "tag", "scope_key": "tier", "scope_value": "edge", "priority": 3},
+    )
+    assert tag_rule.status_code == 201, tag_rule.text
+
+    job = admin.post(f"/api/nodes/{node_id}/backup")
+    assert job.status_code == 202, job.text
+    assert job.json()["priority"] == 1
+
+    rules = admin.get("/api/backups/priority-rules").json()["items"]
+    assert len(rules) == 2
+    assert admin.delete(f"/api/backups/priority-rules/{rule.json()['id']}").status_code == 204
+
+
+def test_reconciliation_detects_and_imports(client: TestClient, admin, fake_clients):
+    _node(admin, "known-1")
+    fake_clients.oxidized.nodes = [_live("known-1"), _live("new-1", group="core")]
+
+    report = admin.get("/api/reconciliation")
+    assert report.status_code == 200, report.text
+    body = report.json()
+    assert [item["name"] for item in body["missing_in_ui"]] == ["new-1"]
+    assert body["missing_in_oxidized"] == []
+
+    imported = admin.post("/api/reconciliation/import", json={"names": ["new-1"]})
+    assert imported.status_code == 202, imported.text
+    assert imported.json()["imported"][0]["name"] == "new-1"
+    with SessionLocal() as db:
+        assert db.scalar(select(Node).where(Node.name == "new-1")) is not None
+
+
+def test_health_panel(client: TestClient, admin):
+    health = admin.get("/api/system/health")
+    assert health.status_code == 200, health.text
+    body = health.json()
+    assert body["disk"]["percent"] >= 0
+    assert body["jobs"]["queued"] >= 0
+    assert "migration" in body
+    assert admin.get("/api/system/settings").json()["backup_batch_size"] >= 1
+
+
+def test_scheduled_report_and_download(client: TestClient, admin):
+    response = admin.post("/api/system/reports/run")
+    assert response.status_code == 202, response.text
+    job = _wait(admin, response.json()["id"])
+    assert job["status"] == "succeeded", job
+
+    listing = admin.get("/api/system/reports")
+    assert listing.status_code == 200, listing.text
+    items = listing.json()["items"]
+    assert items and items[0]["filename"].startswith("report-")
+
+    download = admin.get(f"/api/system/reports/{items[0]['filename']}")
+    assert download.status_code == 200
+    assert "summary" in download.text and "generated_at" in download.text
+
+
+def test_export_verification(client: TestClient, admin):
+    configured = admin.put(
+        "/api/system/export",
+        json={
+            "kind": "sftp",
+            "interval_hours": 24,
+            "enabled": False,
+            "config": {
+                "host": "backup.example.invalid",
+                "username": "oxidized",
+                "password": "secret-password",
+                "remote_dir": "/backups",
+                "passphrase": "export-passphrase-123",
+            },
+        },
+    )
+    assert configured.status_code == 200, configured.text
+
+    verified = admin.post("/api/system/export/verify", json={})
+    assert verified.status_code == 200, verified.text
+    assert verified.json()["ok"] is True
+    assert verified.json()["has_database"] is True
+    assert len(verified.json()["sha256"]) == 64

@@ -109,7 +109,9 @@
     "searchHint": "Busca nodos, grupos o páginas",
     "skipToContent": "Saltar al contenido",
     "maintenance": "Mantenimiento",
-    "compliance": "Cumplimiento"
+    "compliance": "Cumplimiento",
+    "nodeTemplates": "Plantillas",
+    "reconciliation": "Reconciliación"
   },
   "status": {
     "online": "Online",
@@ -315,7 +317,21 @@
     "compareDescription": "Diferencias entre las configuraciones actuales de dos nodos.",
     "favoritesOnly": "Favoritos",
     "toggleFavorite": "Marcar como favorito",
-    "lastFailure": "Último fallo"
+    "lastFailure": "Último fallo",
+    "filterTag": "Etiqueta",
+    "allTags": "Todas las etiquetas",
+    "allValues": "Todos los valores",
+    "bulkTags": "Etiquetas",
+    "bulkTagsTitle": "Aplicar etiqueta",
+    "bulkTagsDescription": "Se aplicará a {{count}} nodos seleccionados.",
+    "tagKey": "Clave",
+    "tagValue": "Valor",
+    "tagsMode": "Modo",
+    "tagsMerge": "Combinar con las existentes",
+    "tagsReplace": "Reemplazar todas",
+    "bulkTagsSuccess": "Etiquetas aplicadas a {{count}} nodos.",
+    "bulkFacts": "Analizar inventario",
+    "factsQueued": "Análisis de inventario en cola."
   },
   "nodeForm": {
     "createTitle": "Nuevo nodo",
@@ -378,7 +394,10 @@
     "secretReplaceHint": "Introduce un valor nuevo para reemplazar el existente.",
     "modelPlaceholder": "Buscar modelo…",
     "modelNoResults": "No se encontraron modelos.",
-    "modelCustomHint": "Se usará como modelo personalizado."
+    "modelCustomHint": "Se usará como modelo personalizado.",
+    "tags": "Etiquetas",
+    "tagsHelp": "Metadatos libres para filtrar y priorizar (site, criticidad, proveedor). No se escriben en Oxidized.",
+    "addTag": "Añadir etiqueta"
   },
   "nodeDetail": {
     "back": "Volver a nodos",
@@ -452,7 +471,13 @@
     "maintenanceActive": "Este nodo está en ventana de mantenimiento: no se lanzan backups programados ni reintentos y las alertas están silenciadas.",
     "retryScheduled": "Reintento {{attempts}} programado ({{value}}).",
     "retryExhausted": "Se agotaron los {{attempts}} reintentos automáticos.",
-    "lastConfigChange": "Último cambio de config"
+    "lastConfigChange": "Último cambio de config",
+    "serial": "Número de serie",
+    "osVersion": "Versión de software",
+    "uptime": "Uptime",
+    "collectFacts": "Analizar configuración",
+    "factsCollected": "Inventario analizado (serie {{serial}}).",
+    "factsCollectedAt": "Inventario leído"
   },
   "groups": {
     "title": "Grupos y credenciales",
@@ -615,7 +640,20 @@
     "never": "nunca",
     "scheduleUpdated": "Programación actualizada.",
     "paused": "Pausada",
-    "enabled": "Activa"
+    "enabled": "Activa",
+    "priorityTitle": "Prioridad de la cola",
+    "priorityDescription": "Los trabajos con prioridad más baja (1 es la máxima) se ejecutan antes.",
+    "priorityScope": "Ámbito",
+    "priorityGroup": "Grupo",
+    "priorityTag": "Etiqueta",
+    "priorityGroupName": "Nombre del grupo",
+    "priorityLevel": "Prioridad",
+    "priorityAdd": "Añadir regla",
+    "priorityHelp": "Se aplica al crear el trabajo. Con varias reglas coincidentes gana la prioridad más alta (número menor).",
+    "priorityValue": "prioridad {{value}}",
+    "priorityEmpty": "Sin reglas; todo se ejecuta con prioridad 5.",
+    "ruleCreated": "Regla de prioridad creada.",
+    "ruleDeleted": "Regla de prioridad eliminada."
   },
   "logs": {
     "title": "Estado y logs",
@@ -814,7 +852,16 @@
       "compliance.template_updated": "Plantilla de cumplimiento actualizada",
       "compliance.template_deleted": "Plantilla de cumplimiento eliminada",
       "system.export_configured": "Exportación programada configurada",
-      "system.export_requested": "Exportación solicitada"
+      "system.export_requested": "Exportación solicitada",
+      "node.template_created": "Plantilla de nodo creada",
+      "node.template_updated": "Plantilla de nodo actualizada",
+      "node.template_deleted": "Plantilla de nodo eliminada",
+      "node.template_applied": "Plantilla de nodo aplicada",
+      "node.facts_collected": "Inventario del nodo analizado",
+      "job.priority_created": "Regla de prioridad creada",
+      "job.priority_deleted": "Regla de prioridad eliminada",
+      "report.generated": "Informe generado",
+      "system.export_verified": "Exportación verificada"
     },
     "export": "Exportar CSV"
   },
@@ -1021,7 +1068,19 @@
     "exportQueued": "Exportación en cola.",
     "exportNeverRun": "Sin ejecutar",
     "exportNotConfigured": "Sin configurar",
-    "exportNextRun": "Próxima: {{value}}"
+    "exportNextRun": "Próxima: {{value}}",
+    "pacingTitle": "Ritmo de backups masivos",
+    "pacingDescription": "Evita saturar la red y los equipos al lanzar un backup de todo el inventario.",
+    "batchSize": "Nodos por lote",
+    "batchDelay": "Pausa entre lotes (s)",
+    "pacingHelp": "Tras cada lote se espera el tiempo indicado antes de pedir el siguiente. 0 desactiva la pausa.",
+    "healthCardTitle": "Umbrales de salud",
+    "healthCardDescription": "Cuándo avisar sobre disco y tamaño de los datos de Oxidized.",
+    "healthAlerts": "Avisar por los canales suscritos a salud del sistema",
+    "healthDisk": "Avisar si el disco supera (%)",
+    "healthOutput": "Avisar si los datos de Oxidized superan (MB, 0 = off)",
+    "exportVerify": "Verificar",
+    "exportVerified": "Paquete verificado: {{entries}} archivos, {{bytes}} KB."
   },
   "search": {
     "title": "Búsqueda global",
@@ -1241,7 +1300,10 @@
     },
     "export.failed": "No se pudo subir la exportación.",
     "export.not_configured": "Configura un destino de exportación primero.",
-    "compliance.template_missing": "No hay plantilla aplicable a este nodo."
+    "compliance.template_missing": "No hay plantilla aplicable a este nodo.",
+    "health.disk": "El disco supera el umbral configurado.",
+    "health.output": "Los datos de Oxidized ocupan más de lo esperado.",
+    "facts.collect_failed": "No se pudo leer la configuración del nodo para extraer el inventario."
   },
   "validation": {
     "required": "Este campo es obligatorio.",
@@ -1850,5 +1912,85 @@
       "no_template": "Sin plantilla",
       "error": "Error"
     }
+  },
+  "templates": {
+    "subtitle": "Crea nodos nuevos a partir de ajustes probados (modelo, grupo, input y variables).",
+    "list": "Plantillas de nodo",
+    "listDescription": "No guardan contraseñas; el alta reutiliza la credencial del grupo o la que definas al crear el nodo.",
+    "empty": "Todavía no hay plantillas.",
+    "createTitle": "Nueva plantilla",
+    "editTitle": "Editar plantilla",
+    "createDescription": "Configura los valores por defecto que se aplicarán al crear un nodo.",
+    "name": "Nombre",
+    "model": "Modelo",
+    "group": "Grupo",
+    "noGroup": "Sin grupo",
+    "input": "Input",
+    "port": "Puerto",
+    "username": "Usuario",
+    "vars": "Variables",
+    "use": "Usar",
+    "create": "Crear plantilla",
+    "update": "Actualizar",
+    "saved": "Plantilla guardada.",
+    "deleted": "Plantilla eliminada.",
+    "applyTitle": "Crear nodo desde {{name}}",
+    "applyHelp": "Se crearán el nodo y su configuración; la contraseña se hereda del grupo o puedes añadirla después.",
+    "createNode": "Crear nodo",
+    "applied": "Nodo {{name}} creado desde la plantilla."
+  },
+  "reconciliation": {
+    "subtitle": "Compara el inventario de Oxidized con el de la consola y detecta huérfanos y diferencias.",
+    "missingInUi": "En Oxidized, no en la consola",
+    "missingInOxidized": "En la consola, no en Oxidized",
+    "drift": "Diferencias de datos",
+    "missingInUiTitle": "Nodos por importar",
+    "missingInUiDescription": "Existen en Oxidized pero no en la consola. Importa los que quieras gestionar aquí.",
+    "importSelected": "Importar ({{count}})",
+    "noMissing": "Sin nodos pendientes",
+    "noMissingDescription": "Todos los nodos de Oxidized están en la consola.",
+    "imported": "{{count}} nodos importados.",
+    "driftTitle": "Diferencias entre Oxidized y la consola",
+    "driftDescription": "La consola es la fuente de configuración; revisa estas diferencias antes de reaplicar.",
+    "noDrift": "No hay diferencias.",
+    "missingInOxidizedTitle": "Nodos huérfanos en la consola",
+    "missingInOxidizedDescription": "Están en la consola pero Oxidized ya no los carga. Revísalos antes de borrarlos.",
+    "noOrphans": "No hay huérfanos."
+  },
+  "reports": {
+    "title": "Informes semanales",
+    "description": "Resumen de backups, trabajos fallidos, cambios de configuración y cumplimiento.",
+    "enabled": "Generar informe semanal",
+    "weekday": "Día",
+    "hour": "Hora (0-23)",
+    "runNow": "Generar ahora",
+    "queued": "Informe en cola.",
+    "saved": "Programación del informe guardada.",
+    "help": "Se guarda en data/reports y, si hay destino de exportación, también se sube. Se avisa por el evento report.ready.",
+    "history": "Informes generados",
+    "empty": "Todavía no hay informes.",
+    "weekdays": {
+      "0": "Lunes",
+      "1": "Martes",
+      "2": "Miércoles",
+      "3": "Jueves",
+      "4": "Viernes",
+      "5": "Sábado",
+      "6": "Domingo"
+    }
+  },
+  "health": {
+    "title": "Salud del sistema",
+    "description": "Disco, base de datos, datos de Oxidized y cola de trabajos.",
+    "ok": "Correcto",
+    "warning": "Revisar",
+    "disk": "Disco",
+    "free": "libres",
+    "database": "Base de datos",
+    "migration": "migración {{version}}",
+    "output": "Datos de Oxidized",
+    "nodes": "{{count}} nodos",
+    "queue": "Cola",
+    "failedToday": "{{count}} fallidos hoy"
   }
 }

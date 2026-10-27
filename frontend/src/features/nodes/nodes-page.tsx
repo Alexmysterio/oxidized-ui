@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient, keepPreviousData } from "@tanstack/react-query";
-import { ArrowDown, ArrowUp, ArrowUpDown, ChevronDown, Download, Fingerprint, Filter, MoreHorizontal, Network, Pencil, Plus, RefreshCw, Search, ServerCog, Star, Trash2, Upload, UsersRound } from "lucide-react";
+import { ArrowDown, ArrowUp, ArrowUpDown, ChevronDown, Download, Fingerprint, Filter, MoreHorizontal, Network, Pencil, Plus, RefreshCw, ScanSearch, Search, ServerCog, Star, Tag, Trash2, Upload, UsersRound } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useSearchParams } from "react-router-dom";
@@ -93,6 +93,10 @@ export function NodesPage() {
   const [filterDialogOpen, setFilterDialogOpen] = useState(false);
   const [filterName, setFilterName] = useState("");
   const [savedFilters, setSavedFilters] = useState<{ name: string; query: string }[]>([]);
+  const [tagsOpen, setTagsOpen] = useState(false);
+  const [tagKey, setTagKey] = useState("");
+  const [tagValue, setTagValue] = useState("");
+  const [tagsMode, setTagsMode] = useState<"merge" | "replace">("merge");
   usePageTitle("nav.nodes");
 
   const page = Number(params.get("page") ?? "1") || 1;
@@ -102,6 +106,8 @@ export function NodesPage() {
   const sort = params.get("sort") ?? "name";
   const order = (params.get("order") ?? "asc") as SortDirection;
   const favoritesOnly = params.get("favorites") === "1";
+  const tagFilterKey = params.get("tag_key") ?? "";
+  const tagFilterValue = params.get("tag_value") ?? "";
 
   const setParam = (key: string, value: string | null, resetPage = true) => {
     const next = new URLSearchParams(params);
@@ -130,6 +136,8 @@ export function NodesPage() {
     sort,
     order,
     favorites: favoritesOnly || undefined,
+    tag_key: tagFilterKey || undefined,
+    tag_value: tagFilterValue || undefined,
     page,
     page_size: 25,
   };
@@ -145,6 +153,7 @@ export function NodesPage() {
     enabled: can("groups.write"),
   });
   const preferencesQuery = useQuery({ queryKey: ["preferences"], queryFn: api.preferences });
+  const tagsQuery = useQuery({ queryKey: ["node-tags"], queryFn: api.nodeTags });
 
   useEffect(() => {
     if (preferencesQuery.data) setSavedFilters(preferencesQuery.data.saved_filters);
@@ -285,11 +294,44 @@ export function NodesPage() {
     onError: (error) => notifyError(t, error),
   });
 
+  const bulkTags = useMutation({
+    mutationFn: () =>
+      api.bulkNodes({
+        action: "set_tags",
+        ids: Array.from(selected),
+        tags: { [tagKey.trim()]: tagValue.trim() },
+        tags_mode: tagsMode,
+      }),
+    onSuccess: () => {
+      toast.success(t("nodes.bulkTagsSuccess", { count: selected.size }));
+      setTagsOpen(false);
+      setTagKey("");
+      setTagValue("");
+      setSelected(new Set());
+      void invalidate();
+      void queryClient.invalidateQueries({ queryKey: ["node-tags"] });
+    },
+    onError: (error) => notifyError(t, error),
+  });
+
+  const bulkFacts = useMutation({
+    mutationFn: () => api.collectFacts(Array.from(selected)),
+    onSuccess: () => {
+      toast.success(t("nodes.factsQueued"));
+      setSelected(new Set());
+      void queryClient.invalidateQueries({ queryKey: ["jobs"] });
+    },
+    onError: (error) => notifyError(t, error),
+  });
+
   const items = nodesQuery.data?.items ?? [];
   const allSelected = items.length > 0 && items.every((node) => selected.has(node.id));
   const someSelected = items.some((node) => selected.has(node.id));
-  const hasFilters = Boolean(query.search || query.group || query.model || query.status || favoritesOnly);
+  const hasFilters = Boolean(query.search || query.group || query.model || query.status || favoritesOnly || tagFilterKey);
   const availableGroups = (groupsQuery.data?.groups ?? []).filter((item) => item.state === "applied");
+  const tagCatalog = tagsQuery.data?.items ?? [];
+  const tagKeys = Array.from(new Set(tagCatalog.map((item) => item.key))).sort();
+  const tagValues = tagCatalog.filter((item) => item.key === tagFilterKey).map((item) => item.value).sort();
 
   const toggleAll = () => {
     if (allSelected) {
@@ -427,6 +469,51 @@ export function NodesPage() {
                 </SelectContent>
               </Select>
             ) : null}
+            {tagKeys.length ? (
+              <>
+                <Select
+                  value={tagFilterKey || "__all__"}
+                  onValueChange={(value) => {
+                    const next = new URLSearchParams(params);
+                    if (value === "__all__") {
+                      next.delete("tag_key");
+                      next.delete("tag_value");
+                    } else {
+                      next.set("tag_key", value);
+                      next.delete("tag_value");
+                    }
+                    next.delete("page");
+                    setParams(next, { replace: true });
+                  }}
+                >
+                  <SelectTrigger className="h-8 w-[8.5rem] text-xs">
+                    <SelectValue placeholder={t("nodes.filterTag")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__all__">{t("nodes.allTags")}</SelectItem>
+                    {tagKeys.map((key) => (
+                      <SelectItem key={key} value={key}>{key}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {tagFilterKey ? (
+                  <Select
+                    value={tagFilterValue || "__all__"}
+                    onValueChange={(value) => setParam("tag_value", value === "__all__" ? null : value)}
+                  >
+                    <SelectTrigger className="h-8 w-[8.5rem] text-xs">
+                      <SelectValue placeholder={t("nodes.allValues")} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="__all__">{t("nodes.allValues")}</SelectItem>
+                      {tagValues.map((value) => (
+                        <SelectItem key={value} value={value}>{value}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : null}
+              </>
+            ) : null}
             {hasFilters ? (
               <Button variant="ghost" size="sm" className="h-8 text-xs" onClick={clearFilters}>
                 {t("common.clearFilters")}
@@ -493,6 +580,16 @@ export function NodesPage() {
                 {t("nodes.bulkTrust")}
               </Button>
             ) : null}
+            {can("nodes.write") ? (
+              <Button variant="outline" size="xs" onClick={() => setTagsOpen(true)}>
+                <Tag />
+                {t("nodes.bulkTags")}
+              </Button>
+            ) : null}
+            <Button variant="outline" size="xs" onClick={() => bulkFacts.mutate()} disabled={bulkFacts.isPending}>
+              {bulkFacts.isPending ? <Spinner /> : <ScanSearch />}
+              {t("nodes.bulkFacts")}
+            </Button>
             {can("nodes.write") ? (
               <Button variant="destructive-outline" size="xs" onClick={() => setBulkDeleteOpen(true)}>
                 <Trash2 />
@@ -615,6 +712,15 @@ export function NodesPage() {
                           <span className="block font-mono text-[9px] uppercase tracking-[0.08em] text-muted-foreground lg:hidden">
                             {node.address ?? "—"} · {node.model}
                           </span>
+                          {Object.keys(node.tags ?? {}).length ? (
+                            <span className="mt-0.5 flex flex-wrap gap-1">
+                              {Object.entries(node.tags ?? {}).slice(0, 2).map(([key, value]) => (
+                                <span key={key} className="rounded-full border border-border/70 bg-muted/40 px-1.5 py-0 text-[9px] text-muted-foreground">
+                                  {key}: {value}
+                                </span>
+                              ))}
+                            </span>
+                          ) : null}
                         </span>
                       </Link>
                     </div>
@@ -737,6 +843,47 @@ export function NodesPage() {
         loading={bulkTrust.isPending}
         onConfirm={() => bulkTrust.mutate()}
       />
+
+      <Dialog open={tagsOpen} onOpenChange={setTagsOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t("nodes.bulkTagsTitle")}</DialogTitle>
+            <DialogDescription>{t("nodes.bulkTagsDescription", { count: selected.size })}</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="space-y-1">
+                <Label>{t("nodes.tagKey")}</Label>
+                <Input value={tagKey} maxLength={32} onChange={(event) => setTagKey(event.target.value)} placeholder="site" />
+              </div>
+              <div className="space-y-1">
+                <Label>{t("nodes.tagValue")}</Label>
+                <Input value={tagValue} maxLength={64} onChange={(event) => setTagValue(event.target.value)} placeholder="madrid" />
+              </div>
+            </div>
+            <div className="space-y-1">
+              <Label>{t("nodes.tagsMode")}</Label>
+              <Select value={tagsMode} onValueChange={(value) => setTagsMode(value as "merge" | "replace")}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="merge">{t("nodes.tagsMerge")}</SelectItem>
+                  <SelectItem value="replace">{t("nodes.tagsReplace")}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setTagsOpen(false)}>{t("common.cancel")}</Button>
+            <Button
+              disabled={!tagKey.trim() || !tagValue.trim() || bulkTags.isPending}
+              onClick={() => bulkTags.mutate()}
+            >
+              {bulkTags.isPending ? <Spinner /> : <Tag />}
+              {t("common.save")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={compareOpen} onOpenChange={setCompareOpen}>
         <DialogContent className="max-w-6xl">

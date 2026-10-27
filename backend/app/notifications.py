@@ -16,7 +16,14 @@ from .system_service import ensure_system_settings
 logger = logging.getLogger("oxidized_ui.notifications")
 
 KINDS = ("webhook", "slack", "discord", "telegram")
-EVENTS = ("job.failed", "backup.stale", "config.changed", "backup.retry_exhausted")
+EVENTS = (
+    "job.failed",
+    "backup.stale",
+    "config.changed",
+    "backup.retry_exhausted",
+    "system.health",
+    "report.ready",
+)
 URL_RE = re.compile(r"^https?://\S+$")
 
 
@@ -261,6 +268,21 @@ def notify_retry_exhausted(db: Session, node_name: str, attempts: int) -> bool:
     row = ensure_system_settings(db)
     text = f"{row.site_name}: giving up on {node_name} after {attempts} retries; check connectivity or credentials"
     return bool(_notify(db, text=text, event="backup.retry_exhausted")["ok"])
+
+
+def notify_health(db: Session, warnings: list[str], percent: float, output_bytes: int) -> bool:
+    row = ensure_system_settings(db)
+    detail = ", ".join(warnings)
+    text = (
+        f"{row.site_name}: system health warning ({detail}); disk {percent}% used, "
+        f"Oxidized data {round(output_bytes / (1024 * 1024), 1)} MB"
+    )
+    return bool(_notify(db, text=text, event="system.health")["ok"])
+
+
+def notify_report_ready(db: Session, summary: str, uploaded: bool) -> bool:
+    suffix = "uploaded to the export target" if uploaded else "stored locally"
+    return bool(_notify(db, text=f"{summary} ({suffix})", event="report.ready")["ok"])
 
 
 def _digest_text(db: Session, site_name: str, hours: int = 24) -> tuple[str, int]:

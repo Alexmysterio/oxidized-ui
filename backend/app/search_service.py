@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 
 from .config_service import applied_groups
 from .errors import AppError
-from .models import Node
+from .models import Node, NodeFacts
 from .oxidized import client_for
 
 
@@ -26,6 +26,22 @@ def global_search(
     if allowed_groups is not None:
         statement = statement.where(Node.group_name.in_(allowed_groups))
     nodes = db.scalars(statement.order_by(Node.name).limit(10)).all()
+    fact_statement = (
+        select(Node)
+        .join(NodeFacts, NodeFacts.node_id == Node.id)
+        .where(
+            NodeFacts.serial.ilike(f"%{needle}%")
+            | NodeFacts.os_version.ilike(f"%{needle}%")
+            | NodeFacts.uptime.ilike(f"%{needle}%")
+        )
+        .limit(10)
+    )
+    if allowed_groups is not None:
+        fact_statement = fact_statement.where(Node.group_name.in_(allowed_groups))
+    merged = {node.id: node for node in nodes}
+    for node in db.scalars(fact_statement).all():
+        merged[node.id] = node
+    nodes = sorted(merged.values(), key=lambda node: node.name)[:10]
     groups = [
         {"name": name}
         for name in sorted(applied_groups(db))
