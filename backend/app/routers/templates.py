@@ -4,8 +4,9 @@ from fastapi import APIRouter, Depends, Request, Response
 from sqlalchemy.orm import Session
 
 from ..audit import add_audit
-from ..auth_deps import get_auth_context, require_operator
+from ..auth_deps import require_operator
 from ..db import get_db
+from ..errors import AppError
 from ..schemas import NodeTemplateApply, NodeTemplateCreate, NodeTemplateUpdate
 from ..security import AuthContext
 from ..template_service import (
@@ -21,7 +22,7 @@ router = APIRouter(prefix="/node-templates", tags=["node-templates"])
 
 
 @router.get("")
-def templates(db: Session = Depends(get_db), _context: AuthContext = Depends(get_auth_context)):
+def templates(db: Session = Depends(get_db), _context: AuthContext = Depends(require_operator)):
     return {"items": [serialize(row) for row in list_templates(db)]}
 
 
@@ -32,6 +33,8 @@ def create_template_route(
     db: Session = Depends(get_db),
     context: AuthContext = Depends(require_operator),
 ):
+    if context.scope_groups is not None and payload.group_name not in context.scope_groups:
+        raise AppError("auth.forbidden")
     row = create_template(db, payload=payload, actor_id=context.user_id)
     add_audit(
         db,
@@ -54,6 +57,17 @@ def update_template_route(
     db: Session = Depends(get_db),
     context: AuthContext = Depends(require_operator),
 ):
+    from ..models import NodeTemplate
+
+    existing = db.get(NodeTemplate, template_id)
+    if existing is None:
+        raise AppError("app.not_found", params={"id": template_id})
+    if context.scope_groups is not None:
+        if existing.group_name not in context.scope_groups:
+            raise AppError("app.not_found", params={"id": template_id})
+        data = payload.model_dump(exclude_unset=True)
+        if data.get("group_name") not in (None, *context.scope_groups):
+            raise AppError("auth.forbidden")
     row = update_template(db, template_id, payload)
     add_audit(
         db,
@@ -75,6 +89,13 @@ def delete_template_route(
     db: Session = Depends(get_db),
     context: AuthContext = Depends(require_operator),
 ):
+    from ..models import NodeTemplate
+
+    existing = db.get(NodeTemplate, template_id)
+    if existing is None:
+        raise AppError("app.not_found", params={"id": template_id})
+    if context.scope_groups is not None and existing.group_name not in context.scope_groups:
+        raise AppError("app.not_found", params={"id": template_id})
     delete_template(db, template_id)
     add_audit(
         db,

@@ -30,6 +30,7 @@ export function ExportCard() {
     username: "",
     password: "",
     remote_dir: "/backups",
+    host_key_fingerprint: "",
     endpoint_url: "",
     region: "us-east-1",
     bucket: "",
@@ -53,6 +54,7 @@ export function ExportCard() {
         port: String(status.target.port ?? current.port),
         username: status.target.username ?? current.username,
         remote_dir: status.target.remote_dir ?? current.remote_dir,
+        host_key_fingerprint: status.target.host_key_fingerprint ?? current.host_key_fingerprint,
         endpoint_url: status.target.endpoint_url ?? current.endpoint_url,
         region: status.target.region ?? current.region,
         bucket: status.target.bucket ?? current.bucket,
@@ -73,6 +75,7 @@ export function ExportCard() {
               username: fields.username,
               password: fields.password,
               remote_dir: fields.remote_dir,
+              host_key_fingerprint: fields.host_key_fingerprint,
             }
           : {
               ...base,
@@ -106,7 +109,8 @@ export function ExportCard() {
   const verify = useMutation({
     mutationFn: () => api.verifyExport(),
     onSuccess: (result) => {
-      toast.success(t("system.exportVerified", { entries: result.entries, bytes: (result.bytes / 1024).toFixed(1) }));
+      const label = result.filename ?? t("system.exportSelfTest");
+      toast.success(t("system.exportVerified", { entries: result.entries, bytes: (result.bytes / 1024).toFixed(1), filename: label }));
     },
     onError: (error) => notifyError(t, error),
   });
@@ -159,6 +163,8 @@ export function ExportCard() {
             <div className="space-y-1"><Label>{t("system.exportUsername")}</Label><Input value={fields.username} onChange={(event) => update("username", event.target.value)} /></div>
             <div className="space-y-1"><Label>{t("system.exportPassword")}</Label><Input type="password" autoComplete="new-password" value={fields.password} onChange={(event) => update("password", event.target.value)} /></div>
             <div className="space-y-1"><Label>{t("system.exportRemoteDir")}</Label><Input value={fields.remote_dir} onChange={(event) => update("remote_dir", event.target.value)} /></div>
+            <div className="space-y-1"><Label>{t("system.exportFingerprint")}</Label><Input value={fields.host_key_fingerprint} onChange={(event) => update("host_key_fingerprint", event.target.value)} placeholder="SHA256:..." /></div>
+            <p className="text-[10px] text-muted-foreground sm:col-span-2 lg:col-span-3">{t("system.exportFingerprintHelp")}</p>
           </div>
         ) : (
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">

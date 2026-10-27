@@ -41,6 +41,9 @@ def _validate_address(value: str | None) -> str:
 
 
 def _scan(address: str, port: int) -> list[str]:
+    from .net_safety import ensure_safe_target
+
+    ensure_safe_target(address, port)
     try:
         result = subprocess.run(
             ["ssh-keyscan", "-T", "5", "-p", str(port), address],

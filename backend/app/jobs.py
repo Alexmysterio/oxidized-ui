@@ -4,6 +4,7 @@ import itertools
 import logging
 import queue
 import threading
+import time
 from collections.abc import Callable
 from concurrent.futures import Future, ThreadPoolExecutor
 from typing import Any
@@ -58,12 +59,18 @@ def _dispatch() -> None:
         priority, _, job_id, runner = item
         try:
             if job_id in _cancelled:
+                _cancelled.discard(job_id)
                 continue
             with SessionLocal() as db:
                 job = db.get(Job, job_id)
                 if job is None or job.status == "cancelled":
+                    _cancelled.discard(job_id)
                     continue
             _futures[job_id] = _get_executor().submit(_execute, job_id, runner)
+        except Exception:  # noqa: BLE001 - the dispatcher must survive transient DB errors
+            logger.exception("Job dispatcher failed for job %s", job_id)
+            _priority_queue.put(item)
+            time.sleep(1)
         finally:
             _priority_queue.task_done()
 

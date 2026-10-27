@@ -176,7 +176,7 @@ export function ProfilePage() {
   const mfaStatusQuery = useQuery({
     queryKey: ["mfa"],
     queryFn: api.mfaStatus,
-    enabled: user?.role === "admin",
+    enabled: Boolean(user),
   });
 
   const startMfa = useMutation({

@@ -1,6 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowRight, LockKeyhole, TriangleAlert } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -33,6 +33,21 @@ export function LoginPage() {
   const [challenge, setChallenge] = useState<MfaChallenge | null>(null);
   const [mfaCode, setMfaCode] = useState("");
   usePageTitle("auth.loginTitle");
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const error = params.get("oidc_error");
+    if (error === "mfa") setServerError(t("auth.oidcMfaRequired"));
+    else if (error) setServerError(t("auth.oidcError"));
+    const challengeToken = params.get("mfa_challenge");
+    if (challengeToken) {
+      setChallenge({
+        mfa_required: true,
+        challenge_token: challengeToken,
+        expires_at: new Date(Date.now() + 5 * 60_000).toISOString(),
+      });
+    }
+  }, [location.search, t]);
 
   const form = useForm<LoginValues>({
     resolver: zodResolver(loginSchema(t)),

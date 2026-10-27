@@ -12,6 +12,7 @@ from .catalog import models as catalog_models
 from .config_service import applied_config, applied_groups
 from .crypto import decrypt_optional
 from .models import Node
+from .net_safety import ensure_safe_target
 from .ping_service import ping_host
 from .settings import settings
 
@@ -34,6 +35,7 @@ def test_connection(db: Session, node: Node) -> dict[str, Any]:
     if not node.address:
         result["message"] = "missing_address"
         return result
+    ensure_safe_target(node.address, int(node.port or 22))
     ping = ping_host(node.address)
     result["ping"] = ping["reachable"]
     result["ping_rtt_ms"] = ping["rtt_ms"]

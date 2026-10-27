@@ -4,6 +4,7 @@ import csv
 import io
 import json
 import logging
+import math
 import re
 from typing import Any
 
@@ -801,10 +802,14 @@ def sites(db: Session, *, tag_key: str = "Site", allowed_groups: list[str] | Non
                     latitude = float(value)
                 except (TypeError, ValueError):
                     latitude = None
+                if latitude is not None and not math.isfinite(latitude):
+                    latitude = None
             elif lowered in {"longitude", "lon", "lng"}:
                 try:
                     longitude = float(value)
                 except (TypeError, ValueError):
+                    longitude = None
+                if longitude is not None and not math.isfinite(longitude):
                     longitude = None
         bucket = buckets.setdefault(site_name or "", {"name": site_name, "count": 0, "status": {}, "nodes": []})
         cache = caches.get(node.id)

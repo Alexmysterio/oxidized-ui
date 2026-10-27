@@ -129,7 +129,7 @@ def record_sample(db: Session, snapshot: dict[str, Any] | None = None) -> None:
     db.commit()
 
 
-def history(db: Session, *, hours: int = 168) -> dict[str, Any]:
+def history(db: Session, *, hours: int = 168, allowed_groups: list[str] | None = None) -> dict[str, Any]:
     from datetime import timedelta
 
     cutoff = utcnow() - timedelta(hours=max(1, min(hours, 24 * 30)))
@@ -153,12 +153,17 @@ def history(db: Session, *, hours: int = 168) -> dict[str, Any]:
             }
             for row in rows
         ],
-        "top_nodes": top_nodes(db),
+        "top_nodes": top_nodes(db, allowed_groups=allowed_groups),
     }
 
 
-def top_nodes(db: Session, *, limit: int = 5) -> list[dict[str, Any]]:
-    names = {node.name_key: node.name for node in db.scalars(select(Node)).all()}
+def top_nodes(
+    db: Session, *, limit: int = 5, allowed_groups: list[str] | None = None
+) -> list[dict[str, Any]]:
+    nodes = list(db.scalars(select(Node)).all())
+    if allowed_groups is not None:
+        nodes = [node for node in nodes if node.group_name in allowed_groups]
+    names = {node.name_key: node.name for node in nodes}
     sizes: dict[str, int] = {}
     base = settings.oxidized_config_dir
     if not base.exists() or not names:

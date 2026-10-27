@@ -198,11 +198,11 @@ def read_health(
 def read_health_history(
     hours: int = 168,
     db: Session = Depends(get_db),
-    _context: AuthContext = Depends(require_capability("logs.read")),
+    context: AuthContext = Depends(require_capability("logs.read")),
 ):
     from ..health_service import history
 
-    return history(db, hours=hours)
+    return history(db, hours=hours, allowed_groups=context.scope_groups)
 
 
 @router.get("/email")
@@ -235,7 +235,7 @@ def verify_export(
     db: Session = Depends(get_db),
     context: AuthContext = Depends(require_admin),
 ):
-    result = verify_bundle(db, payload.passphrase)
+    result = verify_bundle(db, payload.passphrase, remote=payload.remote)
     add_audit(
         db,
         actor=context,

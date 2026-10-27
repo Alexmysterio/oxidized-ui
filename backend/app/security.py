@@ -52,7 +52,7 @@ CAPABILITIES: dict[str, tuple[str, ...]] = {
         "compliance.write",
         "me.write",
     ),
-    "viewer": ("nodes.read", "versions.read", "compliance.read", "me.write"),
+    "viewer": ("nodes.read", "versions.read", "me.write"),
 }
 
 

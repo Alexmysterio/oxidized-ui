@@ -22,7 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { SheetFooter, SheetHeader } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
@@ -575,20 +575,39 @@ export function NodeFormSheet({
     [],
   );
 
+  useEffect(() => {
+    if (!open) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onOpenChange(false);
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [open, onOpenChange]);
+
+  if (!open) return null;
+
   return (
-    <Sheet open={open} onOpenChange={onOpenChange} modal={false}>
-      <SheetContent
-        side="right"
-        hideOverlay
-        onInteractOutside={(event) => event.preventDefault()}
-        className="w-[min(94vw,38rem)] gap-0 p-0 sm:max-w-[38rem]"
+    <div className="fixed inset-0 z-[60]">
+      <button
+        type="button"
+        aria-label={t("common.close")}
+        className="absolute inset-0 h-full w-full bg-slate-950/40 backdrop-blur-[1px]"
+        onClick={() => onOpenChange(false)}
+      />
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label={nodeId ? t("nodeForm.editTitle") : t("nodeForm.createTitle")}
+        className="absolute inset-y-0 right-0 flex w-[min(94vw,38rem)] flex-col border-l bg-card shadow-lift"
       >
         <SheetHeader className="border-b px-6 pb-5 pt-6">
-          <SheetTitle className="flex items-center gap-2">
+          <h2 className="flex items-center gap-2 text-lg font-semibold tracking-tight">
             <KeyRound className="h-4 w-4 text-primary" />
             {nodeId ? t("nodeForm.editTitle") : t("nodeForm.createTitle")}
-          </SheetTitle>
-          <SheetDescription>{nodeId ? t("nodeForm.editDescription") : t("nodeForm.createDescription")}</SheetDescription>
+          </h2>
+          <p className="text-sm leading-relaxed text-muted-foreground">
+            {nodeId ? t("nodeForm.editDescription") : t("nodeForm.createDescription")}
+          </p>
         </SheetHeader>
         {nodeId && nodeQuery.isLoading ? (
           <div className="space-y-4 p-6">
@@ -618,7 +637,7 @@ export function NodeFormSheet({
             }}
           />
         )}
-      </SheetContent>
-    </Sheet>
+      </div>
+    </div>
   );
 }

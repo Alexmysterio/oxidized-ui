@@ -89,7 +89,7 @@ jobs:
         with:
           image-ref: oxidized-ui:ci
           format: table
-          exit-code: "0"
+          exit-code: "1"
           severity: CRITICAL,HIGH
           ignore-unfixed: true
       - name: SBOM

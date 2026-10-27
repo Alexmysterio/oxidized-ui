@@ -193,7 +193,9 @@
     "mfaBack": "Volver al inicio de sesión",
     "invalidMfaCode": "El código de verificación no es correcto.",
     "mfaExpired": "La verificación ha caducado. Inicia sesión de nuevo.",
-    "oidcLogin": "Entrar con OIDC"
+    "oidcLogin": "Entrar con OIDC",
+    "oidcMfaRequired": "Tu cuenta tiene MFA activo. Entra con usuario y contraseña para completar el segundo factor.",
+    "oidcError": "No se pudo completar el login OIDC."
   },
   "dashboard": {
     "eyebrow": "Centro de operaciones",
@@ -1086,8 +1088,11 @@
     "healthDisk": "Avisar si el disco supera (%)",
     "healthOutput": "Avisar si los datos de Oxidized superan (MB, 0 = off)",
     "exportVerify": "Verificar",
-    "exportVerified": "Paquete verificado: {{entries}} archivos, {{bytes}} KB.",
-    "healthChecks": "Comprobaciones consecutivas antes de avisar"
+    "exportVerified": "Paquete {{filename}} verificado: {{entries}} archivos, {{bytes}} KB.",
+    "healthChecks": "Comprobaciones consecutivas antes de avisar",
+    "exportFingerprint": "Huella de host (SHA256)",
+    "exportFingerprintHelp": "Opcional si la clave ya está en known_hosts. Evita aceptar un servidor SFTP suplantado.",
+    "exportSelfTest": "autotest local"
   },
   "search": {
     "title": "Búsqueda global",
@@ -1310,7 +1315,15 @@
     "compliance.template_missing": "No hay plantilla aplicable a este nodo.",
     "health.disk": "El disco supera el umbral configurado.",
     "health.output": "Los datos de Oxidized ocupan más de lo esperado.",
-    "facts.collect_failed": "No se pudo leer la configuración del nodo para extraer el inventario."
+    "facts.collect_failed": "No se pudo leer la configuración del nodo para extraer el inventario.",
+    "app.rate_limited": "Demasiadas peticiones. Espera unos segundos e inténtalo de nuevo.",
+    "node.forbidden_target": "Ese destino no está permitido (loopback, link-local o metadatos).",
+    "export.host_key_unknown": "La clave del servidor SFTP no se conoce. Añade su huella SHA256.",
+    "export.host_key_mismatch": "La huella del servidor SFTP no coincide.",
+    "export.private_key_invalid": "La clave privada SSH no es válida (RSA, ECDSA o Ed25519).",
+    "export.remote_not_found": "No hay ningún paquete exportado en el destino.",
+    "export.remote_too_large": "El paquete remoto es demasiado grande para verificarlo.",
+    "auth.mfa_oidc_unsupported": "Tu cuenta tiene MFA: usa usuario y contraseña para completar el segundo factor."
   },
   "validation": {
     "required": "Este campo es obligatorio.",

@@ -73,21 +73,21 @@ def channel_public(row: NotificationChannel) -> dict[str, Any]:
 
 
 def ensure_legacy_channel(db: Session) -> None:
-    if db.scalar(select(NotificationChannel.id).limit(1)) is not None:
-        return
     settings_row = ensure_system_settings(db)
     legacy = (settings_row.notify_webhook_url or "").strip()
     if not legacy:
         return
-    db.add(
-        NotificationChannel(
-            name="Legacy webhook",
-            kind="webhook",
-            enabled=True,
-            config_ciphertext=encrypt_json({"url": legacy}),
-            events=list(EVENTS),
+    existing = db.scalar(select(NotificationChannel).where(NotificationChannel.name == "Legacy webhook"))
+    if existing is None:
+        db.add(
+            NotificationChannel(
+                name="Legacy webhook",
+                kind="webhook",
+                enabled=True,
+                config_ciphertext=encrypt_json({"url": legacy}),
+                events=list(EVENTS),
+            )
         )
-    )
     settings_row.notify_webhook_url = ""
     db.commit()
 

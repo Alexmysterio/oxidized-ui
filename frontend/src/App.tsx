@@ -66,7 +66,14 @@ function RootLayout() {
               <Route index element={<Page><DashboardPage /></Page>} />
               <Route path="nodes" element={<Page><NodesPage /></Page>} />
               <Route path="nodes/:id" element={<Page><NodeDetailPage /></Page>} />
-              <Route path="node-templates" element={<Page><NodeTemplatesPage /></Page>} />
+              <Route
+                path="node-templates"
+                element={
+                  <RequireCapability capability="nodes.write">
+                    <Page><NodeTemplatesPage /></Page>
+                  </RequireCapability>
+                }
+              />
               <Route path="reconciliation" element={<Page><ReconciliationPage /></Page>} />
               <Route path="sites" element={<Page><SitesPage /></Page>} />
               <Route

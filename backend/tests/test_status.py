@@ -152,11 +152,14 @@ def test_list_nodes_reads_the_top_level_status_when_last_is_absent(monkeypatch):
     assert nodes[0].last_finished == datetime(2026, 10, 20, 12, 0, tzinfo=UTC)
 
 
-def test_metrics_report_the_derived_status(client: TestClient, admin):
+def test_metrics_report_the_derived_status(client: TestClient, admin, monkeypatch):
+    from app.settings import settings
+
+    monkeypatch.setattr(settings, "metrics_token", "test-metrics-token")
     node_id = _create_node(admin)
     _set_cache(node_id, status="never", last_success_at=datetime(2026, 10, 20, 12, 0, tzinfo=UTC))
 
-    text = client.get("/api/metrics").text
+    text = client.get("/api/metrics", headers={"X-Metrics-Token": "test-metrics-token"}).text
     assert 'oxidized_ui_nodes_total{status="ok"} 1' in text
     assert 'oxidized_ui_nodes_total{status="never"}' not in text
     assert 'oxidized_ui_node_status{node="core-sw-01",status="ok"} 1' in text

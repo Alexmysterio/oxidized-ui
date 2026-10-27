@@ -29,6 +29,52 @@ def node_ids_in_scope(db: Session, ctx: AuthContext) -> set[int] | None:
     return {node.id for node in db.scalars(select(Node)).all() if node.group_name in scope}
 
 
+def require_unscoped(ctx: AuthContext) -> None:
+    if ctx.scope_groups is not None:
+        raise AppError("auth.forbidden")
+
+
+def ensure_job_visible(db: Session, ctx: AuthContext, job) -> None:  # noqa: ANN001
+    scope = scoped_groups(ctx)
+    if scope is None:
+        return
+    allowed = node_ids_in_scope(db, ctx) or set()
+    if job.node_id in allowed:
+        return
+    payload = job.payload if isinstance(job.payload, dict) else {}
+    for value in payload.get("node_ids", []) or []:
+        try:
+            if int(value) in allowed:
+                return
+        except (TypeError, ValueError):
+            continue
+    raise AppError("job.not_found", params={"job_id": job.id})
+
+
+def ensure_schedule_visible(db: Session, ctx: AuthContext, schedule) -> None:  # noqa: ANN001
+    scope = scoped_groups(ctx)
+    if scope is None:
+        return
+    if not schedule.group_name or schedule.group_name not in scope:
+        raise AppError("app.not_found", params={"id": schedule.id})
+
+
+def ensure_priority_rule_visible(ctx: AuthContext, rule) -> None:  # noqa: ANN001
+    scope = scoped_groups(ctx)
+    if scope is None:
+        return
+    if rule.scope_type != "group" or rule.scope_key not in scope:
+        raise AppError("app.not_found", params={"id": rule.id})
+
+
+def ensure_compliance_template_visible(ctx: AuthContext, template) -> None:  # noqa: ANN001
+    scope = scoped_groups(ctx)
+    if scope is None:
+        return
+    if template.scope_type != "group" or template.scope_value not in scope:
+        raise AppError("app.not_found", params={"id": template.id})
+
+
 def node_visible(ctx: AuthContext, node: Node) -> bool:
     scope = scoped_groups(ctx)
     return scope is None or (node.group_name is not None and node.group_name in scope)

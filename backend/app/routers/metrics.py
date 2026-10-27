@@ -27,4 +27,7 @@ def metrics(
             supplied = authorization[7:].strip()
         if not supplied or not hmac.compare_digest(supplied, settings.metrics_token):
             raise AppError("auth.unauthenticated")
+    else:
+        # Never expose node names/status publicly by accident. Set METRICS_TOKEN.
+        raise AppError("auth.unauthenticated")
     return PlainTextResponse(render_metrics(db), media_type="text/plain; version=0.0.4")

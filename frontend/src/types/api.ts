@@ -737,6 +737,7 @@ export interface ExportStatus {
     bucket?: string;
     prefix?: string;
     has_secret?: boolean;
+    host_key_fingerprint?: string | null;
   };
   enabled: boolean;
   interval_hours: number;
@@ -858,6 +859,8 @@ export interface ExportVerification {
   has_fernet_key: boolean;
   has_metadata: boolean;
   target: string;
+  mode?: "remote" | "self-test";
+  filename?: string;
 }
 
 export interface SiteNode {

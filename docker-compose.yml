@@ -31,5 +31,28 @@ services:
     # Allow the unprivileged UI process (UID/GID 30000) to send ICMP pings.
     sysctls:
       net.ipv4.ping_group_range: "30000 30000"
+    read_only: true
+    tmpfs:
+      - /tmp:size=128m,mode=1777
+      - /run:size=16m,mode=755
+      - /var/log/supervisor:size=32m,mode=755
+      - /home/oxidized:size=16m,mode=755
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - DAC_OVERRIDE
+      - FOWNER
+      - KILL
+      - NET_BIND_SERVICE
+      - NET_RAW
+      - SETGID
+      - SETUID
     security_opt:
       - no-new-privileges:true
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8080/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 30s

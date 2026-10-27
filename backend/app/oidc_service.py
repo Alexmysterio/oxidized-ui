@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import base64
 import hashlib
+import hmac
 import secrets
 import time
 from typing import Any
@@ -19,6 +20,7 @@ from .settings import settings
 
 _STATES: dict[str, dict[str, Any]] = {}
 _DISCOVERY: dict[str, Any] = {}
+OIDC_STATE_COOKIE = "oxidized_ui_oidc_state"
 
 
 def enabled() -> bool:
@@ -35,6 +37,8 @@ def _discovery() -> dict[str, Any]:
     if _DISCOVERY.get("expires", 0) > now:
         return _DISCOVERY["data"]
     issuer = settings.oidc_issuer.rstrip("/")
+    if not issuer.startswith("https://"):
+        raise AppError("auth.oidc_failed", params={"reason": "insecure_issuer"})
     response = httpx.get(f"{issuer}/.well-known/openid-configuration", timeout=10)
     response.raise_for_status()
     data = response.json()
@@ -56,7 +60,7 @@ def _prune_states() -> None:
         _STATES.pop(next(iter(_STATES)), None)
 
 
-def start_url() -> str:
+def start_url() -> tuple[str, str]:
     if not enabled():
         raise AppError("auth.oidc_disabled")
     _prune_states()
@@ -74,10 +78,13 @@ def start_url() -> str:
         "code_challenge": challenge,
         "code_challenge_method": "S256",
     }
-    return f"{data['authorization_endpoint']}?{urlencode(params)}"
+    return f"{data['authorization_endpoint']}?{urlencode(params)}", state
 
 
 def complete(db: Session, code: str, state: str, request) -> tuple[User, str, Any]:
+    expected = request.cookies.get(OIDC_STATE_COOKIE, "")
+    if not expected or not hmac.compare_digest(expected, state):
+        raise AppError("auth.oidc_failed", params={"reason": "state"})
     dance = _STATES.pop(state, None)
     if dance is None or time.time() - dance["created"] > 600:
         raise AppError("auth.oidc_failed", params={"reason": "state"})
@@ -129,5 +136,10 @@ def complete(db: Session, code: str, state: str, request) -> tuple[User, str, An
         db.refresh(user)
     if not user.is_active:
         raise AppError("auth.forbidden")
+    from .mfa_service import create_challenge
+    from .mfa_service import is_enabled as mfa_is_enabled
+
+    if mfa_is_enabled(user):
+        raise create_challenge(db, user)
     raw, context = create_session(db, user, request)
     return user, raw, context

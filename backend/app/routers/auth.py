@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from .. import oidc_service
 from ..api_token_service import create_token, list_tokens, revoke_token
 from ..audit import add_audit
-from ..auth_deps import get_auth_context, require_admin
+from ..auth_deps import get_auth_context, require_capability
 from ..auth_service import (
     change_password,
     create_session,
@@ -169,11 +169,34 @@ def logout_route(
 @router.get("/auth/oidc/login")
 def oidc_login():
     try:
-        return RedirectResponse(oidc_service.start_url(), status_code=303)
+        url, state = oidc_service.start_url()
     except AppError:
         return RedirectResponse("/login?oidc_error=1", status_code=303)
     except Exception:  # noqa: BLE001 - provider/network failures must not leak internals
         return RedirectResponse("/login?oidc_error=1", status_code=303)
+    response = RedirectResponse(url, status_code=303)
+    response.set_cookie(
+        key=oidc_service.OIDC_STATE_COOKIE,
+        value=state,
+        max_age=600,
+        httponly=True,
+        secure=settings.session_cookie_secure,
+        samesite="lax",
+        path="/api/auth/oidc",
+    )
+    return response
+
+
+def _oidc_failure(reason: str = "1") -> RedirectResponse:
+    response = RedirectResponse(f"/login?oidc_error={reason}", status_code=303)
+    response.delete_cookie(
+        key=oidc_service.OIDC_STATE_COOKIE,
+        path="/api/auth/oidc",
+        secure=settings.session_cookie_secure,
+        httponly=True,
+        samesite="lax",
+    )
+    return response
 
 
 @router.get("/auth/oidc/callback")
@@ -185,10 +208,20 @@ def oidc_callback(
 ):
     try:
         user, raw, context = oidc_service.complete(db, code, state, request)
-    except AppError:
-        return RedirectResponse("/login?oidc_error=1", status_code=303)
+    except MfaRequired as challenge:
+        response = RedirectResponse(f"/login?mfa_challenge={challenge.token}", status_code=303)
+        response.delete_cookie(
+            key=oidc_service.OIDC_STATE_COOKIE,
+            path="/api/auth/oidc",
+            secure=settings.session_cookie_secure,
+            httponly=True,
+            samesite="lax",
+        )
+        return response
+    except AppError as exc:
+        return _oidc_failure("mfa" if exc.code == "auth.mfa_oidc_unsupported" else "1")
     except Exception:  # noqa: BLE001 - provider/network failures must not leak internals
-        return RedirectResponse("/login?oidc_error=1", status_code=303)
+        return _oidc_failure()
     add_audit(
         db,
         actor=context,
@@ -200,6 +233,13 @@ def oidc_callback(
     db.commit()
     response = RedirectResponse("/", status_code=303)
     _set_cookie(response, raw)
+    response.delete_cookie(
+        key=oidc_service.OIDC_STATE_COOKIE,
+        path="/api/auth/oidc",
+        secure=settings.session_cookie_secure,
+        httponly=True,
+        samesite="lax",
+    )
     return response
 
 
@@ -253,7 +293,7 @@ def revoke_session_route(
 @router.get("/auth/mfa")
 def mfa_status(
     db: Session = Depends(get_db),
-    context: AuthContext = Depends(require_admin),
+    context: AuthContext = Depends(require_capability("me.write")),
 ):
     user = db.get(User, context.user_id)
     if user is None:
@@ -270,7 +310,7 @@ def mfa_status(
 def mfa_setup(
     request: Request,
     db: Session = Depends(get_db),
-    context: AuthContext = Depends(require_admin),
+    context: AuthContext = Depends(require_capability("me.write")),
 ):
     user = db.get(User, context.user_id)
     if user is None:
@@ -295,7 +335,7 @@ def mfa_enable(
     payload: MfaCodeRequest,
     request: Request,
     db: Session = Depends(get_db),
-    context: AuthContext = Depends(require_admin),
+    context: AuthContext = Depends(require_capability("me.write")),
 ):
     user = db.get(User, context.user_id)
     if user is None:
@@ -327,7 +367,7 @@ def mfa_disable(
     payload: MfaDisableRequest,
     request: Request,
     db: Session = Depends(get_db),
-    context: AuthContext = Depends(require_admin),
+    context: AuthContext = Depends(require_capability("me.write")),
 ):
     user = db.get(User, context.user_id)
     if user is None:

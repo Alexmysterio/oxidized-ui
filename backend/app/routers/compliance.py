@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, Query, Request, Response
 from sqlalchemy.orm import Session
 
 from ..audit import add_audit
-from ..auth_deps import get_auth_context, require_capability
+from ..auth_deps import require_capability
 from ..compliance_service import (
     create_template,
     delete_template,
@@ -15,6 +15,7 @@ from ..compliance_service import (
     update_template,
 )
 from ..db import get_db
+from ..errors import AppError
 from ..schemas import ConfigTemplateCreate, ConfigTemplateUpdate
 from ..security import AuthContext
 
@@ -22,8 +23,15 @@ router = APIRouter(prefix="/compliance", tags=["compliance"])
 
 
 @router.get("/templates")
-def templates(db: Session = Depends(get_db), _context: AuthContext = Depends(get_auth_context)):
-    return {"items": [serialize_template(row) for row in list_templates(db)]}
+def templates(
+    db: Session = Depends(get_db),
+    context: AuthContext = Depends(require_capability("compliance.read")),
+):
+    rows = list_templates(db)
+    if context.scope_groups is not None:
+        allowed = set(context.scope_groups)
+        rows = [row for row in rows if row.scope_type == "group" and row.scope_value in allowed]
+    return {"items": [serialize_template(row) for row in rows]}
 
 
 @router.post("/templates", status_code=201)
@@ -33,6 +41,9 @@ def create_template_route(
     db: Session = Depends(get_db),
     context: AuthContext = Depends(require_capability("compliance.write")),
 ):
+    if context.scope_groups is not None:
+        if payload.scope_type != "group" or payload.scope_value not in context.scope_groups:
+            raise AppError("auth.forbidden")
     row = create_template(
         db,
         name=payload.name,
@@ -62,7 +73,20 @@ def update_template_route(
     db: Session = Depends(get_db),
     context: AuthContext = Depends(require_capability("compliance.write")),
 ):
-    row = update_template(db, template_id, **payload.model_dump(exclude_unset=True))
+    from ..models import ConfigTemplate
+    from ..scope_service import ensure_compliance_template_visible
+
+    existing = db.get(ConfigTemplate, template_id)
+    if existing is None:
+        raise AppError("app.not_found", params={"id": template_id})
+    ensure_compliance_template_visible(context, existing)
+    data = payload.model_dump(exclude_unset=True)
+    if context.scope_groups is not None:
+        scope_type = data.get("scope_type", existing.scope_type)
+        scope_value = data.get("scope_value", existing.scope_value)
+        if scope_type != "group" or scope_value not in context.scope_groups:
+            raise AppError("auth.forbidden")
+    row = update_template(db, template_id, **data)
     add_audit(
         db,
         actor=context,
@@ -83,6 +107,13 @@ def delete_template_route(
     db: Session = Depends(get_db),
     context: AuthContext = Depends(require_capability("compliance.write")),
 ):
+    from ..models import ConfigTemplate
+    from ..scope_service import ensure_compliance_template_visible
+
+    existing = db.get(ConfigTemplate, template_id)
+    if existing is None:
+        raise AppError("app.not_found", params={"id": template_id})
+    ensure_compliance_template_visible(context, existing)
     delete_template(db, template_id)
     add_audit(
         db,
@@ -104,7 +135,7 @@ def compliance_report(
     template_id: int | None = Query(default=None, ge=1),
     limit: int = Query(default=200, ge=1, le=1000),
     db: Session = Depends(get_db),
-    context: AuthContext = Depends(get_auth_context),
+    context: AuthContext = Depends(require_capability("compliance.read")),
 ):
     return report(
         db,
@@ -121,6 +152,6 @@ def compliance_node_report(
     node_id: int,
     template_id: int | None = Query(default=None, ge=1),
     db: Session = Depends(get_db),
-    context: AuthContext = Depends(get_auth_context),
+    context: AuthContext = Depends(require_capability("compliance.read")),
 ):
     return node_report(db, ctx=context, node_id=node_id, template_id=template_id)

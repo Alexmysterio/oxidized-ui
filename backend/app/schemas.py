@@ -681,6 +681,7 @@ class ExportConfigPayload(StrictModel):
 
 class ExportVerifyRequest(StrictModel):
     passphrase: str | None = Field(default=None, max_length=512)
+    remote: bool = False
 
 
 class JobPriorityRuleCreate(StrictModel):

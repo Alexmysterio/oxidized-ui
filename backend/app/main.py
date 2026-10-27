@@ -21,6 +21,7 @@ from .errors import AppError, install_error_handlers
 from .jobs import interrupt_incomplete_jobs, shutdown_jobs
 from .models import AuditLog, Job, LoginAttempt, SystemSettings
 from .poller import start_poller, stop_poller
+from .request_limit import check_rate_limit
 from .routers import (
     audit,
     auth,
@@ -126,7 +127,9 @@ async def lifespan(_app: FastAPI):
     settings.ensure_directories()
     _run_migrations()
     with SessionLocal() as db:
+        from .compliance_service import encrypt_legacy_templates
         from .node_service import normalize_all_tags
+        from .template_service import encrypt_legacy_vars
 
         ensure_system_state(db)
         ensure_system_settings(db)
@@ -135,6 +138,8 @@ async def lifespan(_app: FastAPI):
         bootstrap_admin(db)
         bootstrap_configuration(db)
         normalize_all_tags(db)
+        encrypt_legacy_vars(db)
+        encrypt_legacy_templates(db)
         _cleanup_retention(db)
     if not settings.disable_background_tasks:
         start_poller()
@@ -165,6 +170,12 @@ def create_app() -> FastAPI:
         path = request.url.path
         if not _ip_allowed(request):
             return _environment_error("auth.ip_not_allowed", request, 403)
+        if path.startswith("/api/") and not path.startswith("/api/internal/"):
+            retry_after = check_rate_limit(path, get_client_ip(request))
+            if retry_after is not None:
+                response = _environment_error("app.rate_limited", request, 429)
+                response.headers["Retry-After"] = str(retry_after)
+                return response
         bearer_auth = request.headers.get("authorization", "").lower().startswith("bearer ")
         if (
             request.method in UNSAFE_METHODS

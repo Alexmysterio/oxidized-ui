@@ -28,4 +28,10 @@ def reconciliation_import(
     context: AuthContext = Depends(require_operator),
 ):
     names = [str(name) for name in payload.names]
-    return import_nodes(db, names=names, actor=context, request=request)
+    return import_nodes(
+        db,
+        names=names,
+        actor=context,
+        request=request,
+        allowed_groups=context.scope_groups,
+    )

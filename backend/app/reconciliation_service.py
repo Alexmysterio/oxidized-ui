@@ -90,6 +90,7 @@ def import_nodes(
     names: list[str],
     actor: AuthContext,
     request: Request,
+    allowed_groups: list[str] | None = None,
 ) -> dict[str, Any]:
     live = {node.name.casefold(): node for node in oxidized_client_for(db).list_nodes()}
     known_groups = set(applied_groups(db))
@@ -104,6 +105,9 @@ def import_nodes(
         item: OxidizedNode | None = live.get(key)
         if item is None:
             errors.append({"name": raw_name, "code": "node.not_found", "params": {"name": raw_name}})
+            continue
+        if allowed_groups is not None and item.group not in allowed_groups:
+            errors.append({"name": raw_name, "code": "auth.forbidden", "params": {}})
             continue
         if not item.model:
             errors.append({"name": raw_name, "code": "validation.required", "params": {"field": "model"}})

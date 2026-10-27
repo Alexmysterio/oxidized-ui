@@ -5,6 +5,7 @@ from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
+from .api_token_service import revoke_user_tokens
 from .audit import add_audit
 from .auth_service import revoke_user_sessions, validate_language
 from .avatar_service import avatars_dir
@@ -139,6 +140,7 @@ def update_user(
     db.refresh(user)
     if data.get("is_active") is False or "role" in data:
         revoke_user_sessions(db, user.id, except_session_id=actor.session_id if user.id == actor.user_id else None)
+        revoke_user_tokens(db, user.id)
     add_audit(
         db,
         actor=actor,
@@ -168,6 +170,7 @@ def reset_password(
     record_password(db, user, user.password_hash, keep=policy.history_count)
     db.commit()
     revoke_user_sessions(db, user.id, except_session_id=None)
+    revoke_user_tokens(db, user.id)
     add_audit(
         db,
         actor=actor,

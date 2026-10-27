@@ -7,6 +7,7 @@ from .. import config_service
 from ..audit import add_audit
 from ..auth_deps import require_operator
 from ..db import get_db
+from ..errors import AppError
 from ..schemas import GroupCreate, GroupWrite, validate_group_name
 from ..security import AuthContext
 
@@ -18,7 +19,11 @@ def list_groups(
     db: Session = Depends(get_db),
     context: AuthContext = Depends(require_operator),
 ):
-    return config_service.groups_list(db)
+    result = config_service.groups_list(db)
+    if context.scope_groups is not None:
+        allowed = set(context.scope_groups)
+        result["groups"] = [row for row in result["groups"] if row.get("name") in allowed]
+    return result
 
 
 @router.get("/{name}")
@@ -27,7 +32,10 @@ def get_group(
     db: Session = Depends(get_db),
     context: AuthContext = Depends(require_operator),
 ):
+    from ..scope_service import require_group
+
     validate_group_name(name)
+    require_group(context, name)
     return config_service.groups_detail(db, name)
 
 
@@ -40,6 +48,8 @@ def create_group(
     context: AuthContext = Depends(require_operator),
 ):
     patch = payload.model_dump(exclude={"name"}, exclude_unset=True)
+    if context.scope_groups is not None:
+        raise AppError("auth.forbidden")
     revision = config_service.group_write_config(
         db,
         name=payload.name,
@@ -74,6 +84,9 @@ def update_group(
     context: AuthContext = Depends(require_operator),
 ):
     validate_group_name(name)
+    from ..scope_service import require_group
+
+    require_group(context, name)
     patch = payload.model_dump(exclude_unset=True)
     revision = config_service.group_write_config(
         db,
@@ -108,6 +121,9 @@ def delete_group(
     context: AuthContext = Depends(require_operator),
 ):
     validate_group_name(name)
+    from ..scope_service import require_group
+
+    require_group(context, name)
     revision = config_service.group_delete_config(
         db,
         name=name,

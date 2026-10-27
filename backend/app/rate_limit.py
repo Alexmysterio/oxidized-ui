@@ -33,7 +33,6 @@ def check_login_allowed(db: Session, *, username_key: str, ip: str) -> None:
         db.scalar(
             select(func.count(LoginAttempt.id)).where(
                 LoginAttempt.username_key == username_key,
-                LoginAttempt.ip == ip,
                 LoginAttempt.succeeded.is_(False),
                 LoginAttempt.created_at >= since,
             )

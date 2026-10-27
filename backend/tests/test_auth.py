@@ -236,7 +236,10 @@ def test_allowlist_rejects_unlisted_client(client, admin):
     assert blocked.json()["error"]["code"] == "auth.ip_not_allowed"
 
 
-def test_metrics_endpoint(client: TestClient):
-    response = client.get("/api/metrics")
+def test_metrics_endpoint(client: TestClient, monkeypatch):
+    from app.settings import settings
+
+    monkeypatch.setattr(settings, "metrics_token", "test-metrics-token")
+    response = client.get("/api/metrics", headers={"X-Metrics-Token": "test-metrics-token"})
     assert response.status_code == 200
     assert "oxidized_ui_backups_total" in response.text

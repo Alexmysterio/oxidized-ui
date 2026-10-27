@@ -5,6 +5,7 @@ from typing import Any
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from .crypto import decrypt_text, encrypt_text
 from .diffing import build_diff
 from .errors import AppError
 from .models import ConfigTemplate, Node
@@ -14,6 +15,31 @@ from .security import AuthContext
 from .version_service import current_config
 
 SCOPE_TYPES = ("global", "group", "model")
+ENC_PREFIX = "enc:v1:"
+
+
+def _encrypt_content(content: str) -> str:
+    return f"{ENC_PREFIX}{encrypt_text(content)}"
+
+
+def _decrypt_content(content: str) -> str:
+    if content.startswith(ENC_PREFIX):
+        try:
+            return decrypt_text(content[len(ENC_PREFIX) :]) or ""
+        except AppError:
+            return ""
+    return content
+
+
+def encrypt_legacy_templates(db: Session) -> int:
+    changed = 0
+    for row in db.scalars(select(ConfigTemplate)).all():
+        if row.content and not row.content.startswith(ENC_PREFIX):
+            row.content = _encrypt_content(row.content)
+            changed += 1
+    if changed:
+        db.commit()
+    return changed
 
 
 def serialize_template(row: ConfigTemplate) -> dict[str, Any]:
@@ -22,7 +48,7 @@ def serialize_template(row: ConfigTemplate) -> dict[str, Any]:
         "name": row.name,
         "scope_type": row.scope_type,
         "scope_value": row.scope_value,
-        "content": row.content,
+        "content": _decrypt_content(row.content),
         "created_at": row.created_at.isoformat() if row.created_at else None,
         "updated_at": row.updated_at.isoformat() if row.updated_at else None,
     }
@@ -53,7 +79,7 @@ def create_template(
         name=name,
         scope_type=scope_type,
         scope_value=scope_value,
-        content=content,
+        content=_encrypt_content(content),
         created_by_id=actor_id,
     )
     db.add(row)
@@ -77,7 +103,7 @@ def update_template(db: Session, template_id: int, **values: Any) -> ConfigTempl
     if "content" in values and values["content"] is not None:
         if not str(values["content"]).strip():
             raise AppError("validation.required", params={"field": "content"})
-        row.content = values["content"]
+        row.content = _encrypt_content(str(values["content"]))
     if "scope_type" in values and values["scope_type"] is not None:
         row.scope_type, row.scope_value = _validate_scope(
             values["scope_type"], values.get("scope_value")
@@ -165,7 +191,7 @@ def report(
             summary["error"] += 1
             items.append(_item(node, template, "error"))
             continue
-        stats = _diff_stats(template.content, config)
+        stats = _diff_stats(_decrypt_content(template.content), config)
         if stats["changed"] == 0:
             summary["compliant"] += 1
             items.append(_item(node, template, "compliant"))
@@ -212,7 +238,7 @@ def node_report(
     if template is None:
         raise AppError("compliance.template_missing")
     config = current_config(db, node)
-    stats = _diff_stats(template.content, config)
+    stats = _diff_stats(_decrypt_content(template.content), config)
     return {
         "node_id": node.id,
         "name": node.name,

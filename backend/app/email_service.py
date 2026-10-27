@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 import smtplib
+import ssl
 from email.message import EmailMessage
 from typing import Any
 
@@ -51,13 +52,16 @@ def send(
             filename=filename,
         )
     try:
+        context = ssl.create_default_context()
         if row.smtp_ssl:
-            client: smtplib.SMTP = smtplib.SMTP_SSL(row.smtp_host, int(row.smtp_port or 465), timeout=15)
+            client: smtplib.SMTP = smtplib.SMTP_SSL(
+                row.smtp_host, int(row.smtp_port or 465), timeout=15, context=context
+            )
         else:
             client = smtplib.SMTP(row.smtp_host, int(row.smtp_port or 587), timeout=15)
         with client:
             if row.smtp_tls and not row.smtp_ssl:
-                client.starttls()
+                client.starttls(context=context)
             password = decrypt_optional(row.smtp_password_ciphertext)
             if row.smtp_user and password:
                 client.login(row.smtp_user, password)

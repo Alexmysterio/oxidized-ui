@@ -6,6 +6,7 @@ from fastapi import Request
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from .crypto import decrypt_json, encrypt_json
 from .errors import AppError
 from .models import NodeTemplate
 from .node_service import create_node
@@ -27,10 +28,36 @@ def serialize(row: NodeTemplate) -> dict[str, Any]:
         "output": row.output,
         "prompt": row.prompt,
         "timeout_seconds": row.timeout_seconds,
-        "vars": row.vars or {},
+        "vars": _decrypt_vars(row.vars),
         "created_at": row.created_at.isoformat() if row.created_at else None,
         "updated_at": row.updated_at.isoformat() if row.updated_at else None,
     }
+
+
+def _encrypt_vars(value: dict[str, Any] | None) -> dict[str, Any]:
+    data = value or {}
+    return {"_ciphertext": encrypt_json(data)} if data else {}
+
+
+def _decrypt_vars(value: Any) -> dict[str, Any]:
+    if isinstance(value, dict) and value.get("_ciphertext"):
+        try:
+            decrypted = decrypt_json(str(value["_ciphertext"]), default={})
+        except AppError:
+            return {}
+        return decrypted if isinstance(decrypted, dict) else {}
+    return value if isinstance(value, dict) else {}
+
+
+def encrypt_legacy_vars(db: Session) -> int:
+    changed = 0
+    for row in db.scalars(select(NodeTemplate)).all():
+        if isinstance(row.vars, dict) and row.vars and "_ciphertext" not in row.vars:
+            row.vars = _encrypt_vars(row.vars)
+            changed += 1
+    if changed:
+        db.commit()
+    return changed
 
 
 def list_templates(db: Session) -> list[NodeTemplate]:
@@ -58,7 +85,7 @@ def create_template(db: Session, *, payload: NodeTemplateCreate, actor_id: int) 
         output=payload.output,
         prompt=payload.prompt,
         timeout_seconds=payload.timeout_seconds,
-        vars=payload.vars or {},
+        vars=_encrypt_vars(payload.vars),
         created_by_id=actor_id,
     )
     db.add(row)
@@ -82,7 +109,7 @@ def update_template(db: Session, template_id: int, payload: NodeTemplateUpdate) 
         if field in data:
             setattr(row, field, data[field])
     if "vars" in data:
-        row.vars = data["vars"] or {}
+        row.vars = _encrypt_vars(data["vars"])
     row.updated_at = utcnow()
     db.commit()
     db.refresh(row)
@@ -120,7 +147,7 @@ def apply_template(
         output=row.output,
         prompt=row.prompt,
         timeout_seconds=row.timeout_seconds,
-        vars=row.vars or {},
+        vars=_decrypt_vars(row.vars),
         tags=payload.tags,
     )
     from sqlalchemy import func

@@ -37,9 +37,9 @@ def _restart_runner(db: Session, job: Job) -> dict:
 @router.get("/status")
 def get_status(
     db: Session = Depends(get_db),
-    _context: AuthContext = Depends(get_auth_context),
+    context: AuthContext = Depends(get_auth_context),
 ):
-    return build_status(db)
+    return build_status(db, allowed_groups=context.scope_groups)
 
 
 @router.post("/backups/all", status_code=202)
@@ -142,7 +142,17 @@ def inbound_backup_webhook(
 @router.get("/jobs")
 def list_jobs(
     status: Literal["queued", "running", "succeeded", "failed", "cancelled"] | None = None,
-    kind: Literal["backup_node", "backup_all", "oxidized_restart", "config_apply", "oxidized_reload"] | None = None,
+    kind: Literal[
+        "backup_node",
+        "backup_all",
+        "backup_export",
+        "facts_collect",
+        "report",
+        "oxidized_restart",
+        "config_apply",
+        "oxidized_reload",
+    ]
+    | None = None,
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=25, ge=1, le=100),
     db: Session = Depends(get_db),
@@ -177,11 +187,14 @@ def list_jobs(
 def get_job(
     job_id: int,
     db: Session = Depends(get_db),
-    _context: AuthContext = Depends(require_operator),
+    context: AuthContext = Depends(require_operator),
 ):
+    from ..scope_service import ensure_job_visible
+
     job = db.get(JobModel, job_id)
     if job is None:
         raise AppError("job.not_found", params={"job_id": job_id})
+    ensure_job_visible(db, context, job)
     return serialize_job(db, job)
 
 
@@ -192,6 +205,12 @@ def cancel_job_route(
     db: Session = Depends(get_db),
     context: AuthContext = Depends(require_operator),
 ):
+    from ..scope_service import ensure_job_visible
+
+    job = db.get(JobModel, job_id)
+    if job is None:
+        raise AppError("job.not_found", params={"job_id": job_id})
+    ensure_job_visible(db, context, job)
     job = cancel_job(db, job_id)
     add_audit(
         db,
@@ -207,7 +226,7 @@ def cancel_job_route(
 
 
 @router.get("/backups/schedules")
-def list_backup_schedules(db: Session = Depends(get_db), _context: AuthContext = Depends(require_operator)):
+def list_backup_schedules(db: Session = Depends(get_db), context: AuthContext = Depends(require_operator)):
     from sqlalchemy import select
 
     from ..config_service import applied_config
@@ -225,8 +244,13 @@ def list_backup_schedules(db: Session = Depends(get_db), _context: AuthContext =
     group_names = sorted(
         {name for name in configured_groups if isinstance(name, str)} | {name for name in counts if name is not None}
     )
+    if context.scope_groups is not None:
+        group_names = [name for name in group_names if name in context.scope_groups]
+        total_nodes = sum(counts.get(name, 0) for name in group_names)
     items = []
     for row in rows:
+        if context.scope_groups is not None and (not row.group_name or row.group_name not in context.scope_groups):
+            continue
         data = serialize_schedule(row)
         data["node_count"] = counts.get(row.group_name, 0) if row.group_name else total_nodes
         items.append(data)
@@ -234,7 +258,7 @@ def list_backup_schedules(db: Session = Depends(get_db), _context: AuthContext =
     return {
         "items": items,
         "groups": [{"name": name, "node_count": counts.get(name, 0)} for name in group_names],
-        "ungrouped_count": counts.get(None, 0),
+        "ungrouped_count": 0 if context.scope_groups is not None else counts.get(None, 0),
         "total_nodes": total_nodes,
         "oxidized_interval_seconds": int(interval) if isinstance(interval, (int, float)) else None,
     }
@@ -267,8 +291,13 @@ def patch_backup_schedule(
     db: Session = Depends(get_db),
     context: AuthContext = Depends(require_operator),
 ):
-    from ..scope_service import require_group
+    from ..models import BackupSchedule
+    from ..scope_service import ensure_schedule_visible, require_group
 
+    row = db.get(BackupSchedule, schedule_id)
+    if row is None:
+        raise AppError("app.not_found", params={"id": schedule_id})
+    ensure_schedule_visible(db, context, row)
     data = payload.model_dump(exclude_unset=True)
     if "group_name" in data:
         require_group(context, data["group_name"])
@@ -289,8 +318,15 @@ def patch_backup_schedule(
 def delete_backup_schedule(
     schedule_id: int,
     db: Session = Depends(get_db),
-    _context: AuthContext = Depends(require_operator),
+    context: AuthContext = Depends(require_operator),
 ):
+    from ..models import BackupSchedule
+    from ..scope_service import ensure_schedule_visible
+
+    row = db.get(BackupSchedule, schedule_id)
+    if row is None:
+        raise AppError("app.not_found", params={"id": schedule_id})
+    ensure_schedule_visible(db, context, row)
     delete_schedule(db, schedule_id)
     return Response(status_code=204)
 
@@ -298,11 +334,15 @@ def delete_backup_schedule(
 @router.get("/backups/priority-rules")
 def list_priority_rules(
     db: Session = Depends(get_db),
-    _context: AuthContext = Depends(require_operator),
+    context: AuthContext = Depends(require_operator),
 ):
     from ..priority_service import list_rules, serialize_rule
 
-    return {"items": [serialize_rule(row) for row in list_rules(db)]}
+    rows = list_rules(db)
+    if context.scope_groups is not None:
+        allowed = set(context.scope_groups)
+        rows = [row for row in rows if row.scope_type == "group" and row.scope_key in allowed]
+    return {"items": [serialize_rule(row) for row in rows]}
 
 
 @router.post("/backups/priority-rules", status_code=201)
@@ -313,7 +353,12 @@ def create_priority_rule(
     context: AuthContext = Depends(require_operator),
 ):
     from ..priority_service import create_rule, serialize_rule
+    from ..scope_service import require_group
 
+    if payload.scope_type == "tag" and context.scope_groups is not None:
+        raise AppError("auth.forbidden")
+    if payload.scope_type == "group":
+        require_group(context, payload.scope_key)
     row = create_rule(
         db,
         scope_type=payload.scope_type,
@@ -341,8 +386,14 @@ def delete_priority_rule(
     db: Session = Depends(get_db),
     context: AuthContext = Depends(require_operator),
 ):
+    from ..models import JobPriorityRule
     from ..priority_service import delete_rule
+    from ..scope_service import ensure_priority_rule_visible
 
+    row = db.get(JobPriorityRule, rule_id)
+    if row is None:
+        raise AppError("app.not_found", params={"id": rule_id})
+    ensure_priority_rule_visible(context, row)
     delete_rule(db, rule_id)
     add_audit(
         db,

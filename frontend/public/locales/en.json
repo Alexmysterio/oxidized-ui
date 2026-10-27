@@ -193,7 +193,9 @@
     "mfaBack": "Back to sign in",
     "invalidMfaCode": "The verification code is incorrect.",
     "mfaExpired": "The verification expired. Sign in again.",
-    "oidcLogin": "Sign in with OIDC"
+    "oidcLogin": "Sign in with OIDC",
+    "oidcMfaRequired": "Your account has MFA enabled. Sign in with username and password to complete the second factor.",
+    "oidcError": "The OIDC login could not be completed."
   },
   "dashboard": {
     "eyebrow": "Operations center",
@@ -1086,8 +1088,11 @@
     "healthDisk": "Warn when disk exceeds (%)",
     "healthOutput": "Warn when Oxidized data exceeds (MB, 0 = off)",
     "exportVerify": "Verify",
-    "exportVerified": "Bundle verified: {{entries}} files, {{bytes}} KB.",
-    "healthChecks": "Consecutive checks before alerting"
+    "exportVerified": "Bundle {{filename}} verified: {{entries}} files, {{bytes}} KB.",
+    "healthChecks": "Consecutive checks before alerting",
+    "exportFingerprint": "Host key (SHA256)",
+    "exportFingerprintHelp": "Optional when the key already exists in known_hosts. Prevents trusting an impersonated SFTP server.",
+    "exportSelfTest": "local self-test"
   },
   "search": {
     "title": "Global search",
@@ -1310,7 +1315,15 @@
     "compliance.template_missing": "No template applies to this node.",
     "health.disk": "Disk usage is above the configured threshold.",
     "health.output": "Oxidized data is larger than expected.",
-    "facts.collect_failed": "The node configuration could not be read to extract inventory data."
+    "facts.collect_failed": "The node configuration could not be read to extract inventory data.",
+    "app.rate_limited": "Too many requests. Wait a few seconds and try again.",
+    "node.forbidden_target": "That target is not allowed (loopback, link-local or metadata).",
+    "export.host_key_unknown": "The SFTP host key is unknown. Add its SHA256 fingerprint.",
+    "export.host_key_mismatch": "The SFTP host key fingerprint does not match.",
+    "export.private_key_invalid": "The SSH private key is invalid (RSA, ECDSA or Ed25519).",
+    "export.remote_not_found": "No exported bundle exists at the target.",
+    "export.remote_too_large": "The remote bundle is too large to verify.",
+    "auth.mfa_oidc_unsupported": "Your account has MFA: use username and password to complete the second factor."
   },
   "validation": {
     "required": "This field is required.",

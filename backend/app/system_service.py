@@ -147,9 +147,16 @@ def update_system_settings(db: Session, patch: dict) -> SystemSettings:
     if "smtp_user" in patch and patch["smtp_user"] is not None:
         row.smtp_user = str(patch["smtp_user"]).strip()[:255]
     if "smtp_from" in patch and patch["smtp_from"] is not None:
-        row.smtp_from = str(patch["smtp_from"]).strip()[:255]
+        sender = str(patch["smtp_from"]).strip()[:255]
+        if sender and not re.fullmatch(r"^[^@\s,]+@[^@\s,]+\.[^@\s,]+$", sender):
+            raise AppError("system.invalid_setting", params={"key": "smtp_from"})
+        row.smtp_from = sender
     if "report_email_to" in patch and patch["report_email_to"] is not None:
-        row.report_email_to = str(patch["report_email_to"]).strip()[:500]
+        raw = str(patch["report_email_to"]).strip()[:500]
+        recipients = [item.strip() for item in raw.split(",") if item.strip()]
+        if any(not re.fullmatch(r"^[^@\s,]+@[^@\s,]+\.[^@\s,]+$", item) for item in recipients):
+            raise AppError("system.invalid_setting", params={"key": "report_email_to"})
+        row.report_email_to = ", ".join(recipients)
     if patch.get("clear_smtp_password"):
         row.smtp_password_ciphertext = None
     elif patch.get("smtp_password"):

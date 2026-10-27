@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 from ..auth_deps import require_operator
 from ..db import get_db
 from ..log_service import download, snapshot, sse_events
+from ..scope_service import require_unscoped
 from ..security import AuthContext
 from ..settings import settings
 from ..system_service import ensure_system_settings
@@ -25,8 +26,9 @@ def logs_snapshot(
     level: Literal["trace", "debug", "info", "warn", "error", "fatal", "unknown"] | None = None,
     q: str | None = Query(default=None, max_length=200),
     db: Session = Depends(get_db),
-    _context: AuthContext = Depends(require_operator),
+    context: AuthContext = Depends(require_operator),
 ):
+    require_unscoped(context)
     if tail is None:
         tail = ensure_system_settings(db).log_tail_default or settings.max_log_lines
     return snapshot(db, tail=tail, level=level, query=q, since=since)
@@ -39,8 +41,9 @@ def logs_stream(
     level: Literal["trace", "debug", "info", "warn", "error", "fatal", "unknown"] | None = None,
     q: str | None = Query(default=None, max_length=200),
     db: Session = Depends(get_db),
-    _context: AuthContext = Depends(require_operator),
+    context: AuthContext = Depends(require_operator),
 ):
+    require_unscoped(context)
     if tail is None:
         tail = ensure_system_settings(db).log_tail_default or settings.max_log_lines
     from ..docker_api import client_for
@@ -63,8 +66,9 @@ def logs_download(
     level: Literal["trace", "debug", "info", "warn", "error", "fatal", "unknown"] | None = None,
     q: str | None = Query(default=None, max_length=200),
     db: Session = Depends(get_db),
-    _context: AuthContext = Depends(require_operator),
+    context: AuthContext = Depends(require_operator),
 ):
+    require_unscoped(context)
     filename, content = download(db, since=since, until=until, level=level, query=q)
     return Response(
         content=content,

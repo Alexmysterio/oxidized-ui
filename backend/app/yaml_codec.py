@@ -50,6 +50,8 @@ def _new_yaml() -> YAML:
 def load_yaml(text: str) -> Any:
     if len(text.encode("utf-8")) > settings.max_config_bytes:
         raise AppError("config.content_too_large")
+    if "!!python/" in text or "tag:yaml.org,2002:python/" in text:
+        raise AppError("config.invalid_yaml", params={"reason": "unsupported_tag"})
     yaml = _new_yaml()
     try:
         documents = list(yaml.load_all(text))

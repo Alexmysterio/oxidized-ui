@@ -30,7 +30,7 @@ def _active_job_node_ids(db: Session, jobs: list[Job]) -> set[int]:
     return result
 
 
-def build_status(db: Session) -> dict[str, Any]:
+def build_status(db: Session, *, allowed_groups: list[str] | None = None) -> dict[str, Any]:
     state = ensure_system_state(db)
     settings_row = ensure_system_settings(db)
     api_online = False
@@ -53,10 +53,28 @@ def build_status(db: Session) -> dict[str, Any]:
         container = {"status": "unavailable", "running": False, "restarting": False}
 
     nodes = list(db.scalars(select(Node)).all())
+    if allowed_groups is not None:
+        nodes = [node for node in nodes if node.group_name in allowed_groups]
+        allowed_ids = {node.id for node in nodes}
+    else:
+        allowed_ids = None
     caches = {cache.node_id: cache for cache in db.scalars(select(NodeStatusCache)).all()}
+    if allowed_ids is not None:
+        caches = {key: value for key, value in caches.items() if key in allowed_ids}
     active_jobs = list(
         db.scalars(select(Job).where(Job.status.in_(("queued", "running"))).order_by(Job.id.desc())).all()
     )
+    if allowed_ids is not None:
+        active_jobs = [
+            job
+            for job in active_jobs
+            if job.node_id in allowed_ids
+            or any(
+                int(value) in allowed_ids
+                for value in (job.payload or {}).get("node_ids", [])
+                if isinstance(value, (int, str)) and str(value).isdigit()
+            )
+        ]
     pending_ids = _active_job_node_ids(db, active_jobs)
     counts = {"total": len(nodes), "ok": 0, "failed": 0, "pending": 0, "never": 0}
     for node in nodes:
@@ -105,11 +123,14 @@ def build_status(db: Session) -> dict[str, Any]:
         days = min(settings_row.activity_retention_days, 90)
     since = utcnow() - __import__("datetime").timedelta(days=days)
     groups: list[dict[str, Any]] = []
-    for group_name, status, count in db.execute(
+    group_query = (
         select(BackupRun.group_name, BackupRun.status, func.count(BackupRun.id))
         .where(BackupRun.finished_at.is_not(None), BackupRun.finished_at >= since)
         .group_by(BackupRun.group_name, BackupRun.status)
-    ):
+    )
+    if allowed_groups is not None:
+        group_query = group_query.where(BackupRun.group_name.in_(allowed_groups))
+    for group_name, status, count in db.execute(group_query):
         groups.append({"group": group_name or "default", "status": status, "count": int(count)})
     sla_totals: dict[str, dict[str, int]] = {}
     for row in groups:
@@ -145,7 +166,7 @@ def build_status(db: Session) -> dict[str, Any]:
             "last_failure_at": to_iso(max(failure_times) if failure_times else None),
             "active_jobs": len(active_jobs),
         },
-        "activity": recent_activity(db, days=days),
+        "activity": recent_activity(db, days=days, allowed_groups=allowed_groups),
         "sla": {"days": days, "groups": sla_groups},
         "warnings": list(dict.fromkeys(warnings)),
     }

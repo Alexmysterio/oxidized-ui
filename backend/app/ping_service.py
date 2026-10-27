@@ -138,11 +138,17 @@ def _ping_command(
 def ping_host(address: str, *, count: int = PING_COUNT, timeout: float = PING_TIMEOUT) -> dict[str, Any]:
     """Send ICMP echo requests to a node address.
 
+    Loopback, link-local, multicast and metadata targets are rejected: they are
+    not managed devices and would turn this endpoint into an SSRF primitive.
+
     Uses unprivileged ICMP datagram sockets first (they only need
     ``net.ipv4.ping_group_range`` inside the container), then raw sockets, and
     finally the system ``ping`` command. ICMP may be filtered by the network, so
     callers must treat the result as informational.
     """
+    from .net_safety import ensure_safe_target
+
+    ensure_safe_target(address, raise_on_dns_failure=False)
     result: dict[str, Any] = {
         "reachable": False,
         "address": None,

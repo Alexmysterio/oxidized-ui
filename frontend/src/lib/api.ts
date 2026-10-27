@@ -456,8 +456,8 @@ export const api = {
   runReport: () => request<Job>("/system/reports/run", { method: "POST" }),
   testEmail: () => request<{ ok: boolean; reason?: string }>("/system/email/test", { method: "POST" }),
   downloadReport: (filename: string) => download(`/system/reports/${encodeURIComponent(filename)}`, undefined, filename),
-  verifyExport: (passphrase?: string) =>
-    request<ExportVerification>("/system/export/verify", { method: "POST", body: { passphrase: passphrase ?? null } }),
+  verifyExport: (passphrase?: string, remote = true) =>
+    request<ExportVerification>("/system/export/verify", { method: "POST", body: { passphrase: passphrase ?? null, remote } }),
 
   maintenanceWindows: (include_finished = false) =>
     request<{ items: MaintenanceWindow[] }>("/maintenance", { query: { include_finished } }),

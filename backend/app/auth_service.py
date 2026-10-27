@@ -282,6 +282,9 @@ def change_password(
     user.password_changed_at = utcnow()
     record_password(db, user, user.password_hash, keep=policy.history_count)
     revoke_user_sessions(db, user.id, except_session_id=None)
+    from .api_token_service import revoke_user_tokens
+
+    revoke_user_tokens(db, user.id)
     db.commit()
     raw, new_context = create_session(db, user, request)
     add_audit(db, actor=new_context, action_code="auth.password_changed", request=request)

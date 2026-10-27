@@ -96,9 +96,6 @@ _last_health: datetime | None = None
 
 def check_health(db: Session) -> None:
     global _last_health
-    row = ensure_system_settings(db)
-    if not row.health_alerts_enabled:
-        return
     now = utcnow()
     if _last_health is not None and now - _last_health < timedelta(hours=1):
         return
@@ -210,9 +207,12 @@ def status_snapshot(db: Session) -> dict[str, int]:
     return counts
 
 
-def recent_activity(db: Session, days: int) -> list[dict[str, object]]:
+def recent_activity(db: Session, days: int, allowed_groups: list[str] | None = None) -> list[dict[str, object]]:
     cutoff = (utcnow() - timedelta(days=days)).date()
-    rows = db.scalars(select(BackupRun).where(BackupRun.finished_at.is_not(None))).all()
+    query = select(BackupRun).where(BackupRun.finished_at.is_not(None))
+    if allowed_groups is not None:
+        query = query.where(BackupRun.group_name.in_(allowed_groups))
+    rows = db.scalars(query).all()
     buckets: dict[str, dict[str, int]] = {}
     for row in rows:
         finished = ensure_utc(row.finished_at)

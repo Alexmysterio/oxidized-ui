@@ -121,7 +121,9 @@ def bulk_nodes(
             if node.group_name in context.scope_groups
         }
         payload.ids = [node_id for node_id in payload.ids if node_id in allowed]
-    if payload.group_name is not None:
+    if payload.action == "change_group":
+        require_group(context, payload.group_name)
+    elif payload.group_name is not None:
         require_group(context, payload.group_name)
     result = bulk_action(
         db,

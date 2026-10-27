@@ -80,11 +80,22 @@ def authenticate_token(db: Session, raw: str) -> tuple[User, ApiToken]:
     return user, row
 
 
+def revoke_user_tokens(db: Session, user_id: int) -> None:
+    rows = db.scalars(select(ApiToken).where(ApiToken.user_id == user_id, ApiToken.revoked_at.is_(None))).all()
+    now = utcnow()
+    for row in rows:
+        row.revoked_at = now
+    db.commit()
+
+
 def context_from_token(user: User, token: ApiToken, raw: str) -> AuthContext:
+    role = token.role
+    if ROLE_RANK.get(role, 0) > ROLE_RANK.get(user.role, 0):
+        role = user.role
     return AuthContext(
         user_id=user.id,
         username=user.username,
-        role=token.role,
+        role=role,
         language=user.language,
         theme=user.theme,
         session_id=0,

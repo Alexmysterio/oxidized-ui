@@ -97,7 +97,9 @@ office, or a trusted internal network.
 - Per-node configuration history and side-by-side diffs.
 - Credentials stored write-only and encrypted with Fernet.
 - Users with `admin`, `operator`, and `viewer` roles.
-- Password policy, account lockout, IP allowlist, MFA/TOTP, and revocable sessions.
+- Password policy, account lockout, IP allowlist, MFA/TOTP for every role, and
+  revocable sessions. Disabling MFA or changing a password also revokes API tokens,
+  and a token can never exceed the current role of its owner.
 - Restart/reload of Oxidized from the UI.
 - Configuration editor with validation, preflight, diff, apply, health check,
   and rollback.
@@ -516,7 +518,7 @@ database or restoring a backup.
 | `BOOTSTRAP_ADMIN_USERNAME` | empty | No | Optional first administrator. |
 | `BOOTSTRAP_ADMIN_PASSWORD` | empty | No | Optional first administrator password. |
 | `BOOTSTRAP_ADMIN_LANGUAGE` | `en` | No | Language for the bootstrap administrator. |
-| `METRICS_TOKEN` | empty | No | Bearer token for `/api/metrics`; empty means no token check. |
+| `METRICS_TOKEN` | empty | **Yes** | Bearer token for `/api/metrics`. The endpoint returns 401 until it is set. |
 | `INBOUND_WEBHOOK_TOKEN` | empty | No | Token for `POST /api/hooks/backup`. |
 | `OIDC_ENABLED` | `false` | No | Show the OIDC login button. |
 | `OIDC_ISSUER` | empty | OIDC only | Issuer URL with a discovery document. |
@@ -949,7 +951,11 @@ the `config.changed` event.
 **System → Scheduled encrypted export** uploads the same encrypted `.oxui` bundle
 as the manual export to SFTP or S3 on a schedule, or on demand with **Run now**.
 The passphrase is stored encrypted with `FERNET_KEY`; keep a copy of it, because
-it is required to restore the bundle.
+it is required to restore the bundle. For SFTP, set the server's SHA256 host-key
+fingerprint (or preload it in `known_hosts`); uploads and remote verification
+refuse unknown or changed host keys. **Verify** downloads the newest remote bundle
+and checks its ZIP, database, metadata and key; it falls back to a local self-test
+when no target is configured.
 
 ---
 
@@ -976,9 +982,11 @@ Create this redirect URI in your provider:
 https://oxidized.example.com/api/auth/oidc/callback
 ```
 
-The flow uses authorization code + PKCE and the `userinfo` endpoint. New users are
-created as `oidc_<hash-of-subject>` with `OIDC_DEFAULT_ROLE`; they do not use local
-MFA. OIDC state is in memory, suitable for the single-worker deployment. Test
+The flow uses authorization code + PKCE and the `userinfo` endpoint. The state is
+bound to an HttpOnly cookie. New users are created as `oidc_<hash-of-subject>` with
+`OIDC_DEFAULT_ROLE`; they do not use a local password. If a user has local MFA
+enabled, the OIDC callback redirects to the login page with an MFA challenge and
+asks for the TOTP or recovery code, so the second factor cannot be bypassed. Test
 with your provider before relying on it.
 
 ---
@@ -999,7 +1007,8 @@ Responses: `202` accepted; `409` global backup already active; `403` wrong token
 
 ## Metrics
 
-Set `METRICS_TOKEN` to require a bearer token:
+`/api/metrics` is authenticated with `METRICS_TOKEN`; without it the endpoint
+returns 401 (node names and status are not public). Configure it before scraping:
 
 ```bash
 curl -H "Authorization: Bearer $METRICS_TOKEN" https://oxidized.example.com/api/metrics
@@ -1246,9 +1255,14 @@ the latest review.
 - Restrict access to a trusted network or VPN. Do not expose directly to the
   public Internet without a reverse proxy, firewall, and additional controls.
 - API tokens are bearer credentials: treat them like passwords.
-- OIDC users bypass local MFA; enforce MFA at the identity provider.
-- The single-container mode runs root supervisor and Caddy beside the UI. Use the
+- MFA is available to any role from the profile page; OIDC logins for accounts with
+  local MFA are completed with a TOTP/recovery challenge.
+- The single-container mode runs root supervisor and Caddy beside the UI, now with a
+  read-only root filesystem, dropped capabilities and no-new-privileges. Use the
   four-container mode for stronger process isolation.
+- Authentication lockout applies per user across all source IPs and per source IP
+  independently. Expensive endpoints have per-client rate limits.
+- Node test/ping operations reject loopback, link-local and metadata targets.
 - The single-container mode does not mount the Docker socket.
 - Back up `data/` and `.env` before upgrades.
 

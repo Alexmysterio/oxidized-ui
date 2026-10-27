@@ -5,9 +5,13 @@ import xmlrpc.client
 from collections.abc import Iterator
 from pathlib import Path
 
+from defusedxml import xmlrpc as safe_xmlrpc
+
 from .docker_api import LogLine, parse_level, split_timestamp
 from .errors import AppError
 from .settings import settings
+
+safe_xmlrpc.monkey_patch()
 
 
 class ProcessClient:

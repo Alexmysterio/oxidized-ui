@@ -51,7 +51,7 @@ const groups: NavGroup[] = [
     labelKey: "nav.inventory",
     items: [
       { to: "/nodes", labelKey: "nav.nodes", icon: Network, capability: "nodes.read" },
-      { to: "/node-templates", labelKey: "nav.nodeTemplates", icon: Server, capability: "nodes.read" },
+      { to: "/node-templates", labelKey: "nav.nodeTemplates", icon: Server, capability: "nodes.write" },
       { to: "/reconciliation", labelKey: "nav.reconciliation", icon: GitCompareArrows, capability: "nodes.read" },
       { to: "/sites", labelKey: "nav.sites", icon: MapPin, capability: "nodes.read" },
       { to: "/groups", labelKey: "nav.groups", icon: UsersRound, capability: "groups.write" },
@@ -253,7 +253,7 @@ export function Sidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle:
   return (
     <aside
       className={cn(
-        "fixed inset-y-0 left-0 z-40 hidden border-r border-sidebar-border transition-[width] duration-200 lg:block",
+        "fixed inset-y-0 left-0 z-40 hidden border-r border-sidebar-border transition-[width] duration-200 pointer-events-auto lg:block",
         collapsed ? "w-20" : "w-[268px]",
       )}
     >
