@@ -1229,6 +1229,9 @@
       "stream_failed": "The log stream failed.",
       "too_large": "The log download exceeds the allowed size."
     },
+    "map": {
+      "tile_unavailable": "The map could not be loaded. Check the server connection to OpenStreetMap."
+    },
     "node": {
       "backup_failed": "The backup could not be requested.",
       "bulk_too_large": "The bulk operation exceeds the node limit.",
