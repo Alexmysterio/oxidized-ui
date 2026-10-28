@@ -216,3 +216,24 @@ test("mobile drawer stays usable after node navigation and edit", async ({ page 
   await expect(page.getByRole("dialog")).toBeVisible();
 });
 
+test("sites page keeps its localized label in the sidebar and topbar", async ({ page }) => {
+  await page.route("**/api/**", async (route) => {
+    const path = new URL(route.request().url()).pathname;
+    if (path.endsWith("/api/meta")) return route.fulfill({ json: meta });
+    if (path.endsWith("/api/auth/session")) return route.fulfill({ json: session });
+    if (path.endsWith("/api/nodes/sites")) return route.fulfill({ json: { tag: "Site", sites: [], total: 0 } });
+    if (path.endsWith("/api/nodes/tags")) return route.fulfill({ json: { items: [] } });
+    if (path.endsWith("/api/preferences")) return route.fulfill({ json: { favorites: [], saved_filters: [] } });
+    return route.fulfill({ json: {} });
+  });
+
+  await page.goto("/sites");
+
+  const sitesLink = page.locator('aside a[href="/sites"]');
+  await expect(sitesLink).toBeVisible();
+  const label = (await sitesLink.innerText()).trim();
+  expect(label).toMatch(/^(Sitios|Sites)$/);
+  await expect(page.locator("header")).toContainText(label);
+  await expect(page.locator("aside")).not.toContainText(/nav\.[a-z]/);
+});
+

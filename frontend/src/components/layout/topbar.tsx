@@ -9,9 +9,15 @@ import { Button } from "@/components/ui/button";
 
 function titleKey(pathname: string): string {
   if (pathname === "/") return "nav.dashboard";
+  if (pathname.startsWith("/node-templates")) return "nav.nodeTemplates";
   if (pathname.startsWith("/nodes")) return "nav.nodes";
   if (pathname.startsWith("/groups")) return "nav.groups";
+  if (pathname.startsWith("/reconciliation")) return "nav.reconciliation";
+  if (pathname.startsWith("/sites")) return "nav.sites";
   if (pathname.startsWith("/config")) return "nav.config";
+  if (pathname.startsWith("/backups")) return "nav.backups";
+  if (pathname.startsWith("/maintenance")) return "nav.maintenance";
+  if (pathname.startsWith("/compliance")) return "nav.compliance";
   if (pathname.startsWith("/status")) return "nav.status";
   if (pathname.startsWith("/users")) return "nav.users";
   if (pathname.startsWith("/audit")) return "nav.audit";

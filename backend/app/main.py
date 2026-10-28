@@ -59,6 +59,21 @@ CSRF_EXEMPT = {"/api/auth/login", "/api/auth/login/mfa", "/api/setup"}
 MAX_REQUEST_BODY = 8 * 1024 * 1024
 
 
+def _static_cache_headers(relative: str) -> dict[str, str]:
+    """Keep hashed assets immutable but force revalidation of the SPA shell.
+
+    Locale files and ``index.html`` change without a hashed filename, so a
+    heuristically cached copy can keep showing raw i18n keys (for example a new
+    sidebar entry such as ``nav.sites``) until the browser decides to refresh.
+    """
+
+    if relative.startswith("assets/"):
+        return {"Cache-Control": "public, max-age=31536000, immutable"}
+    if relative == "index.html" or relative.startswith("locales/"):
+        return {"Cache-Control": "no-cache"}
+    return {}
+
+
 def _ip_allowed(request: Request) -> bool:
     # The Oxidized container calls the inventory source over the private Docker
     # network. That endpoint has its own token and must not depend on the LAN
@@ -238,7 +253,7 @@ def create_app() -> FastAPI:
     def root():
         index = settings.static_dir / "index.html"
         if index.exists():
-            return FileResponse(index)
+            return FileResponse(index, headers=_static_cache_headers("index.html"))
         return JSONResponse(
             status_code=200,
             content={"app": "Oxidized UI", "version": __version__, "api": "/api/meta"},
@@ -251,10 +266,10 @@ def create_app() -> FastAPI:
         static_root = settings.static_dir.resolve()
         target = (settings.static_dir / full_path).resolve()
         if target.is_file() and (target == static_root or static_root in target.parents):
-            return FileResponse(target)
+            return FileResponse(target, headers=_static_cache_headers(full_path))
         index = settings.static_dir / "index.html"
         if index.exists():
-            return FileResponse(index)
+            return FileResponse(index, headers=_static_cache_headers("index.html"))
         raise AppError("app.not_found")
 
     return app

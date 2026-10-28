@@ -2,16 +2,22 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import {
   Activity,
   ArrowUpRight,
+  CalendarClock,
   FileCode2,
   Gauge,
+  GitCompareArrows,
   Loader2,
+  MapPin,
   Network,
+  Scale,
   Search,
   ScrollText,
+  Server,
   Settings2,
   ShieldCheck,
   UserRound,
   UsersRound,
+  Wrench,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
@@ -39,8 +45,14 @@ interface PageResult {
 const pages: PageResult[] = [
   { labelKey: "nav.dashboard", to: "/", icon: Gauge },
   { labelKey: "nav.nodes", to: "/nodes", icon: Network, capability: "nodes.read" },
+  { labelKey: "nav.nodeTemplates", to: "/node-templates", icon: Server, capability: "nodes.write" },
+  { labelKey: "nav.reconciliation", to: "/reconciliation", icon: GitCompareArrows, capability: "nodes.read" },
+  { labelKey: "nav.sites", to: "/sites", icon: MapPin, capability: "nodes.read" },
   { labelKey: "nav.groups", to: "/groups", icon: UsersRound, capability: "groups.write" },
   { labelKey: "nav.config", to: "/config", icon: FileCode2, capability: "config.read" },
+  { labelKey: "nav.backups", to: "/backups", icon: CalendarClock, capability: "backups.trigger" },
+  { labelKey: "nav.maintenance", to: "/maintenance", icon: Wrench, capability: "backups.trigger" },
+  { labelKey: "nav.compliance", to: "/compliance", icon: Scale, capability: "compliance.read" },
   { labelKey: "nav.status", to: "/status", icon: Activity, capability: "logs.read" },
   { labelKey: "nav.users", to: "/users", icon: ShieldCheck, capability: "users.manage" },
   { labelKey: "nav.audit", to: "/audit", icon: ScrollText, capability: "audit.read" },

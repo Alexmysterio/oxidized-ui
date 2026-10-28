@@ -177,3 +177,13 @@ def test_health_history_is_recorded_with_alerts_disabled(client: TestClient, adm
         after = db.query(HealthSample).count()
     assert after == before + 1
 
+
+def test_locale_files_are_not_heuristically_cached():
+    from app.main import _static_cache_headers
+
+    assert _static_cache_headers("locales/es.json") == {"Cache-Control": "no-cache"}
+    assert _static_cache_headers("index.html") == {"Cache-Control": "no-cache"}
+    assets = _static_cache_headers("assets/index-abc123.js")["Cache-Control"]
+    assert "immutable" in assets
+    assert _static_cache_headers("favicon.svg") == {}
+
