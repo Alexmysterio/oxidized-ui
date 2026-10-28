@@ -17,6 +17,10 @@ _COMPONENT = re.compile(
 )
 
 _SEPARATORS = set(" \t\r\n,;|/")
+COORDINATE_TAG_KEYS = {"coordinates", "coordenadas", "coordinate", "coordenada", "coords", "coord"}
+LATITUDE_TAG_KEYS = {"latitude", "lat"}
+LONGITUDE_TAG_KEYS = {"longitude", "lon", "lng"}
+LEGACY_COORDINATE_TAG_KEYS = LATITUDE_TAG_KEYS | LONGITUDE_TAG_KEYS
 _TRANSLATION = str.maketrans(
     {
         "º": "°",

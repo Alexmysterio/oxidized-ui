@@ -399,8 +399,7 @@
     "modelNoResults": "No models found.",
     "modelCustomHint": "It will be used as a custom model.",
     "tags": "Tags",
-    "tagsHelp": "Free metadata for filtering and prioritising (site, criticality, vendor). The Coordinates tag accepts 36.751112, -3.491751 or 36°45'04.0\"N 3°29'30.3\"W. It is not written to Oxidized.",
-    "coordinatesTag": "Coordinates",
+    "tagsHelp": "Free metadata for filtering and prioritising (site, criticality, vendor). Location is configured per site under Inventory → Sites. It is not written to Oxidized.",
     "addTag": "Add tag"
   },
   "nodeDetail": {
@@ -865,7 +864,10 @@
       "job.priority_created": "Priority rule created",
       "job.priority_deleted": "Priority rule deleted",
       "report.generated": "Report generated",
-      "system.export_verified": "Export verified"
+      "system.export_verified": "Export verified",
+      "site": {
+        "coordinates_updated": "Site coordinates updated"
+      }
     },
     "export": "Export CSV",
     "targetId": "Target ID",
@@ -1327,7 +1329,10 @@
     "export.private_key_invalid": "The SSH private key is invalid (RSA, ECDSA or Ed25519).",
     "export.remote_not_found": "No exported bundle exists at the target.",
     "export.remote_too_large": "The remote bundle is too large to verify.",
-    "auth.mfa_oidc_unsupported": "Your account has MFA: use username and password to complete the second factor."
+    "auth.mfa_oidc_unsupported": "Your account has MFA: use username and password to complete the second factor.",
+    "site": {
+      "invalid_coordinates": "The coordinates are invalid. Use 36.751112, -3.491751 or 36°45'04.0\"N 3°29'30.3\"W."
+    }
   },
   "validation": {
     "required": "This field is required.",
@@ -2033,16 +2038,25 @@
   },
   "sites": {
     "title": "Sites",
-    "subtitle": "Group the inventory by tag and see the health of each location.",
+    "subtitle": "Group the inventory by location and see the health of each site.",
     "tagBy": "Group by {{tag}}",
     "emptyTitle": "No sites",
     "emptyDescription": "Add the Site tag (or any other) to nodes to group them here.",
     "map": "Map",
-    "mapDescription": "Nodes with the Coordinates tag in decimal or degrees/minutes/seconds format.",
-    "mapHelp": "Coordinates accepts 36.751112, -3.491751 or 36°45'04.0\"N 3°29'30.3\"W. Legacy Latitude/Longitude tags are converted automatically.",
+    "mapDescription": "One marker per site; open it to see every device.",
+    "mapHelp": "Set coordinates from the site card. Formats: 36.751112, -3.491751 or 36°45'04.0\"N 3°29'30.3\"W.",
     "mapUnavailable": "The map could not be loaded. The server cannot reach OpenStreetMap; check its internet access or proxy.",
     "noSite": "No site",
     "nodes": "{{count}} nodes",
-    "openNode": "Open node"
+    "mapEmpty": "No site has coordinates yet. Use the pencil on a card to place it on the map.",
+    "editCoordinates": "Edit coordinates",
+    "editCoordinatesTitle": "{{site}} coordinates",
+    "editCoordinatesDescription": "The position applies to every node in this site.",
+    "coordinates": "Coordinates",
+    "coordinatesHelp": "Accepts 36.751112, -3.491751 or 36°45'04.0\"N 3°29'30.3\"W.",
+    "clearCoordinates": "Clear coordinates",
+    "coordinatesSaved": "Site coordinates saved.",
+    "coordinatesCleared": "Site coordinates cleared.",
+    "noCoordinates": "No coordinates"
   }
 }

@@ -114,7 +114,7 @@ office, or a trusted internal network.
 - Outgoing alerts to Telegram, Slack, Discord, or any webhook, plus an incoming backup webhook.
 - Optional daily notification digest.
 - Node tags, node templates, and inventory facts (serial, OS version, uptime).
-- Sites view grouped by tag, with an OpenStreetMap map from a single `Coordinates` tag.
+- Sites view grouped by tag, with per-site coordinates and an OpenStreetMap map.
 - Reconciliation with Oxidized: missing nodes, orphans and field drift.
 - Queue priority rules and pacing for bulk backups.
 - System health history, weekly CSV/PDF reports and email delivery.
@@ -846,14 +846,14 @@ reports and offers the import.
 ## Sites
 
 **Inventory -> Sites** groups the inventory by a tag (default `Site`) and shows the
-aggregated status per location. Nodes can carry a `Coordinates` (or `Coordenadas`)
-tag with either decimal values (`36.751112, -3.491751`) or degrees/minutes/seconds
-(`36°45'04.0"N 3°29'30.3"W`). The page plots them on an OpenStreetMap map; status
-counts and node links stay available for locations without coordinates. Tiles are
-proxied and cached by the backend (they are fetched from OpenStreetMap, never from
-the browser), so clients on isolated VLANs still get the map background. At startup,
-legacy `Latitude`/`Longitude` tag pairs are converted to `Coordinates` and the old
-keys are removed.
+aggregated status per location. Coordinates belong to the site, not to individual
+nodes: use the pencil on a site card to set them. The input accepts decimal values
+(`36.751112, -3.491751`) or degrees/minutes/seconds (`36°45'04.0"N 3°29'30.3"W`).
+All nodes with that site tag are listed in the site's marker popup, so overlapping
+devices remain accessible. Tiles are proxied and cached by the backend (they are
+fetched from OpenStreetMap, never from the browser), so clients on isolated VLANs
+still get the map background. At startup, legacy node coordinate tags are moved to
+the corresponding site and removed from the nodes.
 
 ---
 

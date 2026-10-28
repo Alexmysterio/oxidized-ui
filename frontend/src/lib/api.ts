@@ -334,6 +334,11 @@ export const api = {
   node: (id: number) => request<Node>(`/nodes/${id}`),
   nodeTags: () => request<{ items: NodeTagCount[] }>("/nodes/tags"),
   sites: (tag = "Site") => request<SitesResponse>("/nodes/sites", { query: { tag } }),
+  setSiteCoordinates: (site: string, coordinates: string | null) =>
+    request<{ site: string; latitude: number | null; longitude: number | null }>("/nodes/sites", {
+      method: "PUT",
+      body: { site, coordinates },
+    }),
   collectFacts: (ids: number[]) => request<Job>("/nodes/facts/collect", { method: "POST", body: { ids } }),
   collectNodeFacts: (id: number) => request<NodeFacts>(`/nodes/${id}/facts/collect`, { method: "POST" }),
   createNode: (payload: NodeInput) => request<{ node: Node; reload_status: string; warnings: string[] }>("/nodes", { method: "POST", body: payload }),

@@ -20,9 +20,14 @@ from .config_service import applied_config, applied_groups, get_draft_revision
 from .crypto import decrypt_optional, encrypt_json, encrypt_optional
 from .docker_api import client_for as docker_client_for
 from .errors import AppError
-from .geo import parse_coordinates
+from .geo import (
+    COORDINATE_TAG_KEYS,
+    LATITUDE_TAG_KEYS,
+    LEGACY_COORDINATE_TAG_KEYS,
+    LONGITUDE_TAG_KEYS,
+)
 from .models import Job as JobModel
-from .models import Node, NodeStatusCache
+from .models import Node, NodeStatusCache, SiteLocation
 from .node_effective_service import effective_node_settings
 from .node_error_service import latest_error
 from .oxidized import client_for as oxidized_client_for
@@ -50,6 +55,9 @@ def normalize_tags(tags: dict[str, Any] | None) -> dict[str, str] | None:
     cleaned: dict[str, str] = {}
     for raw_key, raw_value in tags.items():
         key = _capitalize_tag_part(str(raw_key).strip())
+        if key.casefold() in COORDINATE_TAG_KEYS | LEGACY_COORDINATE_TAG_KEYS:
+            # Coordinates live on the site, never on the node.
+            continue
         value = _capitalize_tag_part(str(raw_value).strip())
         if not value:
             continue
@@ -782,12 +790,6 @@ def tags_catalog(db: Session, *, allowed_groups: list[str] | None = None) -> lis
     ]
 
 
-COORDINATE_TAG_KEYS = {"coordinates", "coordenadas", "coordinate", "coordenada", "coords", "coord"}
-LATITUDE_TAG_KEYS = {"latitude", "lat"}
-LONGITUDE_TAG_KEYS = {"longitude", "lon", "lng"}
-LEGACY_COORDINATE_TAG_KEYS = LATITUDE_TAG_KEYS | LONGITUDE_TAG_KEYS
-
-
 def _finite_float(value: object) -> float | None:
     try:
         number = float(str(value).strip().replace(",", "."))
@@ -852,21 +854,25 @@ def sites(db: Session, *, tag_key: str = "Site", allowed_groups: list[str] | Non
     if allowed_groups is not None:
         query = query.where(Node.group_name.in_(allowed_groups))
     caches = {cache.node_id: cache for cache in db.scalars(select(NodeStatusCache)).all()}
+    locations = {
+        row.name_key: (row.latitude, row.longitude)
+        for row in db.scalars(select(SiteLocation)).all()
+    }
     buckets: dict[str, dict[str, Any]] = {}
     for node in db.scalars(query.order_by(Node.name)).all():
         tags = node.tags if isinstance(node.tags, dict) else {}
         site_name: str | None = None
-        latitude: float | None = None
-        longitude: float | None = None
         for key, value in tags.items():
-            lowered = str(key).casefold()
-            if lowered == wanted:
+            if str(key).casefold() == wanted:
                 site_name = str(value)
-            if lowered in COORDINATE_TAG_KEYS:
-                parsed = parse_coordinates(value)
-                if parsed is not None:
-                    latitude, longitude = parsed
-        bucket = buckets.setdefault(site_name or "", {"name": site_name, "count": 0, "status": {}, "nodes": []})
+        bucket = buckets.setdefault(
+            site_name or "",
+            {"name": site_name, "count": 0, "status": {}, "nodes": [], "latitude": None, "longitude": None},
+        )
+        if bucket["latitude"] is None and site_name:
+            coordinates: tuple[float, float] | None = locations.get(site_name.casefold())
+            if coordinates is not None:
+                bucket["latitude"], bucket["longitude"] = coordinates
         cache = caches.get(node.id)
         status = node_status_bucket(node, cache)
         bucket["count"] += 1
@@ -878,8 +884,6 @@ def sites(db: Session, *, tag_key: str = "Site", allowed_groups: list[str] | Non
                 "group_name": node.group_name,
                 "model": node.model,
                 "status": status,
-                "latitude": latitude,
-                "longitude": longitude,
             }
         )
     ordered = sorted(buckets.values(), key=lambda item: (item["name"] is None, (item["name"] or "").casefold()))

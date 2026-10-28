@@ -145,6 +145,7 @@ async def lifespan(_app: FastAPI):
     with SessionLocal() as db:
         from .compliance_service import encrypt_legacy_templates
         from .node_service import migrate_legacy_coordinate_tags, normalize_all_tags
+        from .site_service import migrate_site_coordinates
         from .template_service import encrypt_legacy_vars
 
         ensure_system_state(db)
@@ -153,8 +154,9 @@ async def lifespan(_app: FastAPI):
         interrupt_incomplete_jobs(db)
         bootstrap_admin(db)
         bootstrap_configuration(db)
-        normalize_all_tags(db)
         migrate_legacy_coordinate_tags(db)
+        migrate_site_coordinates(db)
+        normalize_all_tags(db)
         encrypt_legacy_vars(db)
         encrypt_legacy_templates(db)
         _cleanup_retention(db)

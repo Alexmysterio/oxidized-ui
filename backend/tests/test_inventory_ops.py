@@ -6,9 +6,10 @@ from sqlalchemy import select
 
 from app.db import SessionLocal
 from app.facts_service import parse_facts
-from app.models import Node
+from app.models import Node, SiteLocation
 from app.node_service import migrate_legacy_coordinate_tags
 from app.oxidized import OxidizedNode
+from app.site_service import migrate_site_coordinates
 from app.timeutil import utcnow
 from tests.conftest import make_node
 
@@ -229,35 +230,74 @@ def test_export_verification(client: TestClient, admin):
     assert len(verified.json()["sha256"]) == 64
 
 def test_sites_grouping_and_map(client: TestClient, admin):
-    first = admin.post(
-        "/api/nodes",
-        json=make_node(name="site-a", tags={"site": "madrid", "coordinates": "40.4, -3.7"}),
-    )
+    first = admin.post("/api/nodes", json=make_node(name="site-a", tags={"site": "madrid"}))
     assert first.status_code == 201, first.text
-    second = admin.post(
-        "/api/nodes",
-        json=make_node(name="site-b", tags={"site": "madrid", "coordinates": '40°30\'00.0"N 3°36\'00.0"W'}),
-    )
+    second = admin.post("/api/nodes", json=make_node(name="site-b", tags={"site": "madrid"}))
     assert second.status_code == 201, second.text
-    admin.post(
-        "/api/nodes",
-        json=make_node(name="site-c", tags={"site": "barcelona", "coordinates": "41.4, 2.2"}),
-    )
+    admin.post("/api/nodes", json=make_node(name="site-c", tags={"site": "barcelona"}))
     admin.post("/api/nodes", json=make_node(name="site-d", tags={"site": "barcelona"}))
+
+    saved = admin.put(
+        "/api/nodes/sites",
+        json={"site": "Madrid", "coordinates": "40\u00b030'00.0\"N 3\u00b036'00.0\"W"},
+    )
+    assert saved.status_code == 200, saved.text
+    assert saved.json()["latitude"] == pytest.approx(40.5)
+    assert admin.put(
+        "/api/nodes/sites",
+        json={"site": "Barcelona", "coordinates": "41.4, 2.2"},
+    ).status_code == 200
 
     sites = admin.get("/api/nodes/sites", params={"tag": "Site"}).json()
     assert sites["total"] == 4
     names = {site["name"]: site for site in sites["sites"]}
     assert names["Madrid"]["count"] == 2
+    assert names["Madrid"]["latitude"] == pytest.approx(40.5)
+    assert names["Madrid"]["longitude"] == pytest.approx(-3.6)
+    assert {node["name"] for node in names["Madrid"]["nodes"]} == {"site-a", "site-b"}
+    assert "latitude" not in names["Madrid"]["nodes"][0]
     assert names["Barcelona"]["count"] == 2
-    madrid = {node["name"]: node for node in names["Madrid"]["nodes"]}
-    assert madrid["site-a"]["latitude"] == 40.4
-    assert madrid["site-a"]["longitude"] == -3.7
-    assert madrid["site-b"]["latitude"] == pytest.approx(40.5)
-    assert madrid["site-b"]["longitude"] == pytest.approx(-3.6)
-    barcelona = {node["name"]: node for node in names["Barcelona"]["nodes"]}
-    assert barcelona["site-c"]["latitude"] == 41.4
-    assert barcelona["site-d"]["latitude"] is None
+    assert names["Barcelona"]["latitude"] == 41.4
+
+
+def test_site_coordinates_validation_and_clear(client: TestClient, admin):
+    admin.post("/api/nodes", json=make_node(name="site-validation", tags={"site": "valencia"}))
+
+    invalid = admin.put(
+        "/api/nodes/sites",
+        json={"site": "Valencia", "coordinates": "not coordinates"},
+    )
+    assert invalid.status_code == 422
+    assert invalid.json()["error"]["code"] == "site.invalid_coordinates"
+
+    saved = admin.put(
+        "/api/nodes/sites",
+        json={"site": "Valencia", "coordinates": "39.4699, -0.3763"},
+    )
+    assert saved.status_code == 200, saved.text
+
+    cleared = admin.put("/api/nodes/sites", json={"site": "Valencia", "coordinates": None})
+    assert cleared.status_code == 200
+    assert cleared.json()["latitude"] is None
+    site = next(
+        item
+        for item in admin.get("/api/nodes/sites", params={"tag": "Site"}).json()["sites"]
+        if item["name"] == "Valencia"
+    )
+    assert site["latitude"] is None
+    assert site["longitude"] is None
+
+
+def test_node_coordinate_tags_are_discarded(client: TestClient, admin):
+    created = admin.post(
+        "/api/nodes",
+        json=make_node(
+            name="coordinate-tags",
+            tags={"site": "Madrid", "coordinates": "40.4, -3.7", "latitude": "40.4", "longitude": "-3.7"},
+        ),
+    )
+    assert created.status_code == 201, created.text
+    assert created.json()["node"]["tags"] == {"Site": "Madrid"}
 
 
 def test_legacy_coordinate_tags_are_migrated_and_removed(client: TestClient, admin):
@@ -274,19 +314,22 @@ def test_legacy_coordinate_tags_are_migrated_and_removed(client: TestClient, adm
 
     with SessionLocal() as db:
         assert migrate_legacy_coordinate_tags(db) == 2
+        assert migrate_site_coordinates(db) == 1
         node = db.get(Node, node_id)
         orphan = db.get(Node, orphan_id)
         assert node is not None and orphan is not None
-        assert node.tags == {"Site": "Madrid", "Coordinates": "40.4, -3.7"}
+        assert node.tags == {"Site": "Madrid"}
         assert orphan.tags == {"Site": "Madrid"}
-        assert migrate_legacy_coordinate_tags(db) == 0
+        location = db.scalar(select(SiteLocation).where(SiteLocation.name == "Madrid"))
+        assert location is not None
+        assert location.latitude == 40.4
+        assert location.longitude == -3.7
+        assert migrate_site_coordinates(db) == 0
 
     sites = admin.get("/api/nodes/sites", params={"tag": "Site"}).json()
     madrid = next(site for site in sites["sites"] if site["name"] == "Madrid")
-    mapped = {item["name"]: item for item in madrid["nodes"]}
-    assert mapped["legacy-map"]["latitude"] == 40.4
-    assert mapped["legacy-map"]["longitude"] == -3.7
-    assert mapped["legacy-orphan"]["latitude"] is None
+    assert madrid["latitude"] == 40.4
+    assert madrid["longitude"] == -3.7
 
 
 def test_audit_records_before_and_after(client: TestClient, admin):

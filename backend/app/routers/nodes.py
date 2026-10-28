@@ -7,7 +7,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from ..audit import add_audit
-from ..auth_deps import get_auth_context, require_operator
+from ..auth_deps import get_auth_context, require_capability, require_operator
 from ..backup_service import create_backup_node_job
 from ..db import get_db
 from ..diffing import diff_texts
@@ -28,7 +28,7 @@ from ..node_service import (
 )
 from ..node_test_service import test_connection
 from ..ping_service import ping_host
-from ..schemas import NodeBulkRequest, NodeCreate, NodeIdsRequest, NodeUpdate
+from ..schemas import NodeBulkRequest, NodeCreate, NodeIdsRequest, NodeUpdate, SiteCoordinatesUpdate
 from ..scope_service import require_group, scoped_node
 from ..security import AuthContext
 from ..version_service import current_config
@@ -239,6 +239,24 @@ def node_sites(
     from ..node_service import sites
 
     return sites(db, tag_key=tag, allowed_groups=context.scope_groups)
+
+
+@router.put("/sites")
+def update_site_coordinates(
+    payload: SiteCoordinatesUpdate,
+    request: Request,
+    db: Session = Depends(get_db),
+    context: AuthContext = Depends(require_capability("nodes.write")),
+):
+    from ..site_service import set_site_coordinates
+
+    return set_site_coordinates(
+        db,
+        site=payload.site,
+        coordinates=payload.coordinates,
+        actor=context,
+        request=request,
+    )
 
 
 @router.get("/compare")

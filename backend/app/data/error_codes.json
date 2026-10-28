@@ -116,6 +116,7 @@
   "setup.completed": 403,
   "setup.invalid_language": 422,
   "setup.rate_limited": 429,
+  "site.invalid_coordinates": 422,
   "system.connection_failed": 502,
   "system.invalid_setting": 422,
   "system.unavailable": 503,

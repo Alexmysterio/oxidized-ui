@@ -679,6 +679,11 @@ class ExportConfigPayload(StrictModel):
     config: dict[str, Any] = Field(default_factory=dict)
 
 
+class SiteCoordinatesUpdate(StrictModel):
+    site: str = Field(min_length=1, max_length=64)
+    coordinates: str | None = Field(default=None, max_length=128)
+
+
 class ExportVerifyRequest(StrictModel):
     passphrase: str | None = Field(default=None, max_length=512)
     remote: bool = False

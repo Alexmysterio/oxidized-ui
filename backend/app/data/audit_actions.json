@@ -18,6 +18,7 @@
   "node.deleted",
   "node.imported",
   "node.updated",
+  "site.coordinates_updated",
   "oxidized.auto_recovered",
   "oxidized.reload_requested",
   "oxidized.restart_requested",

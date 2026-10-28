@@ -123,14 +123,6 @@ def test_yaml_python_tags_are_rejected():
         raise AssertionError("python YAML tags must be rejected")
 
 
-def test_sites_ignores_non_finite_coordinates(client: TestClient, admin):
-    _node(admin, "nan-site", tags={"site": "Madrid", "latitude": "nan", "longitude": "1"})
-    response = admin.get("/api/nodes/sites", params={"tag": "Site"})
-    assert response.status_code == 200, response.text
-    node = response.json()["sites"][0]["nodes"][0]
-    assert node["latitude"] is None
-
-
 def test_loopback_targets_are_rejected(client: TestClient, admin):
     node_id = _node(admin, "loopback", address="127.0.0.1")
     ping = admin.post(f"/api/nodes/{node_id}/ping")

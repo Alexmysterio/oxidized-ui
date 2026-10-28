@@ -34,6 +34,7 @@ const actionCodes = [
   "node.bulk_updated",
   "node.imported",
   "node.backup_requested",
+  "site.coordinates_updated",
   "group.created",
   "group.updated",
   "group.deleted",

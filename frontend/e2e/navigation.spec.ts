@@ -274,8 +274,10 @@ test("sites page keeps its localized label and renders the OpenStreetMap", async
           sites: [
             {
               name: "Madrid",
-              count: 1,
-              status: { ok: 1 },
+              count: 2,
+              status: { ok: 2 },
+              latitude: 36.751112,
+              longitude: -3.491751,
               nodes: [
                 {
                   id: 1,
@@ -283,8 +285,13 @@ test("sites page keeps its localized label and renders the OpenStreetMap", async
                   group_name: null,
                   model: "ios",
                   status: "ok",
-                  latitude: 36.751112,
-                  longitude: -3.491751,
+                },
+                {
+                  id: 2,
+                  name: "core-2",
+                  group_name: null,
+                  model: "ios",
+                  status: "ok",
                 },
               ],
             },
@@ -310,6 +317,13 @@ test("sites page keeps its localized label and renders the OpenStreetMap", async
   await expect(page.getByRole("link", { name: "OpenStreetMap" })).toBeVisible();
   await expect(page.locator(".leaflet-interactive")).toHaveCount(1);
   await page.locator(".leaflet-interactive").click();
-  await expect(page.locator(".leaflet-popup")).toContainText("36.75111, -3.49175");
+  await expect(page.locator(".leaflet-popup")).toContainText("core-1");
+  await expect(page.locator(".leaflet-popup")).toContainText("core-2");
+
+  await page.getByRole("button", { name: "Editar coordenadas" }).click();
+  await expect(page.getByRole("dialog")).toBeVisible();
+  await expect(page.locator("#site-coordinates")).toHaveValue("36.75111, -3.49175");
+  await page.getByRole("button", { name: "Cancelar" }).click();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
 });
 

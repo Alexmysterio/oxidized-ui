@@ -869,8 +869,6 @@ export interface SiteNode {
   group_name: string | null;
   model: string;
   status: NodeStatus;
-  latitude: number | null;
-  longitude: number | null;
 }
 
 export interface SiteGroup {
@@ -878,6 +876,8 @@ export interface SiteGroup {
   count: number;
   status: Record<string, number>;
   nodes: SiteNode[];
+  latitude: number | null;
+  longitude: number | null;
 }
 
 export interface SitesResponse {

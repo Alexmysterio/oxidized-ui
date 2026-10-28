@@ -399,8 +399,7 @@
     "modelNoResults": "No se encontraron modelos.",
     "modelCustomHint": "Se usará como modelo personalizado.",
     "tags": "Etiquetas",
-    "tagsHelp": "Metadatos libres para filtrar y priorizar (site, criticidad, proveedor). La etiqueta Coordenadas acepta 36.751112, -3.491751 o 36°45'04.0\"N 3°29'30.3\"W. No se escriben en Oxidized.",
-    "coordinatesTag": "Coordenadas",
+    "tagsHelp": "Metadatos libres para filtrar y priorizar (site, criticidad, proveedor). La ubicación se configura por sitio en Inventario → Sitios. No se escriben en Oxidized.",
     "addTag": "Añadir etiqueta"
   },
   "nodeDetail": {
@@ -865,7 +864,10 @@
       "job.priority_created": "Regla de prioridad creada",
       "job.priority_deleted": "Regla de prioridad eliminada",
       "report.generated": "Informe generado",
-      "system.export_verified": "Exportación verificada"
+      "system.export_verified": "Exportación verificada",
+      "site": {
+        "coordinates_updated": "Coordenadas de sitio actualizadas"
+      }
     },
     "export": "Exportar CSV",
     "targetId": "ID del objetivo",
@@ -1327,7 +1329,10 @@
     "export.private_key_invalid": "La clave privada SSH no es válida (RSA, ECDSA o Ed25519).",
     "export.remote_not_found": "No hay ningún paquete exportado en el destino.",
     "export.remote_too_large": "El paquete remoto es demasiado grande para verificarlo.",
-    "auth.mfa_oidc_unsupported": "Tu cuenta tiene MFA: usa usuario y contraseña para completar el segundo factor."
+    "auth.mfa_oidc_unsupported": "Tu cuenta tiene MFA: usa usuario y contraseña para completar el segundo factor.",
+    "site": {
+      "invalid_coordinates": "Las coordenadas no son válidas. Usa 36.751112, -3.491751 o 36°45'04.0\"N 3°29'30.3\"W."
+    }
   },
   "validation": {
     "required": "Este campo es obligatorio.",
@@ -2033,16 +2038,25 @@
   },
   "sites": {
     "title": "Sitios",
-    "subtitle": "Agrupa el inventario por etiqueta y visualiza la salud de cada ubicación.",
+    "subtitle": "Agrupa el inventario por ubicación y visualiza la salud de cada sitio.",
     "tagBy": "Agrupar por {{tag}}",
     "emptyTitle": "Sin sitios",
     "emptyDescription": "Añade la etiqueta Site (o la que elijas) a los nodos para agruparlos aquí.",
     "map": "Mapa",
-    "mapDescription": "Nodos con la etiqueta Coordenadas en formato decimal o grados, minutos y segundos.",
-    "mapHelp": "Coordenadas admite 36.751112, -3.491751 o 36°45'04.0\"N 3°29'30.3\"W. Las etiquetas Latitude/Longitude antiguas se convierten automáticamente.",
+    "mapDescription": "Un marcador por sitio; ábrelo para ver todos sus equipos.",
+    "mapHelp": "Configura las coordenadas desde la tarjeta del sitio. Formatos: 36.751112, -3.491751 o 36°45'04.0\"N 3°29'30.3\"W.",
     "mapUnavailable": "No se pudo cargar el mapa. El servidor no puede acceder a OpenStreetMap; revisa su salida a internet o el proxy.",
     "noSite": "Sin sitio",
     "nodes": "{{count}} nodos",
-    "openNode": "Abrir nodo"
+    "mapEmpty": "Ningún sitio tiene coordenadas todavía. Usa el lápiz de una tarjeta para colocarlo en el mapa.",
+    "editCoordinates": "Editar coordenadas",
+    "editCoordinatesTitle": "Coordenadas de {{site}}",
+    "editCoordinatesDescription": "La posición se aplica a todos los nodos del sitio.",
+    "coordinates": "Coordenadas",
+    "coordinatesHelp": "Acepta 36.751112, -3.491751 o 36°45'04.0\"N 3°29'30.3\"W.",
+    "clearCoordinates": "Quitar coordenadas",
+    "coordinatesSaved": "Coordenadas del sitio guardadas.",
+    "coordinatesCleared": "Coordenadas del sitio eliminadas.",
+    "noCoordinates": "Sin coordenadas"
   }
 }

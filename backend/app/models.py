@@ -164,6 +164,23 @@ class Node(Base):
     updated_by_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
 
 
+class SiteLocation(Base):
+    __tablename__ = "site_locations"
+    __table_args__ = (
+        UniqueConstraint("name_key", name="uq_site_locations_name_key"),
+        CheckConstraint("latitude >= -90 AND latitude <= 90", name="ck_site_latitude"),
+        CheckConstraint("longitude >= -180 AND longitude <= 180", name="ck_site_longitude"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    name: Mapped[str] = mapped_column(String(64), nullable=False)
+    name_key: Mapped[str] = mapped_column(String(64), nullable=False)
+    latitude: Mapped[float] = mapped_column(Float, nullable=False)
+    longitude: Mapped[float] = mapped_column(Float, nullable=False)
+    updated_at: Mapped[Any] = mapped_column(UTCDateTime, nullable=False, default=utcnow, onupdate=utcnow)
+    updated_by_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+
+
 class NodeStatusCache(Base):
     __tablename__ = "node_status_cache"
 
