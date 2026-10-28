@@ -6,6 +6,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 
 import { EmptyState } from "@/components/shared/empty-state";
+import { AutocompleteInput } from "@/components/shared/autocomplete-input";
 import { ErrorState } from "@/components/shared/error-state";
 import { PageHeader } from "@/components/shared/page-header";
 import { Pagination } from "@/components/shared/pagination";
@@ -854,31 +855,23 @@ export function NodesPage() {
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="space-y-1">
                 <Label>{t("nodes.tagKey")}</Label>
-                <Input
+                <AutocompleteInput
                   value={tagKey}
-                  list="bulk-tag-keys"
+                  suggestions={tagKeys}
                   maxLength={32}
                   onChange={(event) => setTagKey(event.target.value)}
                   placeholder="Site"
                 />
-                <datalist id="bulk-tag-keys">
-                  {tagKeys.map((key) => <option key={key} value={key} />)}
-                </datalist>
               </div>
               <div className="space-y-1">
                 <Label>{t("nodes.tagValue")}</Label>
-                <Input
+                <AutocompleteInput
                   value={tagValue}
-                  list="bulk-tag-values"
+                  suggestions={tagCatalog.filter((item) => item.key === tagKey).map((item) => item.value)}
                   maxLength={64}
                   onChange={(event) => setTagValue(event.target.value)}
                   placeholder="Madrid"
                 />
-                <datalist id="bulk-tag-values">
-                  {tagCatalog.filter((item) => item.key === tagKey).map((item) => (
-                    <option key={`${item.key}-${item.value}`} value={item.value} />
-                  ))}
-                </datalist>
               </div>
             </div>
             <div className="space-y-1">

@@ -18,7 +18,7 @@ import {
   Trash2,
   TriangleAlert,
 } from "lucide-react";
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
@@ -194,7 +194,7 @@ export function NodeDetailPage() {
     enabled: tab === "history" && Number.isFinite(nodeId),
   });
 
-  const versions = versionsQuery.data?.versions ?? [];
+  const versions = useMemo(() => versionsQuery.data?.versions ?? [], [versionsQuery.data?.versions]);
   useEffect(() => {
     setSelected(versions.length > 1 ? [versions[1].oid, versions[0].oid] : []);
   }, [versions]);

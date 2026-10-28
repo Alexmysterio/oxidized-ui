@@ -2,6 +2,7 @@ import { Plus, Trash2, UsersRound } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
+import { AutocompleteInput } from "@/components/shared/autocomplete-input";
 import { KeyValueEditor } from "@/components/shared/key-value-editor";
 import { PasswordInput } from "@/components/shared/password-input";
 import { MapListEditor, type MapEntry } from "@/components/shared/map-list-editor";
@@ -51,16 +52,13 @@ export function ConfigModels({
         <div className="mb-4 flex flex-wrap items-end gap-2">
           <div className="min-w-[14rem] flex-1 space-y-1">
             <Label>{t("config.addModelOverride")}</Label>
-            <Input
+            <AutocompleteInput
               value={newModel}
-              list="config-model-names"
+              suggestions={models}
               onChange={(event) => setNewModel(event.target.value)}
               className="h-8 font-mono text-xs"
               placeholder={t("nodeForm.modelPlaceholder")}
             />
-            <datalist id="config-model-names">
-              {models.map((model) => <option key={model} value={model} />)}
-            </datalist>
           </div>
           <Button
             type="button"

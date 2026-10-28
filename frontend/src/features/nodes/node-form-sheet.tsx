@@ -6,6 +6,7 @@ import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
+import { AutocompleteInput } from "@/components/shared/autocomplete-input";
 import { KeyValueEditor } from "@/components/shared/key-value-editor";
 import { KnownVariables } from "@/components/shared/known-variables";
 import { ModelCombobox } from "@/components/shared/model-combobox";
@@ -324,12 +325,12 @@ function NodeForm({
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="node-input">{t("nodeForm.input")}</Label>
-              <Input id="node-input" list="node-inputs" placeholder={t("nodeForm.inputPlaceholder")} {...form.register("input")} />
-              <datalist id="node-inputs">
-                {inputs.map((input) => (
-                  <option key={input} value={input} />
-                ))}
-              </datalist>
+              <AutocompleteInput
+                id="node-input"
+                suggestions={inputs}
+                placeholder={t("nodeForm.inputPlaceholder")}
+                {...form.register("input")}
+              />
               <p className="text-[11px] leading-relaxed text-muted-foreground">{t("nodeForm.inputHelp")}</p>
             </div>
             <div className="space-y-2">
@@ -482,12 +483,7 @@ function NodeForm({
           <div className="grid gap-4 border-t p-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="node-output">{t("nodeForm.output")}</Label>
-              <Input id="node-output" list="node-outputs" {...form.register("output")} />
-              <datalist id="node-outputs">
-                {outputs.map((output) => (
-                  <option key={output} value={output} />
-                ))}
-              </datalist>
+              <AutocompleteInput id="node-output" suggestions={outputs} {...form.register("output")} />
               <p className="text-[11px] text-muted-foreground">{t("nodeForm.outputHelp")}</p>
             </div>
             <div className="space-y-2">

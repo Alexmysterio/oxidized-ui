@@ -7,6 +7,7 @@ import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { z } from "zod";
 
+import { AutocompleteInput } from "@/components/shared/autocomplete-input";
 import { ErrorState } from "@/components/shared/error-state";
 import { PageHeader } from "@/components/shared/page-header";
 import { PageSkeleton, Spinner } from "@/components/shared/loaders";
@@ -391,10 +392,13 @@ export function SystemPage() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="timezone">{t("system.timezone")}</Label>
-                <Input id="timezone" list="timezone-options" className="font-mono text-xs" placeholder="Europe/Madrid" {...form.register("timezone")} />
-                <datalist id="timezone-options">
-                  {["UTC", "Europe/Madrid", "Europe/London", "America/New_York", "America/Bogota", "America/Mexico_City", "America/Sao_Paulo", "Asia/Tokyo", "Australia/Sydney"].map((zone) => <option key={zone} value={zone} />)}
-                </datalist>
+                <AutocompleteInput
+                  id="timezone"
+                  suggestions={["UTC", "Europe/Madrid", "Europe/London", "America/New_York", "America/Bogota", "America/Mexico_City", "America/Sao_Paulo", "Asia/Tokyo", "Australia/Sydney"]}
+                  className="font-mono text-xs"
+                  placeholder="Europe/Madrid"
+                  {...form.register("timezone")}
+                />
                 <p className="text-[11px] text-muted-foreground">{t("system.timezoneHelp")}</p>
               </div>
             </div>

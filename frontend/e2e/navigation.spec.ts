@@ -1,5 +1,7 @@
 import { expect, test } from "@playwright/test";
 
+test.use({ locale: "es-ES" });
+
 const session = {
   user: {
     id: 1,
@@ -75,6 +77,11 @@ test("sidebar stays usable after node edit and navigation", async ({ page }) => 
     const path = new URL(route.request().url()).pathname;
     if (path.endsWith("/api/meta")) return route.fulfill({ json: meta });
     if (path.endsWith("/api/auth/session")) return route.fulfill({ json: session });
+    if (path === "/api/nodes") {
+      return route.fulfill({
+        json: { items: [node], page: 1, page_size: 25, total: 1, total_pages: 1 },
+      });
+    }
     if (/\/api\/nodes\/1$/.test(path)) return route.fulfill({ json: node });
     if (path.endsWith("/api/nodes/1/status")) {
       return route.fulfill({
@@ -102,7 +109,7 @@ test("sidebar stays usable after node edit and navigation", async ({ page }) => 
         json: {
           models: ["ios"],
           model_vendors: { ios: "cisco" },
-          inputs: ["ssh"],
+          inputs: ["ssh", "telnet"],
           outputs: ["git"],
           vars: [],
           prompts: [],
@@ -127,23 +134,49 @@ test("sidebar stays usable after node edit and navigation", async ({ page }) => 
     return route.fulfill({ json: {} });
   });
 
-  await page.goto("/nodes/1");
+  const nodesLink = page.locator('aside a[href="/nodes"]').first();
+  const nodeRow = page.locator('main a[href="/nodes/1"]').first();
+
+  await page.goto("/nodes");
+  await expect(nodeRow).toBeVisible();
+
+  await nodeRow.click();
   await expect(page.getByRole("heading", { name: "core-1" })).toBeVisible();
 
-  const nodesLink = page.locator('aside a[href="/nodes"]').first();
   await nodesLink.click();
   await expect(page).toHaveURL(/\/nodes$/);
+  await expect(nodeRow).toBeVisible();
+  await expect(page.getByRole("heading", { name: "core-1" })).toHaveCount(0);
 
-  await page.goto("/nodes/1");
+  await nodeRow.click();
   await expect(page.getByRole("heading", { name: "core-1" })).toBeVisible();
-
   await page.getByRole("button", { name: "Editar" }).click();
   await expect(page.getByRole("dialog")).toBeVisible();
+
+  const inputField = page.locator("#node-input");
+  await inputField.fill("tel");
+  await expect(page.getByRole("listbox")).toBeVisible();
+  await page.getByRole("option", { name: "telnet" }).click();
+  await expect(inputField).toHaveValue("telnet");
+
+  const tagsSection = page
+    .locator("section")
+    .filter({ has: page.getByRole("heading", { name: "Etiquetas", exact: true }) });
+  await tagsSection.getByRole("button", { name: "Añadir etiqueta" }).click();
+  const tagKey = tagsSection.getByLabel("Clave");
+  await tagKey.fill("Crit");
+  await expect(page.getByRole("option", { name: "Criticality" })).toBeVisible();
+  await page.keyboard.press("Enter");
+  await expect(tagKey).toHaveValue("Criticality");
+  await expect(page.locator("datalist")).toHaveCount(0);
+
   await page.getByRole("button", { name: "Cancelar" }).click();
   await expect(page.getByRole("dialog")).toHaveCount(0);
 
   await nodesLink.click();
   await expect(page).toHaveURL(/\/nodes$/);
+  await expect(nodeRow).toBeVisible();
+  await expect(page.getByRole("heading", { name: "core-1" })).toHaveCount(0);
 });
 
 test("mobile drawer stays usable after node navigation and edit", async ({ page }) => {
@@ -152,6 +185,11 @@ test("mobile drawer stays usable after node navigation and edit", async ({ page 
     const path = new URL(route.request().url()).pathname;
     if (path.endsWith("/api/meta")) return route.fulfill({ json: meta });
     if (path.endsWith("/api/auth/session")) return route.fulfill({ json: session });
+    if (path === "/api/nodes") {
+      return route.fulfill({
+        json: { items: [node], page: 1, page_size: 25, total: 1, total_pages: 1 },
+      });
+    }
     if (/\/api\/nodes\/1$/.test(path)) return route.fulfill({ json: node });
     if (path.endsWith("/api/nodes/1/status")) {
       return route.fulfill({
@@ -176,7 +214,7 @@ test("mobile drawer stays usable after node navigation and edit", async ({ page 
     if (path.endsWith("/api/groups")) return route.fulfill({ json: { groups: [], requires_admin_apply: false, draft_revision_id: null } });
     if (path.endsWith("/api/config/catalog")) {
       return route.fulfill({
-        json: { models: ["ios"], model_vendors: { ios: "cisco" }, inputs: ["ssh"], outputs: ["git"], vars: [], prompts: [] },
+        json: { models: ["ios"], model_vendors: { ios: "cisco" }, inputs: ["ssh", "telnet"], outputs: ["git"], vars: [], prompts: [] },
       });
     }
     if (path.endsWith("/api/nodes/tags")) return route.fulfill({ json: { items: [] } });

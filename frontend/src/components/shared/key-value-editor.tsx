@@ -2,8 +2,8 @@ import { Plus, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
+import { AutocompleteInput } from "@/components/shared/autocomplete-input";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 
@@ -66,7 +66,6 @@ export function KeyValueEditor({
   const [rows, setRows] = useState<Entry[]>(() => toRows(value));
   const counter = useRef(rows.length);
   const lastSerialized = useRef(JSON.stringify(materialize(rows)));
-  const listId = useRef(`kv-${Math.random().toString(36).slice(2)}`).current;
 
   useEffect(() => {
     const incoming = JSON.stringify(value);
@@ -92,9 +91,9 @@ export function KeyValueEditor({
           {rows.map((row) => (
             <div key={row.id} className="flex items-start gap-2">
               <div className="grid flex-1 grid-cols-[minmax(0,0.9fr)_minmax(0,1.4fr)] gap-2">
-                <Input
+                <AutocompleteInput
                   value={row.key}
-                  list={suggestions ? listId : undefined}
+                  suggestions={suggestions ?? []}
                   placeholder={keyPlaceholder ?? t("nodeForm.variableKey")}
                   aria-label={keyPlaceholder ?? t("nodeForm.variableKey")}
                   onChange={(event) => {
@@ -103,9 +102,9 @@ export function KeyValueEditor({
                   }}
                   className="font-mono text-xs"
                 />
-                <Input
+                <AutocompleteInput
                   value={row.value}
-                  list={valueSuggestions && valueSuggestions[row.key] ? `${listId}-${row.id}` : undefined}
+                  suggestions={valueSuggestions?.[row.key] ?? []}
                   placeholder={valuePlaceholder ?? t("nodeForm.variableValue")}
                   aria-label={valuePlaceholder ?? t("nodeForm.variableValue")}
                   onChange={(event) => {
@@ -114,13 +113,6 @@ export function KeyValueEditor({
                   }}
                   className="font-mono text-xs"
                 />
-                {valueSuggestions && valueSuggestions[row.key] ? (
-                  <datalist id={`${listId}-${row.id}`}>
-                    {valueSuggestions[row.key].map((suggestion) => (
-                      <option key={suggestion} value={suggestion} />
-                    ))}
-                  </datalist>
-                ) : null}
               </div>
               <Button
                 type="button"
@@ -139,13 +131,6 @@ export function KeyValueEditor({
       ) : (
         <p className="rounded-md border border-dashed px-3 py-2 text-xs text-muted-foreground">{t("common.none")}</p>
       )}
-      {suggestions?.length ? (
-        <datalist id={listId}>
-          {suggestions.map((suggestion) => (
-            <option key={suggestion} value={suggestion} />
-          ))}
-        </datalist>
-      ) : null}
       <Button
         type="button"
         variant="outline"
