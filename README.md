@@ -12,7 +12,7 @@
   <a href="https://github.com/Alexmysterio/oxidized-ui/actions/workflows/ci.yml"><img src="https://github.com/Alexmysterio/oxidized-ui/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
   <a href="https://github.com/Alexmysterio/oxidized-ui/actions/workflows/contract.yml"><img src="https://github.com/Alexmysterio/oxidized-ui/actions/workflows/contract.yml/badge.svg" alt="Oxidized contract"></a>
   <img src="https://img.shields.io/badge/Docker-single%20image-2496ED?logo=docker&logoColor=white" alt="Docker">
-  <img src="https://img.shields.io/badge/Python-3.13%2B-3776AB?logo=python&logoColor=white" alt="Python 3.13+">
+  <img src="https://img.shields.io/badge/Python-3.12%2B-3776AB?logo=python&logoColor=white" alt="Python 3.12+">
   <img src="https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=111111" alt="React 19">
   <img src="https://img.shields.io/badge/Oxidized-latest-6E4AFF" alt="Oxidized latest">
 </p>
@@ -34,6 +34,17 @@ It uses a private local certificate authority, so no public certificate or
 external certificate service is required. It is intended for a home lab, a small
 office, or a trusted internal network.
 
+> [!WARNING]
+> **Development status.** Oxidized UI is under active development. Features may
+> change or break, and bugs may cause data loss or downtime. Use it at your own
+> risk. The author accepts no responsibility or liability for any damage, data
+> loss, outage, misconfiguration or other harm resulting from its use. Test in a
+> lab and keep independent backups.
+>
+> **AI-assisted development.** Parts of the code and documentation were produced
+> with the help of generative AI tools. The result is reviewed and tested, but
+> errors are still possible.
+
 <p align="center">
   <img src="docs/assets/login.png" alt="Oxidized UI login screen" width="920">
   <br>
@@ -44,9 +55,9 @@ office, or a trusted internal network.
 
 | 🗂️ Inventory | 🔐 Security | 📊 Operations |
 |---|---|---|
-| Nodes, groups, models, credentials, CSV import/export, bulk edit, saved filters, and node-to-node diff. | Argon2id passwords, TOTP, recovery codes, session revocation, IP allowlist, API tokens, OIDC, and encrypted secrets. | Backups by node or group, persistent jobs, live logs, SLA, history, audit, Prometheus, multi-channel alerts, and encrypted export. |
+| Nodes, groups, models, credentials, CSV import/export with preview, bulk edit, saved filters, and node-to-node diff. | Argon2id passwords, TOTP with QR setup, recovery codes, session revocation, IP allowlist, API tokens, OIDC, and encrypted secrets. | Backups by node, group or site, persistent jobs, live logs, SLA, history, audit, Prometheus, multi-channel alerts, and encrypted export. |
 | **⚙️ Configuration** | **🧭 Visibility** | **🐳 Deployment** |
-| YAML editor, validation, preflight, apply, health check, rollback, and scheduled maintenance windows. | Dashboard, per-node status, version history, diffs, backup timeline, and group-level success rate. | One image by default. A four-container hardened mode is available for stricter isolation. |
+| YAML editor, validation, preflight, apply, health check, rollback, and scheduled maintenance windows. | Dashboard with failed-node triage, per-node status, version history, golden versions, diffs, backup timeline, and group-level success rate. | One image by default. A four-container hardened mode is available for stricter isolation. |
 
 > **New to Docker?** Follow the [Quick start](#quick-start) step by step. Every
 > command is shown explicitly. You do not need to understand the internals to get
@@ -71,6 +82,8 @@ office, or a trusted internal network.
 - [Nodes, tags and templates](#nodes-tags-and-templates)
 - [Reconciliation](#reconciliation)
 - [Sites](#sites)
+- [MFA and profile](#mfa-and-profile)
+- [Golden versions](#golden-versions)
 - [Queue priority and pacing](#queue-priority-and-pacing)
 - [System health and reports](#system-health-and-reports)
 - [Automatic retries](#automatic-retries)
@@ -87,6 +100,7 @@ office, or a trusted internal network.
 - [Troubleshooting](#troubleshooting)
 - [Security notes](#security-notes)
 - [Development](#development)
+- [License](#license)
 - [Known limitations](#known-limitations)
 
 ---
@@ -97,24 +111,33 @@ office, or a trusted internal network.
 - Per-node configuration history and side-by-side diffs.
 - Credentials stored write-only and encrypted with Fernet.
 - Users with `admin`, `operator`, and `viewer` roles.
-- Password policy, account lockout, IP allowlist, MFA/TOTP for every role, and
-  revocable sessions. Disabling MFA or changing a password also revokes API tokens,
-  and a token can never exceed the current role of its owner.
+- Password policy, account lockout, IP allowlist, MFA/TOTP with scannable QR
+  setup for every role, and revocable sessions. Disabling MFA or changing a
+  password also revokes API tokens, and a token can never exceed the current role
+  of its owner.
 - Restart/reload of Oxidized from the UI.
 - Configuration editor with validation, preflight, diff, apply, health check,
   and rollback.
 - Scheduled configuration apply and backup schedules by group.
 - Automatic retries with backoff, maintenance windows and configuration-change alerts.
 - Golden-config compliance per group or model with line-level diffs.
+- Golden version pinning per node, with a badge and one-click diff against the
+  current version.
 - Group-scoped operators, saved filters and favorite nodes.
 - Manual and scheduled backups with a persistent, cancellable job queue.
+- Per-site backups from the site card or the map popup.
+- Bulk connection tests, config sanity warnings (empty, truncated or command-error
+  output) and CSV import preview before applying changes.
+- Dashboard failed-node triage with the latest reason and a retry action.
 - Backup history, success rate, and SLA by group.
 - Prometheus metrics.
 - Audit log with CSV export.
 - Outgoing alerts to Telegram, Slack, Discord, or any webhook, plus an incoming backup webhook.
 - Optional daily notification digest.
 - Node tags, node templates, and inventory facts (serial, OS version, uptime).
-- Sites view grouped by tag, with per-site coordinates and an OpenStreetMap map.
+- Sites view grouped by tag, with per-site coordinates, owner/contact/notes, review
+  tracking, and an OpenStreetMap map. Every node in a site is listed in its marker
+  popup.
 - Reconciliation with Oxidized: missing nodes, orphans and field drift.
 - Queue priority rules and pacing for bulk backups.
 - System health history, weekly CSV/PDF reports and email delivery.
@@ -474,18 +497,23 @@ services:
 ## Everyday use
 
 - **Dashboard:** Oxidized status, node counts, recent activity, SLA by group,
-  active jobs, and onboarding hints.
-- **Nodes:** search, filters, saved filters, bulk backup/group/field/delete, CSV
-  import/export, ICMP ping, connection test, host-key trust, versions, diff, and
-  history. The node detail shows effective connection values and where each one
-  comes from: node, group model, group, model, or global configuration.
+  active jobs, onboarding hints, and failed-node triage with the latest reason and
+  retry action.
+- **Nodes:** search, filters, saved filters, bulk backup/group/field/delete,
+  bulk connection test, CSV import with preview and export, ICMP ping, connection
+  test, host-key trust, versions, golden version, diff, and history. The node
+  detail shows effective connection values and where each one comes from: node,
+  group model, group, model, or global configuration. The configuration tab warns
+  about empty, truncated or command-error output.
+- **Sites:** grouped inventory, site coordinates, owner/contact/notes, last review,
+  per-site backup and an OpenStreetMap map whose popup lists every node.
 - **Configuration:** validate YAML, preflight, diff, apply, health check, and
   rollback. Scheduled apply supports maintenance windows.
 - **Operations:** backup schedules and jobs in the **Backups** section; live logs
   and container health in **Status and logs**.
 - **Audit:** filter and export CSV; retention is separate from backup history.
-- **Users and profile:** roles, sessions, password, MFA, language, theme, full
-  name, email, profile photo, and API tokens.
+- **Users and profile:** roles, sessions, password, MFA with QR setup, language,
+  theme, full name, email, profile photo, and API tokens.
 - **System settings:** connections, security, retention, branding, and
   notification channels.
 
@@ -846,14 +874,39 @@ reports and offers the import.
 ## Sites
 
 **Inventory -> Sites** groups the inventory by a tag (default `Site`) and shows the
-aggregated status per location. Coordinates belong to the site, not to individual
-nodes: use the pencil on a site card to set them. The input accepts decimal values
+aggregated status per location. Coordinates, owner, contact, notes and the last
+review date belong to the site, not to individual nodes: use the pencil on a site
+card to edit them. The coordinate input accepts decimal values
 (`36.751112, -3.491751`) or degrees/minutes/seconds (`36°45'04.0"N 3°29'30.3"W`).
+The search box filters by site name, owner, contact or notes. **Back up site**
+queues every node in that site from the card or from the map popup.
+
 All nodes with that site tag are listed in the site's marker popup, so overlapping
 devices remain accessible. Tiles are proxied and cached by the backend (they are
 fetched from OpenStreetMap, never from the browser), so clients on isolated VLANs
 still get the map background. At startup, legacy node coordinate tags are moved to
 the corresponding site and removed from the nodes.
+
+---
+
+## MFA and profile
+
+**Profile -> Two-step verification** shows a scannable QR code generated from the
+TOTP secret, plus a collapsible manual key for clients that cannot scan it. Confirm
+one code to enable MFA and save the recovery codes that are shown once. The same
+page manages language, theme, full name, email, profile photo and API tokens.
+
+The avatar is used in the top bar and in the sidebar footer, with the user's
+initials as fallback.
+
+---
+
+## Golden versions
+
+In a node's **Versions** tab, the star button pins one version as the golden
+reference. The table marks it with a **Golden** badge and offers **Compare with
+golden**, which opens the diff against the current version. Pinning is metadata
+only: it does not restore, apply or roll back a configuration.
 
 ---
 
@@ -1363,6 +1416,12 @@ More documentation:
 
 ---
 
+## License
+
+MIT. See [LICENSE](LICENSE).
+
+---
+
 ## Known limitations
 
 - One Uvicorn worker only; SQLite, in-process locks, and the poller are not
@@ -1375,3 +1434,11 @@ More documentation:
 - OIDC has not been validated against every provider; test yours.
 - Device backups depend on reachability and correct credentials.
 - Docker environment may expose ports only on loopback; see the port-proxy section.
+- Site coordinates and metadata are shared by every node with that site tag;
+  coordinates are no longer stored per node.
+- The map needs outbound access from the container to
+  `tile.openstreetmap.org`; tiles are cached but not bundled offline.
+- Golden versions are a reference label only. They do not restore or roll back
+  configurations.
+- Config sanity warnings and failed-node reasons are heuristics based on the
+  available output; always verify on the device.
