@@ -144,6 +144,8 @@ export interface Node {
   updated_at: string;
   warnings: string[];
   tags?: Record<string, string>;
+  golden_oid?: string | null;
+  golden_at?: string | null;
   facts?: NodeFacts | null;
   maintenance?: boolean;
   retry?: { attempts: number; next_attempt_at: string | null; exhausted: boolean } | null;
@@ -878,6 +880,10 @@ export interface SiteGroup {
   nodes: SiteNode[];
   latitude: number | null;
   longitude: number | null;
+  owner: string | null;
+  contact: string | null;
+  notes: string | null;
+  last_reviewed_at: string | null;
 }
 
 export interface SitesResponse {

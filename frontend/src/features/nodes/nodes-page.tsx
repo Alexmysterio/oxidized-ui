@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient, keepPreviousData } from "@tanstack/react-query";
-import { ArrowDown, ArrowUp, ArrowUpDown, ChevronDown, Download, Fingerprint, Filter, MoreHorizontal, Network, Pencil, Plus, RefreshCw, ScanSearch, Search, ServerCog, Star, Tag, Trash2, Upload, UsersRound } from "lucide-react";
+import { ArrowDown, ArrowUp, ArrowUpDown, ChevronDown, Download, Fingerprint, Filter, MoreHorizontal, Network, Pencil, PlugZap, Plus, RefreshCw, ScanSearch, Search, ServerCog, Star, Tag, Trash2, Upload, UsersRound } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useSearchParams } from "react-router-dom";
@@ -232,6 +232,20 @@ export function NodesPage() {
       toast.success(t("common.operationCompleted"));
       setSelected(new Set());
       void invalidate();
+    },
+    onError: (error) => notifyError(t, error),
+  });
+
+  const bulkTest = useMutation({
+    mutationFn: () => api.bulkNodes({ action: "test_connection", ids: Array.from(selected) }),
+    onSuccess: (result) => {
+      const failed = result.failed?.length ?? 0;
+      const succeeded = result.succeeded ?? 0;
+      if (failed) {
+        toast.warning(t("nodes.bulkTestPartial", { succeeded, failed }));
+      } else {
+        toast.success(t("nodes.bulkTestSuccess", { count: succeeded }));
+      }
     },
     onError: (error) => notifyError(t, error),
   });
@@ -561,6 +575,12 @@ export function NodesPage() {
               <Button variant="outline" size="xs" onClick={() => bulkBackup.mutate()} disabled={bulkBackup.isPending}>
                 {bulkBackup.isPending ? <Spinner /> : <ServerCog />}
                 {t("nodes.bulkBackup")}
+              </Button>
+            ) : null}
+            {can("nodes.write") ? (
+              <Button variant="outline" size="xs" onClick={() => bulkTest.mutate()} disabled={bulkTest.isPending}>
+                {bulkTest.isPending ? <Spinner /> : <PlugZap />}
+                {t("nodes.bulkTest")}
               </Button>
             ) : null}
             {can("nodes.write") ? (

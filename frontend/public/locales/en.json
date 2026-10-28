@@ -244,7 +244,9 @@
     "onboardingNodes": "Review nodes",
     "onboardingTest": "Test connection",
     "onboardingBackup": "Run first backup",
-    "onboardingNotify": "Configure alerts"
+    "onboardingNotify": "Configure alerts",
+    "retry": "Retry backup",
+    "retryQueued": "Retry backup queued."
   },
   "nodes": {
     "title": "Node inventory",
@@ -334,7 +336,10 @@
     "tagsReplace": "Replace all",
     "bulkTagsSuccess": "Tags applied to {{count}} nodes.",
     "bulkFacts": "Scan inventory",
-    "factsQueued": "Inventory scan queued."
+    "factsQueued": "Inventory scan queued.",
+    "bulkTest": "Test connection",
+    "bulkTestSuccess": "{{count}} nodes responded successfully.",
+    "bulkTestPartial": "{{succeeded}} succeeded, {{failed}} had problems."
   },
   "nodeForm": {
     "createTitle": "New node",
@@ -480,7 +485,16 @@
     "uptime": "Uptime",
     "collectFacts": "Scan configuration",
     "factsCollected": "Inventory scanned (serial {{serial}}).",
-    "factsCollectedAt": "Inventory read"
+    "factsCollectedAt": "Inventory read",
+    "golden": "Golden",
+    "pinGolden": "Pin as golden version",
+    "unpinGolden": "Unpin golden version",
+    "compareGolden": "Compare with golden",
+    "goldenPinned": "Golden version pinned.",
+    "goldenUnpinned": "Golden version removed.",
+    "configWarnings": "The configuration looks suspicious",
+    "configWarningShort": "The content is very short; it may be truncated or empty.",
+    "configWarningError": "It contains error messages typical of a failed command."
   },
   "groups": {
     "title": "Groups & credentials",
@@ -808,7 +822,9 @@
         "backup_requested": "Backup requested",
         "host_key_trusted": "Host SSH key trusted",
         "connection_tested": "Node connection tested",
-        "ping_tested": "Node ping tested"
+        "ping_tested": "Node ping tested",
+        "golden_pinned": "Golden version pinned",
+        "golden_unpinned": "Golden version removed"
       },
       "group": {
         "created": "Group created as draft",
@@ -866,7 +882,8 @@
       "report.generated": "Report generated",
       "system.export_verified": "Export verified",
       "site": {
-        "coordinates_updated": "Site coordinates updated"
+        "coordinates_updated": "Site coordinates updated",
+        "updated": "Site updated"
       }
     },
     "export": "Export CSV",
@@ -926,7 +943,7 @@
     "mfaEnable": "Enable MFA",
     "mfaDisable": "Disable MFA",
     "mfaSetupTitle": "Set up two-step verification",
-    "mfaSetupDescription": "Add this key to your authenticator app (Google Authenticator, 1Password, Aegis, etc.) and confirm the generated code.",
+    "mfaSetupDescription": "Scan the QR code with your authenticator app (Google Authenticator, 1Password, Aegis, etc.) and confirm the generated code.",
     "mfaSecret": "Secret key",
     "mfaConfirm": "Confirm and enable",
     "mfaRecoveryTitle": "Save these recovery codes",
@@ -949,7 +966,11 @@
     "revokeToken": "Revoke",
     "noTokens": "No active tokens.",
     "tokenCreated": "Token created.",
-    "tokenRevoked": "Token revoked."
+    "tokenRevoked": "Token revoked.",
+    "mfaScanQr": "Scan this QR code",
+    "mfaQrAlt": "QR code to set up MFA",
+    "mfaScanQrHelp": "Open your authenticator app and point the camera at the code.",
+    "mfaManualKey": "Enter the key manually"
   },
   "system": {
     "title": "System settings",
@@ -1332,6 +1353,9 @@
     "auth.mfa_oidc_unsupported": "Your account has MFA: use username and password to complete the second factor.",
     "site": {
       "invalid_coordinates": "The coordinates are invalid. Use 36.751112, -3.491751 or 36°45'04.0\"N 3°29'30.3\"W."
+    },
+    "version": {
+      "not_found": "The requested version does not exist."
     }
   },
   "validation": {
@@ -2049,14 +2073,23 @@
     "noSite": "No site",
     "nodes": "{{count}} nodes",
     "mapEmpty": "No site has coordinates yet. Use the pencil on a card to place it on the map.",
-    "editCoordinates": "Edit coordinates",
-    "editCoordinatesTitle": "{{site}} coordinates",
-    "editCoordinatesDescription": "The position applies to every node in this site.",
     "coordinates": "Coordinates",
     "coordinatesHelp": "Accepts 36.751112, -3.491751 or 36°45'04.0\"N 3°29'30.3\"W.",
     "clearCoordinates": "Clear coordinates",
-    "coordinatesSaved": "Site coordinates saved.",
-    "coordinatesCleared": "Site coordinates cleared.",
-    "noCoordinates": "No coordinates"
+    "noCoordinates": "No coordinates",
+    "owner": "Owner",
+    "contact": "Contact",
+    "notes": "Notes",
+    "markReviewed": "Mark as reviewed now",
+    "reviewedAt": "Reviewed {{when}}",
+    "notReviewed": "Not reviewed",
+    "editSite": "Edit site",
+    "editSiteTitle": "{{site}} details",
+    "editSiteDescription": "Coordinates and operational details for the site.",
+    "searchPlaceholder": "Search site, owner or notes…",
+    "noMatches": "No sites match your search.",
+    "updated": "Site updated.",
+    "backup": "Back up site",
+    "backupQueued": "Backup queued for {{count}} nodes."
   }
 }

@@ -27,7 +27,7 @@ import { BrandLockup } from "@/components/shared/brand";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useAuth } from "@/lib/auth";
-import { cn } from "@/lib/utils";
+import { cn, initials } from "@/lib/utils";
 
 interface NavItem {
   to: string;
@@ -207,10 +207,14 @@ export function SidebarContent({
               <NavLink
                 to="/profile"
                 onClick={onNavigate}
-                className="mx-auto flex h-8 w-8 items-center justify-center rounded-md border border-white/10 bg-white/[0.04] font-mono text-[10px] text-sidebar-foreground"
+                className="mx-auto flex h-8 w-8 items-center justify-center overflow-hidden rounded-md border border-white/10 bg-white/[0.04] font-mono text-[10px] text-sidebar-foreground"
                 aria-label={t("nav.profile")}
               >
-                {user?.username.slice(0, 2).toUpperCase()}
+                {user?.avatar_url ? (
+                  <img src={user.avatar_url} alt="" className="h-full w-full object-cover" />
+                ) : (
+                  initials(user?.full_name || user?.username || "")
+                )}
               </NavLink>
             </TooltipTrigger>
             <TooltipContent side="right">
@@ -223,8 +227,12 @@ export function SidebarContent({
             onClick={onNavigate}
             className="flex items-center gap-2.5 rounded-md p-1.5 transition-colors hover:bg-white/[0.05]"
           >
-            <span className="flex h-7 w-7 items-center justify-center rounded-md border border-white/10 bg-white/[0.05] font-mono text-[10px] text-sidebar-foreground">
-              {user?.username.slice(0, 2).toUpperCase()}
+            <span className="flex h-7 w-7 items-center justify-center overflow-hidden rounded-md border border-white/10 bg-white/[0.05] font-mono text-[10px] text-sidebar-foreground">
+              {user?.avatar_url ? (
+                <img src={user.avatar_url} alt="" className="h-full w-full object-cover" />
+              ) : (
+                initials(user?.full_name || user?.username || "")
+              )}
             </span>
             <span className="min-w-0 flex-1">
               <span className="block truncate text-xs font-medium text-sidebar-foreground">{user?.username}</span>

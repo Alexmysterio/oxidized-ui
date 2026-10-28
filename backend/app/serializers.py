@@ -125,6 +125,8 @@ def node_public(
         "updated_at": to_iso(node.updated_at),
         "warnings": [],
         "tags": dict(node.tags or {}) if isinstance(node.tags, dict) else {},
+        "golden_oid": node.golden_oid,
+        "golden_at": to_iso(node.golden_at),
     }
     if role in {"admin", "operator"}:
         data.update(

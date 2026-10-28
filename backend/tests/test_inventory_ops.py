@@ -272,13 +272,33 @@ def test_site_coordinates_validation_and_clear(client: TestClient, admin):
 
     saved = admin.put(
         "/api/nodes/sites",
-        json={"site": "Valencia", "coordinates": "39.4699, -0.3763"},
+        json={
+            "site": "Valencia",
+            "coordinates": "39.4699, -0.3763",
+            "owner": "NOC",
+            "contact": "noc@example.test",
+            "notes": "Primary site",
+            "reviewed": True,
+        },
     )
     assert saved.status_code == 200, saved.text
+    assert saved.json()["owner"] == "NOC"
+    assert saved.json()["last_reviewed_at"] is not None
 
-    cleared = admin.put("/api/nodes/sites", json={"site": "Valencia", "coordinates": None})
+    cleared = admin.put(
+        "/api/nodes/sites",
+        json={
+            "site": "Valencia",
+            "coordinates": None,
+            "owner": "NOC",
+            "contact": "noc@example.test",
+            "notes": "Primary site",
+            "reviewed": False,
+        },
+    )
     assert cleared.status_code == 200
     assert cleared.json()["latitude"] is None
+    assert cleared.json()["owner"] == "NOC"
     site = next(
         item
         for item in admin.get("/api/nodes/sites", params={"tag": "Site"}).json()["sites"]
@@ -286,6 +306,10 @@ def test_site_coordinates_validation_and_clear(client: TestClient, admin):
     )
     assert site["latitude"] is None
     assert site["longitude"] is None
+    assert site["owner"] == "NOC"
+    assert site["contact"] == "noc@example.test"
+    assert site["notes"] == "Primary site"
+    assert site["last_reviewed_at"] is not None
 
 
 def test_node_coordinate_tags_are_discarded(client: TestClient, admin):

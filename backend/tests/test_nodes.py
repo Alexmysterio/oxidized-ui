@@ -101,6 +101,27 @@ def test_node_bulk_actions(client: TestClient, admin, fake_clients):
     assert deleted.json()["deleted"] == 3
 
 
+def test_node_bulk_test_connection(client: TestClient, admin, monkeypatch):
+    for index in range(2):
+        assert admin.post("/api/nodes", json=make_node(name=f"t{index}")).status_code == 201
+    ids = [item["id"] for item in admin.get("/api/nodes").json()["items"]]
+    monkeypatch.setattr(
+        "app.node_test_service.test_connection",
+        lambda _db, node: {
+            "authenticated": True,
+            "message": "ok",
+            "ping": True,
+            "tcp": True,
+            "ssh": True,
+        },
+    )
+    response = admin.post("/api/nodes/bulk", json={"action": "test_connection", "ids": ids})
+    assert response.status_code == 200, response.text
+    assert response.json()["tested"] == 2
+    assert response.json()["succeeded"] == 2
+    assert response.json()["failed"] == []
+
+
 def test_csv_import_export_never_exports_secrets(client: TestClient, admin):
     exported = admin.get("/api/nodes/export.csv")
     assert exported.status_code == 200

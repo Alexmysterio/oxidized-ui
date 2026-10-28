@@ -248,12 +248,16 @@ def update_site_coordinates(
     db: Session = Depends(get_db),
     context: AuthContext = Depends(require_capability("nodes.write")),
 ):
-    from ..site_service import set_site_coordinates
+    from ..site_service import update_site
 
-    return set_site_coordinates(
+    return update_site(
         db,
         site=payload.site,
         coordinates=payload.coordinates,
+        owner=payload.owner,
+        contact=payload.contact,
+        notes=payload.notes,
+        reviewed=payload.reviewed,
         actor=context,
         request=request,
     )

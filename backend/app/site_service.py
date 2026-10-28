@@ -18,7 +18,7 @@ from .geo import (
 )
 from .models import Node, SiteLocation
 from .security import AuthContext
-from .timeutil import utcnow
+from .timeutil import to_iso, utcnow
 
 SITE_TAG = "site"
 
@@ -111,11 +111,15 @@ def migrate_site_coordinates(db: Session) -> int:
     return changed
 
 
-def set_site_coordinates(
+def update_site(
     db: Session,
     *,
     site: str,
     coordinates: str | None,
+    owner: str | None,
+    contact: str | None,
+    notes: str | None,
+    reviewed: bool,
     actor: AuthContext,
     request: Request,
 ) -> dict[str, Any]:
@@ -125,47 +129,69 @@ def set_site_coordinates(
     key = name.casefold()
     row = db.scalar(select(SiteLocation).where(SiteLocation.name_key == key))
     raw = (coordinates or "").strip()
-    if not raw:
-        if row is not None:
-            db.delete(row)
-        add_audit(
-            db,
-            actor=actor,
-            action_code="site.coordinates_updated",
-            action_params={"site": name, "cleared": True},
-            target_type="site",
-            target_id=name,
-            request=request,
-        )
-        db.commit()
-        return {"site": name, "latitude": None, "longitude": None}
-
-    parsed = parse_coordinates(raw)
-    if parsed is None:
+    parsed = parse_coordinates(raw) if raw else None
+    if raw and parsed is None:
         raise AppError("site.invalid_coordinates")
-    latitude, longitude = parsed
+
+    def clean(value: str | None) -> str | None:
+        text = (value or "").strip()
+        return text or None
+
+    owner_value = clean(owner)
+    contact_value = clean(contact)
+    notes_value = clean(notes)
+    has_metadata = bool(owner_value or contact_value or notes_value)
+
     if row is None:
-        row = SiteLocation(
-            name=name,
-            name_key=key,
-            latitude=latitude,
-            longitude=longitude,
-            updated_by_id=actor.user_id,
-        )
+        if parsed is None and not has_metadata and not reviewed:
+            return {
+                "site": name,
+                "latitude": None,
+                "longitude": None,
+                "owner": None,
+                "contact": None,
+                "notes": None,
+                "last_reviewed_at": None,
+            }
+        row = SiteLocation(name=name, name_key=key)
         db.add(row)
-    else:
+
+    if parsed is None and not has_metadata and not reviewed and row.id is not None:
+        db.delete(row)
+        row = None
+    elif row is not None:
         row.name = name
-        row.latitude = latitude
-        row.longitude = longitude
+        row.latitude = parsed[0] if parsed else None
+        row.longitude = parsed[1] if parsed else None
+        row.owner = owner_value
+        row.contact = contact_value
+        row.notes = notes_value
+        if reviewed:
+            row.last_reviewed_at = utcnow()
         row.updated_by_id = actor.user_id
+
     add_audit(
         db,
         actor=actor,
-        action_code="site.coordinates_updated",
-        action_params={"site": name, "latitude": latitude, "longitude": longitude},
+        action_code="site.updated",
+        action_params={
+            "site": name,
+            "latitude": parsed[0] if parsed else None,
+            "longitude": parsed[1] if parsed else None,
+            "owner": owner_value,
+            "reviewed": reviewed,
+        },
         target_type="site",
         target_id=name,
         request=request,
     )
     db.commit()
-    return {"site": name, "latitude": latitude, "longitude": longitude}
+    return {
+        "site": name,
+        "latitude": row.latitude if row is not None else None,
+        "longitude": row.longitude if row is not None else None,
+        "owner": row.owner if row is not None else None,
+        "contact": row.contact if row is not None else None,
+        "notes": row.notes if row is not None else None,
+        "last_reviewed_at": to_iso(row.last_reviewed_at) if row is not None else None,
+    }

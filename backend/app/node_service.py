@@ -531,6 +531,47 @@ def bulk_action(
 
         job = create_backup_all_job(db, actor=actor, node_ids=[node.id for node in nodes], request=request)
         return {"job_id": job.id, "requested": len(nodes), "failed": failed}
+    if action == "test_connection":
+        if len(nodes) > 100:
+            raise AppError("node.bulk_too_large", params={"max": 100})
+        from .node_test_service import test_connection
+
+        results: list[dict[str, Any]] = []
+        for node in nodes:
+            try:
+                result = test_connection(db, node)
+                ok = bool(result.get("authenticated"))
+                results.append(
+                    {
+                        "id": node.id,
+                        "name": node.name,
+                        "ok": ok,
+                        "message": result.get("message"),
+                        "ping": result.get("ping"),
+                        "tcp": result.get("tcp"),
+                        "ssh": result.get("ssh"),
+                    }
+                )
+            except AppError as exc:
+                results.append(
+                    {"id": node.id, "name": node.name, "ok": False, "code": exc.code, "params": exc.params}
+                )
+        succeeded = sum(1 for item in results if item["ok"])
+        add_audit(
+            db,
+            actor=actor,
+            action_code="node.bulk_updated",
+            action_params={"count": len(nodes), "change": "test_connection", "succeeded": succeeded},
+            target_type="node",
+            request=request,
+        )
+        db.commit()
+        return {
+            "tested": len(nodes),
+            "succeeded": succeeded,
+            "failed": failed + [item for item in results if not item["ok"]],
+            "results": results,
+        }
     if action == "trust_host_key":
         from .hostkey_service import trust_host_key
 
@@ -855,7 +896,7 @@ def sites(db: Session, *, tag_key: str = "Site", allowed_groups: list[str] | Non
         query = query.where(Node.group_name.in_(allowed_groups))
     caches = {cache.node_id: cache for cache in db.scalars(select(NodeStatusCache)).all()}
     locations = {
-        row.name_key: (row.latitude, row.longitude)
+        row.name_key: row
         for row in db.scalars(select(SiteLocation)).all()
     }
     buckets: dict[str, dict[str, Any]] = {}
@@ -867,12 +908,28 @@ def sites(db: Session, *, tag_key: str = "Site", allowed_groups: list[str] | Non
                 site_name = str(value)
         bucket = buckets.setdefault(
             site_name or "",
-            {"name": site_name, "count": 0, "status": {}, "nodes": [], "latitude": None, "longitude": None},
+            {
+                "name": site_name,
+                "count": 0,
+                "status": {},
+                "nodes": [],
+                "latitude": None,
+                "longitude": None,
+                "owner": None,
+                "contact": None,
+                "notes": None,
+                "last_reviewed_at": None,
+            },
         )
         if bucket["latitude"] is None and site_name:
-            coordinates: tuple[float, float] | None = locations.get(site_name.casefold())
-            if coordinates is not None:
-                bucket["latitude"], bucket["longitude"] = coordinates
+            location = locations.get(site_name.casefold())
+            if location is not None:
+                bucket["latitude"] = location.latitude
+                bucket["longitude"] = location.longitude
+                bucket["owner"] = location.owner
+                bucket["contact"] = location.contact
+                bucket["notes"] = location.notes
+                bucket["last_reviewed_at"] = to_iso(location.last_reviewed_at)
         cache = caches.get(node.id)
         status = node_status_bucket(node, cache)
         bucket["count"] += 1

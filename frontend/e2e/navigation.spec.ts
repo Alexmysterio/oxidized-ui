@@ -320,7 +320,7 @@ test("sites page keeps its localized label and renders the OpenStreetMap", async
   await expect(page.locator(".leaflet-popup")).toContainText("core-1");
   await expect(page.locator(".leaflet-popup")).toContainText("core-2");
 
-  await page.getByRole("button", { name: "Editar coordenadas" }).click();
+  await page.getByRole("button", { name: "Editar sitio" }).click();
   await expect(page.getByRole("dialog")).toBeVisible();
   await expect(page.locator("#site-coordinates")).toHaveValue("36.75111, -3.49175");
   await page.getByRole("button", { name: "Cancelar" }).click();

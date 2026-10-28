@@ -41,7 +41,7 @@ export function NodeImportDialog({
   const inputRef = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | null>(null);
   const [mode, setMode] = useState("skip_existing");
-  const [dryRun, setDryRun] = useState(false);
+  const [dryRun, setDryRun] = useState(true);
   const [dragging, setDragging] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<ImportSummary | null>(null);

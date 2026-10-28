@@ -244,7 +244,9 @@
     "onboardingNodes": "Revisar nodos",
     "onboardingTest": "Probar conexión",
     "onboardingBackup": "Lanzar primer backup",
-    "onboardingNotify": "Configurar avisos"
+    "onboardingNotify": "Configurar avisos",
+    "retry": "Reintentar backup",
+    "retryQueued": "Backup de reintento encolado."
   },
   "nodes": {
     "title": "Inventario de nodos",
@@ -334,7 +336,10 @@
     "tagsReplace": "Reemplazar todas",
     "bulkTagsSuccess": "Etiquetas aplicadas a {{count}} nodos.",
     "bulkFacts": "Analizar inventario",
-    "factsQueued": "Análisis de inventario en cola."
+    "factsQueued": "Análisis de inventario en cola.",
+    "bulkTest": "Probar conexión",
+    "bulkTestSuccess": "{{count}} nodos respondieron correctamente.",
+    "bulkTestPartial": "{{succeeded}} correctos, {{failed}} con problemas."
   },
   "nodeForm": {
     "createTitle": "Nuevo nodo",
@@ -480,7 +485,16 @@
     "uptime": "Uptime",
     "collectFacts": "Analizar configuración",
     "factsCollected": "Inventario analizado (serie {{serial}}).",
-    "factsCollectedAt": "Inventario leído"
+    "factsCollectedAt": "Inventario leído",
+    "golden": "Golden",
+    "pinGolden": "Fijar como versión golden",
+    "unpinGolden": "Quitar versión golden",
+    "compareGolden": "Comparar con golden",
+    "goldenPinned": "Versión golden fijada.",
+    "goldenUnpinned": "Versión golden eliminada.",
+    "configWarnings": "La configuración parece sospechosa",
+    "configWarningShort": "El contenido es muy corto; puede estar truncado o vacío.",
+    "configWarningError": "Contiene mensajes de error típicos de un comando fallido."
   },
   "groups": {
     "title": "Grupos y credenciales",
@@ -808,7 +822,9 @@
         "backup_requested": "Backup solicitado",
         "host_key_trusted": "Clave SSH del host confiada",
         "connection_tested": "Conexión de nodo probada",
-        "ping_tested": "Ping de nodo probado"
+        "ping_tested": "Ping de nodo probado",
+        "golden_pinned": "Versión golden fijada",
+        "golden_unpinned": "Versión golden eliminada"
       },
       "group": {
         "created": "Grupo creado como borrador",
@@ -866,7 +882,8 @@
       "report.generated": "Informe generado",
       "system.export_verified": "Exportación verificada",
       "site": {
-        "coordinates_updated": "Coordenadas de sitio actualizadas"
+        "coordinates_updated": "Coordenadas de sitio actualizadas",
+        "updated": "Sitio actualizado"
       }
     },
     "export": "Exportar CSV",
@@ -926,7 +943,7 @@
     "mfaEnable": "Activar MFA",
     "mfaDisable": "Desactivar MFA",
     "mfaSetupTitle": "Configurar verificación en dos pasos",
-    "mfaSetupDescription": "Añade esta clave a tu aplicación de autenticación (Google Authenticator, 1Password, Aegis, etc.) y confirma el código generado.",
+    "mfaSetupDescription": "Escanea el código QR con tu aplicación de autenticación (Google Authenticator, 1Password, Aegis, etc.) y confirma el código generado.",
     "mfaSecret": "Clave secreta",
     "mfaConfirm": "Confirmar y activar",
     "mfaRecoveryTitle": "Guarda estos códigos de recuperación",
@@ -949,7 +966,11 @@
     "revokeToken": "Revocar",
     "noTokens": "No hay tokens activos.",
     "tokenCreated": "Token creado.",
-    "tokenRevoked": "Token revocado."
+    "tokenRevoked": "Token revocado.",
+    "mfaScanQr": "Escanea este código QR",
+    "mfaQrAlt": "Código QR para configurar MFA",
+    "mfaScanQrHelp": "Abre la aplicación de autenticación y apunta la cámara al código.",
+    "mfaManualKey": "Introducir la clave manualmente"
   },
   "system": {
     "title": "Ajustes del sistema",
@@ -1332,6 +1353,9 @@
     "auth.mfa_oidc_unsupported": "Tu cuenta tiene MFA: usa usuario y contraseña para completar el segundo factor.",
     "site": {
       "invalid_coordinates": "Las coordenadas no son válidas. Usa 36.751112, -3.491751 o 36°45'04.0\"N 3°29'30.3\"W."
+    },
+    "version": {
+      "not_found": "La versión indicada no existe."
     }
   },
   "validation": {
@@ -2049,14 +2073,23 @@
     "noSite": "Sin sitio",
     "nodes": "{{count}} nodos",
     "mapEmpty": "Ningún sitio tiene coordenadas todavía. Usa el lápiz de una tarjeta para colocarlo en el mapa.",
-    "editCoordinates": "Editar coordenadas",
-    "editCoordinatesTitle": "Coordenadas de {{site}}",
-    "editCoordinatesDescription": "La posición se aplica a todos los nodos del sitio.",
     "coordinates": "Coordenadas",
     "coordinatesHelp": "Acepta 36.751112, -3.491751 o 36°45'04.0\"N 3°29'30.3\"W.",
     "clearCoordinates": "Quitar coordenadas",
-    "coordinatesSaved": "Coordenadas del sitio guardadas.",
-    "coordinatesCleared": "Coordenadas del sitio eliminadas.",
-    "noCoordinates": "Sin coordenadas"
+    "noCoordinates": "Sin coordenadas",
+    "owner": "Responsable",
+    "contact": "Contacto",
+    "notes": "Notas",
+    "markReviewed": "Marcar como revisado ahora",
+    "reviewedAt": "Revisado {{when}}",
+    "notReviewed": "Sin revisar",
+    "editSite": "Editar sitio",
+    "editSiteTitle": "Detalles de {{site}}",
+    "editSiteDescription": "Coordenadas y datos operativos del sitio.",
+    "searchPlaceholder": "Buscar sitio, responsable o notas…",
+    "noMatches": "Ningún sitio coincide con la búsqueda.",
+    "updated": "Sitio actualizado.",
+    "backup": "Backup del sitio",
+    "backupQueued": "Backup de {{count}} nodos encolado."
   }
 }

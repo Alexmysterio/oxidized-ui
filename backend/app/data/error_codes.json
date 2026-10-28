@@ -134,5 +134,6 @@
   "validation.min": 422,
   "validation.range": 422,
   "validation.required": 422,
-  "validation.too_long": 422
+  "validation.too_long": 422,
+  "version.not_found": 404
 }

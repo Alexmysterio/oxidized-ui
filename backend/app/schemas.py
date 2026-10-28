@@ -448,7 +448,15 @@ class ReconciliationImport(StrictModel):
 
 
 class NodeBulkRequest(StrictModel):
-    action: Literal["backup", "change_group", "delete", "update", "trust_host_key", "set_tags"]
+    action: Literal[
+        "backup",
+        "change_group",
+        "delete",
+        "update",
+        "trust_host_key",
+        "set_tags",
+        "test_connection",
+    ]
     ids: list[int] = Field(min_length=1, max_length=1000)
     group_name: str | None = None
     model: str | None = Field(default=None, max_length=64)
@@ -682,6 +690,14 @@ class ExportConfigPayload(StrictModel):
 class SiteCoordinatesUpdate(StrictModel):
     site: str = Field(min_length=1, max_length=64)
     coordinates: str | None = Field(default=None, max_length=128)
+    owner: str | None = Field(default=None, max_length=128)
+    contact: str | None = Field(default=None, max_length=128)
+    notes: str | None = Field(default=None, max_length=2000)
+    reviewed: bool = False
+
+
+class GoldenVersionRequest(StrictModel):
+    oid: str | None = Field(default=None, max_length=128)
 
 
 class ExportVerifyRequest(StrictModel):

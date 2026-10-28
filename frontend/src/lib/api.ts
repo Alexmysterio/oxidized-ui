@@ -334,11 +334,23 @@ export const api = {
   node: (id: number) => request<Node>(`/nodes/${id}`),
   nodeTags: () => request<{ items: NodeTagCount[] }>("/nodes/tags"),
   sites: (tag = "Site") => request<SitesResponse>("/nodes/sites", { query: { tag } }),
-  setSiteCoordinates: (site: string, coordinates: string | null) =>
-    request<{ site: string; latitude: number | null; longitude: number | null }>("/nodes/sites", {
-      method: "PUT",
-      body: { site, coordinates },
-    }),
+  updateSite: (payload: {
+    site: string;
+    coordinates: string | null;
+    owner: string | null;
+    contact: string | null;
+    notes: string | null;
+    reviewed: boolean;
+  }) =>
+    request<{
+      site: string;
+      latitude: number | null;
+      longitude: number | null;
+      owner: string | null;
+      contact: string | null;
+      notes: string | null;
+      last_reviewed_at: string | null;
+    }>("/nodes/sites", { method: "PUT", body: payload }),
   collectFacts: (ids: number[]) => request<Job>("/nodes/facts/collect", { method: "POST", body: { ids } }),
   collectNodeFacts: (id: number) => request<NodeFacts>(`/nodes/${id}/facts/collect`, { method: "POST" }),
   createNode: (payload: NodeInput) => request<{ node: Node; reload_status: string; warnings: string[] }>("/nodes", { method: "POST", body: payload }),
@@ -346,7 +358,7 @@ export const api = {
     request<{ node: Node; reload_status: string; warnings: string[] }>(`/nodes/${id}`, { method: "PATCH", body: payload }),
   deleteNode: (id: number) => request<{ deleted: number; reload_status: string; warnings: string[] }>(`/nodes/${id}`, { method: "DELETE" }),
   bulkNodes: (payload: {
-    action: "backup" | "change_group" | "delete" | "update" | "trust_host_key" | "set_tags";
+    action: "backup" | "change_group" | "delete" | "update" | "trust_host_key" | "set_tags" | "test_connection";
     ids: number[];
     group_name?: string | null;
     model?: string | null;
@@ -356,7 +368,7 @@ export const api = {
     tags?: Record<string, string> | null;
     tags_mode?: "merge" | "replace";
   }) =>
-    request<{ job_id?: number; updated?: number; deleted?: number; requested?: number; trusted?: number; failed?: unknown[]; reload_status?: string; warnings?: string[] }>("/nodes/bulk", { method: "POST", body: payload }),
+    request<{ job_id?: number; updated?: number; deleted?: number; requested?: number; trusted?: number; tested?: number; succeeded?: number; failed?: unknown[]; results?: unknown[]; reload_status?: string; warnings?: string[] }>("/nodes/bulk", { method: "POST", body: payload }),
   importNodes: (formData: FormData) => request<ImportSummary>("/nodes/import", { method: "POST", formData }),
   exportNodes: () => download("/nodes/export.csv", undefined, "oxidized-nodes.csv"),
   backupNode: (id: number) => request<Job>(`/nodes/${id}/backup`, { method: "POST" }),
@@ -373,6 +385,11 @@ export const api = {
   nodeConfig: (id: number) => requestText(`/nodes/${id}/config`),
   nodeVersions: (id: number) => request<VersionsResponse>(`/nodes/${id}/versions`),
   nodeVersion: (id: number, oid: string) => request<VersionContent>(`/nodes/${id}/versions/${encodeURIComponent(oid)}`),
+  setGoldenVersion: (id: number, oid: string | null) =>
+    request<{ golden_oid: string | null; golden_at: string | null }>(`/nodes/${id}/golden`, {
+      method: "PUT",
+      body: { oid },
+    }),
   nodeDiff: (id: number, from_oid: string, to_oid: string) =>
     request<NodeDiff>(`/nodes/${id}/diff`, { query: { from_oid, to_oid } }),
   downloadNode: (id: number, oid?: string) =>

@@ -15,6 +15,7 @@ import {
   RefreshCw,
   ScanSearch,
   ServerCog,
+  Star,
   Trash2,
   TriangleAlert,
 } from "lucide-react";
@@ -205,6 +206,16 @@ export function NodeDetailPage() {
     enabled: tab === "diff" && selected.length === 2,
   });
 
+  const setGolden = useMutation({
+    mutationFn: (oid: string | null) => api.setGoldenVersion(nodeId, oid),
+    onSuccess: (_result, oid) => {
+      toast.success(oid ? t("nodeDetail.goldenPinned") : t("nodeDetail.goldenUnpinned"));
+      void queryClient.invalidateQueries({ queryKey: ["node", nodeId] });
+      void queryClient.invalidateQueries({ queryKey: ["node-versions", nodeId] });
+    },
+    onError: (error) => notifyError(t, error),
+  });
+
   const backup = useMutation({
     mutationFn: () => api.backupNode(nodeId),
     onSuccess: () => {
@@ -288,6 +299,18 @@ export function NodeDetailPage() {
   const node = nodeQuery.data;
   const effective = node.effective;
   const status = statusQuery.data;
+  const configText = configQuery.data ?? "";
+  const configWarnings: string[] = [];
+  if (configText.trim()) {
+    if (configText.trim().length < 40) configWarnings.push("nodeDetail.configWarningShort");
+    if (
+      /invalid input|authorization failed|authentication failed|permission denied|syntax error|% ?error/i.test(
+        configText,
+      )
+    ) {
+      configWarnings.push("nodeDetail.configWarningError");
+    }
+  }
   const duration =
     status?.last_started_at && status?.last_finished_at
       ? Math.max(0, Math.round((new Date(status.last_finished_at).getTime() - new Date(status.last_started_at).getTime()) / 1000))
@@ -624,6 +647,21 @@ export function NodeDetailPage() {
               </div>
             </CardHeader>
             <CardContent>
+              {configWarnings.length ? (
+                <div className="mb-3 space-y-1 rounded-md border border-warning/25 bg-warning/[0.05] p-3 text-xs">
+                  <p className="flex items-center gap-2 font-medium text-warning">
+                    <TriangleAlert className="h-3.5 w-3.5" />
+                    {t("nodeDetail.configWarnings")}
+                  </p>
+                  {configWarnings.map((warning) => (
+                    <p key={warning} className="text-muted-foreground">
+                      {warning === "nodeDetail.configWarningShort"
+                        ? t("nodeDetail.configWarningShort")
+                        : t("nodeDetail.configWarningError")}
+                    </p>
+                  ))}
+                </div>
+              ) : null}
               {configQuery.isLoading ? (
                 <div className="h-72 animate-pulse rounded-md bg-muted" />
               ) : configQuery.isError ? (
@@ -648,6 +686,19 @@ export function NodeDetailPage() {
                 <Button size="sm" onClick={() => setTab("diff")}>
                   {t("nodeDetail.compareSelected")}
                   <ArrowUpRight />
+                </Button>
+              ) : null}
+              {node.golden_oid && versions.length ? (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    setSelected([node.golden_oid as string, versions[0].oid]);
+                    setTab("diff");
+                  }}
+                >
+                  <Star />
+                  {t("nodeDetail.compareGolden")}
                 </Button>
               ) : null}
             </CardHeader>
@@ -692,6 +743,12 @@ export function NodeDetailPage() {
                           <button type="button" className="inline-flex items-center gap-2 text-left hover:text-primary" onClick={() => setVersionDialog(version)}>
                             <span className="font-mono text-xs">{version.oid.slice(0, 10)}</span>
                             {index === 0 ? <Badge variant="success">{t("nodeDetail.current")}</Badge> : null}
+                            {version.oid === node.golden_oid ? (
+                              <Badge variant="outline">
+                                <Star className="h-3 w-3 fill-current" />
+                                {t("nodeDetail.golden")}
+                              </Badge>
+                            ) : null}
                           </button>
                         </TableCell>
                         <TableCell className="text-xs">{version.author ?? "—"}</TableCell>
@@ -709,6 +766,17 @@ export function NodeDetailPage() {
                             <Button variant="ghost" size="icon-xs" onClick={() => void api.downloadNode(nodeId, version.oid)} aria-label={t("common.download")}>
                               <Download />
                             </Button>
+                            {can("nodes.write") ? (
+                              <Button
+                                variant="ghost"
+                                size="icon-xs"
+                                onClick={() => setGolden.mutate(version.oid === node.golden_oid ? null : version.oid)}
+                                aria-label={version.oid === node.golden_oid ? t("nodeDetail.unpinGolden") : t("nodeDetail.pinGolden")}
+                                title={version.oid === node.golden_oid ? t("nodeDetail.unpinGolden") : t("nodeDetail.pinGolden")}
+                              >
+                                <Star className={version.oid === node.golden_oid ? "fill-current text-primary" : ""} />
+                              </Button>
+                            ) : null}
                           </div>
                         </TableCell>
                       </TableRow>

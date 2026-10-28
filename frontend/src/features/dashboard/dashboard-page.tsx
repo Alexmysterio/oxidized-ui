@@ -59,6 +59,17 @@ export function DashboardPage() {
     onError: (error) => notifyError(t, error),
   });
 
+  const retryNode = useMutation({
+    mutationFn: (nodeId: number) => api.backupNode(nodeId),
+    onSuccess: () => {
+      toast.success(t("dashboard.retryQueued"));
+      void queryClient.invalidateQueries({ queryKey: ["jobs"] });
+      void queryClient.invalidateQueries({ queryKey: ["status"] });
+      void queryClient.invalidateQueries({ queryKey: ["nodes"] });
+    },
+    onError: (error) => notifyError(t, error),
+  });
+
   if (statusQuery.isLoading) return <PageSkeleton />;
   if (statusQuery.isError || !statusQuery.data) {
     return <ErrorState onRetry={() => void statusQuery.refetch()} />;
@@ -440,13 +451,32 @@ export function DashboardPage() {
                         <span className="min-w-0 flex-1">
                           <span className="block truncate text-sm font-medium">{node.name}</span>
                           <span className="block truncate font-mono text-[10px] text-muted-foreground">
-                            {node.address ?? "—"} · {node.model}
+                            {node.address ?? "-"} · {node.model}
+                            {node.last_status_raw ? ` · ${t(`nodeStatus.${node.last_status_raw}`)}` : ""}
                           </span>
                         </span>
                         <NodeStatusBadge status={node.status} />
                         <span className="hidden font-mono text-[10px] text-muted-foreground sm:block">
-                          {node.last_attempt_at ? intl.relative(node.last_attempt_at) : "—"}
+                          {node.last_attempt_at ? intl.relative(node.last_attempt_at) : "-"}
                         </span>
+                        {can("backups.trigger") ? (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon-xs"
+                            className="shrink-0"
+                            disabled={retryNode.isPending}
+                            onClick={(event) => {
+                              event.preventDefault();
+                              event.stopPropagation();
+                              retryNode.mutate(node.id);
+                            }}
+                            aria-label={t("dashboard.retry")}
+                            title={t("dashboard.retry")}
+                          >
+                            <RefreshCw />
+                          </Button>
+                        ) : null}
                       </Link>
                     ))}
                   </div>

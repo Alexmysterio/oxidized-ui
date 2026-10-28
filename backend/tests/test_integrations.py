@@ -261,6 +261,17 @@ def test_versions_diff_and_download(client: TestClient, admin, fake_clients):
     assert "interface Gi0/2" in current.text
     assert "node not found" not in current.text
 
+    golden = admin.put(f"/api/nodes/{node['id']}/golden", json={"oid": "a1b2c3"})
+    assert golden.status_code == 200, golden.text
+    assert golden.json()["golden_oid"] == "a1b2c3"
+    detail = admin.get(f"/api/nodes/{node['id']}")
+    assert detail.json()["golden_oid"] == "a1b2c3"
+    missing = admin.put(f"/api/nodes/{node['id']}/golden", json={"oid": "ffffff"})
+    assert missing.status_code == 404
+    cleared = admin.put(f"/api/nodes/{node['id']}/golden", json={"oid": None})
+    assert cleared.status_code == 200
+    assert cleared.json()["golden_oid"] is None
+
 
 def test_search_and_system_settings(client: TestClient, admin, fake_clients):
     created = admin.post("/api/nodes", json=make_node())

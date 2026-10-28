@@ -4,6 +4,7 @@ import { Check, KeyRound, LogOut, Monitor, Moon, Palette, ShieldCheck, Sun, Tras
 import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
+import QRCode from "qrcode";
 import { toast } from "sonner";
 
 import { PageHeader } from "@/components/shared/page-header";
@@ -49,6 +50,7 @@ export function ProfilePage() {
   const [savingPreferences, setSavingPreferences] = useState(false);
   const [passwordError, setPasswordError] = useState<string | null>(null);
   const [mfaSetup, setMfaSetup] = useState<MfaSetup | null>(null);
+  const [mfaQr, setMfaQr] = useState<string | null>(null);
   const [mfaCode, setMfaCode] = useState("");
   const [recoveryCodes, setRecoveryCodes] = useState<string[] | null>(null);
   const [disableOpen, setDisableOpen] = useState(false);
@@ -178,6 +180,28 @@ export function ProfilePage() {
     queryFn: api.mfaStatus,
     enabled: Boolean(user),
   });
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!mfaSetup) {
+      setMfaQr(null);
+      return;
+    }
+    void QRCode.toDataURL(mfaSetup.otpauth_uri, {
+      width: 220,
+      margin: 1,
+      color: { dark: "#0f172a", light: "#ffffff" },
+    })
+      .then((url) => {
+        if (!cancelled) setMfaQr(url);
+      })
+      .catch(() => {
+        if (!cancelled) setMfaQr(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [mfaSetup]);
 
   const startMfa = useMutation({
     mutationFn: api.mfaSetup,
@@ -587,14 +611,34 @@ export function ProfilePage() {
             </>
           ) : mfaSetup ? (
             <>
-              <div className="space-y-2">
-                <Label>{t("profile.mfaSecret")}</Label>
-                <div className="flex items-center gap-2">
-                  <Input readOnly value={mfaSetup.secret} className="font-mono text-xs" />
-                  <CopyButton value={mfaSetup.secret} />
-                </div>
-                <p className="break-all font-mono text-[10px] text-muted-foreground">{mfaSetup.otpauth_uri}</p>
+              <div className="space-y-2 text-center">
+                <Label>{t("profile.mfaScanQr")}</Label>
+                {mfaQr ? (
+                  <img
+                    src={mfaQr}
+                    alt={t("profile.mfaQrAlt")}
+                    className="mx-auto h-56 w-56 rounded-lg border bg-white p-2"
+                  />
+                ) : (
+                  <div className="mx-auto flex h-56 w-56 items-center justify-center rounded-lg border bg-muted/20">
+                    <Spinner />
+                  </div>
+                )}
+                <p className="text-[11px] leading-relaxed text-muted-foreground">{t("profile.mfaScanQrHelp")}</p>
               </div>
+              <details className="rounded-md border bg-muted/15 p-3">
+                <summary className="cursor-pointer text-xs font-medium">{t("profile.mfaManualKey")}</summary>
+                <div className="mt-3 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Label htmlFor="mfa-secret">{t("profile.mfaSecret")}</Label>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Input id="mfa-secret" readOnly value={mfaSetup.secret} className="font-mono text-xs" />
+                    <CopyButton value={mfaSetup.secret} />
+                  </div>
+                  <p className="break-all font-mono text-[10px] text-muted-foreground">{mfaSetup.otpauth_uri}</p>
+                </div>
+              </details>
               <div className="space-y-2">
                 <Label htmlFor="mfa-confirm-code">{t("profile.mfaCodeLabel")}</Label>
                 <Input

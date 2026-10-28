@@ -51,7 +51,7 @@ function MapEffects({ points, signature }: { points: Point[]; signature: string 
   return null;
 }
 
-export function SiteMap({ sites }: { sites: LocatedSite[] }) {
+export function SiteMap({ sites, onBackup }: { sites: LocatedSite[]; onBackup?: (site: LocatedSite) => void }) {
   const { t } = useTranslation();
   const points = useMemo<Point[]>(
     () => sites.map((site) => [site.latitude, site.longitude]),
@@ -110,6 +110,15 @@ export function SiteMap({ sites }: { sites: LocatedSite[] }) {
                     </Link>
                   ))}
                 </div>
+                {onBackup ? (
+                  <button
+                    type="button"
+                    onClick={() => onBackup(site)}
+                    className="mt-1 w-full rounded-md border border-border bg-card px-2 py-1 text-[11px] font-medium transition-colors hover:bg-accent"
+                  >
+                    {t("sites.backup")}
+                  </button>
+                ) : null}
               </div>
             </Popup>
           </CircleMarker>
