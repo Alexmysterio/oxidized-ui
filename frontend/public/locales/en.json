@@ -149,7 +149,7 @@
   "auth": {
     "loginTitle": "Sign in to the control plane",
     "username": "Username",
-    "usernamePlaceholder": "your.username",
+    "usernamePlaceholder": "Username",
     "password": "Password",
     "passwordPlaceholder": "Enter your password",
     "signIn": "Sign in",
