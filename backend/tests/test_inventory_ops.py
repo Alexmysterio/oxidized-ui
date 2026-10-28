@@ -7,6 +7,7 @@ from sqlalchemy import select
 from app.db import SessionLocal
 from app.facts_service import parse_facts
 from app.models import Node
+from app.node_service import migrate_legacy_coordinate_tags
 from app.oxidized import OxidizedNode
 from app.timeutil import utcnow
 from tests.conftest import make_node
@@ -240,7 +241,7 @@ def test_sites_grouping_and_map(client: TestClient, admin):
     assert second.status_code == 201, second.text
     admin.post(
         "/api/nodes",
-        json=make_node(name="site-c", tags={"site": "barcelona", "latitude": "41.4", "longitude": "2.2"}),
+        json=make_node(name="site-c", tags={"site": "barcelona", "coordinates": "41.4, 2.2"}),
     )
     admin.post("/api/nodes", json=make_node(name="site-d", tags={"site": "barcelona"}))
 
@@ -257,6 +258,35 @@ def test_sites_grouping_and_map(client: TestClient, admin):
     barcelona = {node["name"]: node for node in names["Barcelona"]["nodes"]}
     assert barcelona["site-c"]["latitude"] == 41.4
     assert barcelona["site-d"]["latitude"] is None
+
+
+def test_legacy_coordinate_tags_are_migrated_and_removed(client: TestClient, admin):
+    node_id = _node(admin, "legacy-map")
+    orphan_id = _node(admin, "legacy-orphan")
+    with SessionLocal() as db:
+        node = db.get(Node, node_id)
+        assert node is not None
+        node.tags = {"Site": "Madrid", "Latitude": "40.4", "Longitude": "-3.7"}
+        orphan = db.get(Node, orphan_id)
+        assert orphan is not None
+        orphan.tags = {"Site": "Madrid", "Latitude": "40.4"}
+        db.commit()
+
+    with SessionLocal() as db:
+        assert migrate_legacy_coordinate_tags(db) == 2
+        node = db.get(Node, node_id)
+        orphan = db.get(Node, orphan_id)
+        assert node is not None and orphan is not None
+        assert node.tags == {"Site": "Madrid", "Coordinates": "40.4, -3.7"}
+        assert orphan.tags == {"Site": "Madrid"}
+        assert migrate_legacy_coordinate_tags(db) == 0
+
+    sites = admin.get("/api/nodes/sites", params={"tag": "Site"}).json()
+    madrid = next(site for site in sites["sites"] if site["name"] == "Madrid")
+    mapped = {item["name"]: item for item in madrid["nodes"]}
+    assert mapped["legacy-map"]["latitude"] == 40.4
+    assert mapped["legacy-map"]["longitude"] == -3.7
+    assert mapped["legacy-orphan"]["latitude"] is None
 
 
 def test_audit_records_before_and_after(client: TestClient, admin):

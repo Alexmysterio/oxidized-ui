@@ -785,6 +785,7 @@ def tags_catalog(db: Session, *, allowed_groups: list[str] | None = None) -> lis
 COORDINATE_TAG_KEYS = {"coordinates", "coordenadas", "coordinate", "coordenada", "coords", "coord"}
 LATITUDE_TAG_KEYS = {"latitude", "lat"}
 LONGITUDE_TAG_KEYS = {"longitude", "lon", "lng"}
+LEGACY_COORDINATE_TAG_KEYS = LATITUDE_TAG_KEYS | LONGITUDE_TAG_KEYS
 
 
 def _finite_float(value: object) -> float | None:
@@ -793,6 +794,56 @@ def _finite_float(value: object) -> float | None:
     except (TypeError, ValueError):
         return None
     return number if math.isfinite(number) else None
+
+
+def _format_coordinate(value: float) -> str:
+    return f"{value:.6f}".rstrip("0").rstrip(".")
+
+
+def _legacy_value(tags: dict[str, Any], keys: set[str]) -> float | None:
+    for key, value in tags.items():
+        if str(key).casefold() in keys:
+            number = _finite_float(value)
+            if number is not None:
+                return number
+    return None
+
+
+def migrate_legacy_coordinate_tags(db: Session) -> int:
+    """Replace legacy Latitude/Longitude tags with a single Coordinates tag.
+
+    Runs once at startup (and is idempotent). Existing Coordinates tags win; a
+    valid legacy pair is converted, while orphan legacy values are just removed.
+    """
+
+    from .timeutil import utcnow
+
+    changed = 0
+    for node in db.scalars(select(Node)).all():
+        tags = node.tags if isinstance(node.tags, dict) else None
+        if not tags:
+            continue
+        legacy_keys = {key for key in tags if str(key).casefold() in LEGACY_COORDINATE_TAG_KEYS}
+        if not legacy_keys:
+            continue
+        updated = {key: value for key, value in tags.items() if key not in legacy_keys}
+        has_coordinates = any(str(key).casefold() in COORDINATE_TAG_KEYS for key in updated)
+        if not has_coordinates:
+            latitude = _legacy_value(tags, LATITUDE_TAG_KEYS)
+            longitude = _legacy_value(tags, LONGITUDE_TAG_KEYS)
+            if (
+                latitude is not None
+                and longitude is not None
+                and -90 <= latitude <= 90
+                and -180 <= longitude <= 180
+            ):
+                updated["Coordinates"] = f"{_format_coordinate(latitude)}, {_format_coordinate(longitude)}"
+        node.tags = updated or None
+        node.updated_at = utcnow()
+        changed += 1
+    if changed:
+        db.commit()
+    return changed
 
 
 def sites(db: Session, *, tag_key: str = "Site", allowed_groups: list[str] | None = None) -> dict[str, Any]:
@@ -807,8 +858,6 @@ def sites(db: Session, *, tag_key: str = "Site", allowed_groups: list[str] | Non
         site_name: str | None = None
         latitude: float | None = None
         longitude: float | None = None
-        legacy_latitude: float | None = None
-        legacy_longitude: float | None = None
         for key, value in tags.items():
             lowered = str(key).casefold()
             if lowered == wanted:
@@ -817,12 +866,6 @@ def sites(db: Session, *, tag_key: str = "Site", allowed_groups: list[str] | Non
                 parsed = parse_coordinates(value)
                 if parsed is not None:
                     latitude, longitude = parsed
-            elif lowered in LATITUDE_TAG_KEYS:
-                legacy_latitude = _finite_float(value)
-            elif lowered in LONGITUDE_TAG_KEYS:
-                legacy_longitude = _finite_float(value)
-        if (latitude is None or longitude is None) and legacy_latitude is not None and legacy_longitude is not None:
-            latitude, longitude = legacy_latitude, legacy_longitude
         bucket = buckets.setdefault(site_name or "", {"name": site_name, "count": 0, "status": {}, "nodes": []})
         cache = caches.get(node.id)
         status = node_status_bucket(node, cache)

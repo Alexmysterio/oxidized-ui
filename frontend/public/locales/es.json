@@ -2036,7 +2036,7 @@
     "emptyDescription": "Añade la etiqueta Site (o la que elijas) a los nodos para agruparlos aquí.",
     "map": "Mapa",
     "mapDescription": "Nodos con la etiqueta Coordenadas en formato decimal o grados, minutos y segundos.",
-    "mapHelp": "Coordenadas admite 36.751112, -3.491751 o 36°45'04.0\"N 3°29'30.3\"W. Las etiquetas Latitude/Longitude antiguas siguen funcionando.",
+    "mapHelp": "Coordenadas admite 36.751112, -3.491751 o 36°45'04.0\"N 3°29'30.3\"W. Las etiquetas Latitude/Longitude antiguas se convierten automáticamente.",
     "noSite": "Sin sitio",
     "nodes": "{{count}} nodos",
     "openNode": "Abrir nodo"

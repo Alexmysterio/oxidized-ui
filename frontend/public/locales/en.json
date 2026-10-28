@@ -2036,7 +2036,7 @@
     "emptyDescription": "Add the Site tag (or any other) to nodes to group them here.",
     "map": "Map",
     "mapDescription": "Nodes with the Coordinates tag in decimal or degrees/minutes/seconds format.",
-    "mapHelp": "Coordinates accepts 36.751112, -3.491751 or 36°45'04.0\"N 3°29'30.3\"W. Legacy Latitude/Longitude tags still work.",
+    "mapHelp": "Coordinates accepts 36.751112, -3.491751 or 36°45'04.0\"N 3°29'30.3\"W. Legacy Latitude/Longitude tags are converted automatically.",
     "noSite": "No site",
     "nodes": "{{count}} nodes",
     "openNode": "Open node"
