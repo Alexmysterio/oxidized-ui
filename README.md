@@ -114,7 +114,7 @@ office, or a trusted internal network.
 - Outgoing alerts to Telegram, Slack, Discord, or any webhook, plus an incoming backup webhook.
 - Optional daily notification digest.
 - Node tags, node templates, and inventory facts (serial, OS version, uptime).
-- Sites view grouped by tag, with an optional coordinate plot.
+- Sites view grouped by tag, with an OpenStreetMap map from a single `Coordinates` tag.
 - Reconciliation with Oxidized: missing nodes, orphans and field drift.
 - Queue priority rules and pacing for bulk backups.
 - System health history, weekly CSV/PDF reports and email delivery.
@@ -846,9 +846,12 @@ reports and offers the import.
 ## Sites
 
 **Inventory -> Sites** groups the inventory by a tag (default `Site`) and shows the
-aggregated status per location. If nodes carry `Latitude` and `Longitude` tags, the
-page plots them on a relative map without any external map provider. Status counts
-and node links stay available for locations without coordinates.
+aggregated status per location. Nodes can carry a `Coordinates` (or `Coordenadas`)
+tag with either decimal values (`36.751112, -3.491751`) or degrees/minutes/seconds
+(`36°45'04.0"N 3°29'30.3"W`). The page plots them on an OpenStreetMap map; status
+counts and node links stay available for locations without coordinates. Tiles are
+loaded directly from OpenStreetMap in the browser. Legacy `Latitude`/`Longitude`
+tags are still read as a fallback.
 
 ---
 

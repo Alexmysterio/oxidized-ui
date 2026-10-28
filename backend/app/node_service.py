@@ -20,6 +20,7 @@ from .config_service import applied_config, applied_groups, get_draft_revision
 from .crypto import decrypt_optional, encrypt_json, encrypt_optional
 from .docker_api import client_for as docker_client_for
 from .errors import AppError
+from .geo import parse_coordinates
 from .models import Job as JobModel
 from .models import Node, NodeStatusCache
 from .node_effective_service import effective_node_settings
@@ -781,6 +782,19 @@ def tags_catalog(db: Session, *, allowed_groups: list[str] | None = None) -> lis
     ]
 
 
+COORDINATE_TAG_KEYS = {"coordinates", "coordenadas", "coordinate", "coordenada", "coords", "coord"}
+LATITUDE_TAG_KEYS = {"latitude", "lat"}
+LONGITUDE_TAG_KEYS = {"longitude", "lon", "lng"}
+
+
+def _finite_float(value: object) -> float | None:
+    try:
+        number = float(str(value).strip().replace(",", "."))
+    except (TypeError, ValueError):
+        return None
+    return number if math.isfinite(number) else None
+
+
 def sites(db: Session, *, tag_key: str = "Site", allowed_groups: list[str] | None = None) -> dict[str, Any]:
     wanted = (tag_key or "Site").strip().casefold()
     query = select(Node)
@@ -793,24 +807,22 @@ def sites(db: Session, *, tag_key: str = "Site", allowed_groups: list[str] | Non
         site_name: str | None = None
         latitude: float | None = None
         longitude: float | None = None
+        legacy_latitude: float | None = None
+        legacy_longitude: float | None = None
         for key, value in tags.items():
             lowered = str(key).casefold()
             if lowered == wanted:
                 site_name = str(value)
-            elif lowered in {"latitude", "lat"}:
-                try:
-                    latitude = float(value)
-                except (TypeError, ValueError):
-                    latitude = None
-                if latitude is not None and not math.isfinite(latitude):
-                    latitude = None
-            elif lowered in {"longitude", "lon", "lng"}:
-                try:
-                    longitude = float(value)
-                except (TypeError, ValueError):
-                    longitude = None
-                if longitude is not None and not math.isfinite(longitude):
-                    longitude = None
+            if lowered in COORDINATE_TAG_KEYS:
+                parsed = parse_coordinates(value)
+                if parsed is not None:
+                    latitude, longitude = parsed
+            elif lowered in LATITUDE_TAG_KEYS:
+                legacy_latitude = _finite_float(value)
+            elif lowered in LONGITUDE_TAG_KEYS:
+                legacy_longitude = _finite_float(value)
+        if (latitude is None or longitude is None) and legacy_latitude is not None and legacy_longitude is not None:
+            latitude, longitude = legacy_latitude, legacy_longitude
         bucket = buckets.setdefault(site_name or "", {"name": site_name, "count": 0, "status": {}, "nodes": []})
         cache = caches.get(node.id)
         status = node_status_bucket(node, cache)

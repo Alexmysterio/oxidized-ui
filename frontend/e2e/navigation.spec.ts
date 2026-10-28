@@ -254,12 +254,44 @@ test("mobile drawer stays usable after node navigation and edit", async ({ page 
   await expect(page.getByRole("dialog")).toBeVisible();
 });
 
-test("sites page keeps its localized label in the sidebar and topbar", async ({ page }) => {
+test("sites page keeps its localized label and renders the OpenStreetMap", async ({ page }) => {
+  const tile = Buffer.from(
+    "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=",
+    "base64",
+  );
+  await page.route("https://tile.openstreetmap.org/**", (route) =>
+    route.fulfill({ body: tile, contentType: "image/png" }),
+  );
   await page.route("**/api/**", async (route) => {
     const path = new URL(route.request().url()).pathname;
     if (path.endsWith("/api/meta")) return route.fulfill({ json: meta });
     if (path.endsWith("/api/auth/session")) return route.fulfill({ json: session });
-    if (path.endsWith("/api/nodes/sites")) return route.fulfill({ json: { tag: "Site", sites: [], total: 0 } });
+    if (path.endsWith("/api/nodes/sites")) {
+      return route.fulfill({
+        json: {
+          tag: "Site",
+          total: 1,
+          sites: [
+            {
+              name: "Madrid",
+              count: 1,
+              status: { ok: 1 },
+              nodes: [
+                {
+                  id: 1,
+                  name: "core-1",
+                  group_name: null,
+                  model: "ios",
+                  status: "ok",
+                  latitude: 36.751112,
+                  longitude: -3.491751,
+                },
+              ],
+            },
+          ],
+        },
+      });
+    }
     if (path.endsWith("/api/nodes/tags")) return route.fulfill({ json: { items: [] } });
     if (path.endsWith("/api/preferences")) return route.fulfill({ json: { favorites: [], saved_filters: [] } });
     return route.fulfill({ json: {} });
@@ -273,5 +305,10 @@ test("sites page keeps its localized label in the sidebar and topbar", async ({ 
   expect(label).toMatch(/^(Sitios|Sites)$/);
   await expect(page.locator("header")).toContainText(label);
   await expect(page.locator("aside")).not.toContainText(/nav\.[a-z]/);
+  await expect(page.locator(".leaflet-container")).toBeVisible();
+  await expect(page.getByRole("link", { name: "OpenStreetMap" })).toBeVisible();
+  await expect(page.locator(".leaflet-interactive")).toHaveCount(1);
+  await page.locator(".leaflet-interactive").click();
+  await expect(page.locator(".leaflet-popup")).toContainText("36.75111, -3.49175");
 });
 

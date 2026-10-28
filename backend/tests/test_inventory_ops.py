@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import select
 
@@ -229,22 +230,33 @@ def test_export_verification(client: TestClient, admin):
 def test_sites_grouping_and_map(client: TestClient, admin):
     first = admin.post(
         "/api/nodes",
-        json=make_node(name="site-a", tags={"site": "madrid", "latitude": "40.4", "longitude": "-3.7"}),
+        json=make_node(name="site-a", tags={"site": "madrid", "coordinates": "40.4, -3.7"}),
     )
     assert first.status_code == 201, first.text
     second = admin.post(
         "/api/nodes",
-        json=make_node(name="site-b", tags={"site": "madrid", "latitude": "40.5", "longitude": "-3.6"}),
+        json=make_node(name="site-b", tags={"site": "madrid", "coordinates": '40°30\'00.0"N 3°36\'00.0"W'}),
     )
     assert second.status_code == 201, second.text
-    admin.post("/api/nodes", json=make_node(name="site-c", tags={"site": "barcelona"}))
+    admin.post(
+        "/api/nodes",
+        json=make_node(name="site-c", tags={"site": "barcelona", "latitude": "41.4", "longitude": "2.2"}),
+    )
+    admin.post("/api/nodes", json=make_node(name="site-d", tags={"site": "barcelona"}))
 
     sites = admin.get("/api/nodes/sites", params={"tag": "Site"}).json()
-    assert sites["total"] == 3
+    assert sites["total"] == 4
     names = {site["name"]: site for site in sites["sites"]}
     assert names["Madrid"]["count"] == 2
-    assert names["Barcelona"]["count"] == 1
-    assert names["Madrid"]["nodes"][0]["latitude"] == 40.4
+    assert names["Barcelona"]["count"] == 2
+    madrid = {node["name"]: node for node in names["Madrid"]["nodes"]}
+    assert madrid["site-a"]["latitude"] == 40.4
+    assert madrid["site-a"]["longitude"] == -3.7
+    assert madrid["site-b"]["latitude"] == pytest.approx(40.5)
+    assert madrid["site-b"]["longitude"] == pytest.approx(-3.6)
+    barcelona = {node["name"]: node for node in names["Barcelona"]["nodes"]}
+    assert barcelona["site-c"]["latitude"] == 41.4
+    assert barcelona["site-d"]["latitude"] is None
 
 
 def test_audit_records_before_and_after(client: TestClient, admin):

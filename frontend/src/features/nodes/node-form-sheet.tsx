@@ -544,7 +544,14 @@ export function NodeFormSheet({
   const tagsQuery = useQuery({ queryKey: ["node-tags"], queryFn: api.nodeTags, enabled: open });
   const tagCatalog = tagsQuery.data?.items ?? [];
   const tagKeySuggestions = Array.from(
-    new Set([...tagCatalog.map((item) => item.key), "Site", "Criticality", "Vendor", "Tier", "Latitude", "Longitude"]),
+    new Set([
+      ...tagCatalog.map((item) => item.key),
+      "Site",
+      "Criticality",
+      "Vendor",
+      "Tier",
+      t("nodeForm.coordinatesTag"),
+    ]),
   ).sort();
   const tagValueSuggestions = tagCatalog.reduce<Record<string, string[]>>((result, item) => {
     result[item.key] = Array.from(new Set([...(result[item.key] ?? []), item.value])).sort();

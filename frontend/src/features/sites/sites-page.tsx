@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { Map as MapIcon, MapPin, Network } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { EmptyState } from "@/components/shared/empty-state";
@@ -10,57 +10,11 @@ import { NodeStatusBadge } from "@/components/shared/status-badge";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { SiteMap } from "@/features/sites/site-map";
 import { usePageTitle } from "@/hooks/use-app";
 import { api } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import type { NodeStatus, SiteNode } from "@/types/api";
-
-const statusColor: Record<string, string> = {
-  ok: "#22a06b",
-  failed: "#e05252",
-  pending: "#d9a521",
-  never: "#94a3b8",
-};
-
-function MapPlot({ nodes }: { nodes: (SiteNode & { latitude: number; longitude: number })[] }) {
-  const bounds = useMemo(() => {
-    const lats = nodes.map((node) => node.latitude);
-    const lons = nodes.map((node) => node.longitude);
-    return {
-      minLat: Math.min(...lats),
-      maxLat: Math.max(...lats),
-      minLon: Math.min(...lons),
-      maxLon: Math.max(...lons),
-    };
-  }, [nodes]);
-  const spanLat = Math.max(bounds.maxLat - bounds.minLat, 0.01);
-  const spanLon = Math.max(bounds.maxLon - bounds.minLon, 0.01);
-  return (
-    <div className="relative h-72 w-full overflow-hidden rounded-lg border bg-muted/10">
-      <svg viewBox="0 0 100 60" className="h-full w-full" preserveAspectRatio="none">
-        {Array.from({ length: 6 }).map((_, index) => (
-          <line key={`h-${index}`} x1="0" x2="100" y1={index * 12} y2={index * 12} stroke="currentColor" strokeWidth="0.1" className="text-border" />
-        ))}
-        {Array.from({ length: 10 }).map((_, index) => (
-          <line key={`v-${index}`} y1="0" y2="60" x1={index * 11.1} x2={index * 11.1} stroke="currentColor" strokeWidth="0.1" className="text-border" />
-        ))}
-        {nodes.map((node) => {
-          const x = ((node.longitude - bounds.minLon) / spanLon) * 92 + 4;
-          const y = 56 - ((node.latitude - bounds.minLat) / spanLat) * 52;
-          return (
-            <g key={node.id}>
-              <title>{`${node.name} (${node.latitude}, ${node.longitude})`}</title>
-              <circle cx={x} cy={y} r="1.4" fill={statusColor[node.status] ?? statusColor.never} />
-              <text x={x + 1.8} y={y + 1} fontSize="2" className="fill-foreground">
-                {node.name}
-              </text>
-            </g>
-          );
-        })}
-      </svg>
-    </div>
-  );
-}
 
 export function SitesPage() {
   const { t } = useTranslation();
@@ -109,7 +63,7 @@ export function SitesPage() {
                 <CardDescription>{t("sites.mapDescription")}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-2">
-                <MapPlot nodes={mapped} />
+                <SiteMap nodes={mapped} />
                 <p className="text-[11px] text-muted-foreground">{t("sites.mapHelp")}</p>
               </CardContent>
             </Card>
