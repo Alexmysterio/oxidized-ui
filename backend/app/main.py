@@ -163,6 +163,9 @@ async def lifespan(_app: FastAPI):
     try:
         yield
     finally:
+        from .routers.map import close_client
+
+        await close_client()
         if not settings.disable_background_tasks:
             stop_poller()
         shutdown_jobs()

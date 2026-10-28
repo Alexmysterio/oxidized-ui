@@ -2040,6 +2040,7 @@
     "map": "Map",
     "mapDescription": "Nodes with the Coordinates tag in decimal or degrees/minutes/seconds format.",
     "mapHelp": "Coordinates accepts 36.751112, -3.491751 or 36°45'04.0\"N 3°29'30.3\"W. Legacy Latitude/Longitude tags are converted automatically.",
+    "mapUnavailable": "The map could not be loaded. The server cannot reach OpenStreetMap; check its internet access or proxy.",
     "noSite": "No site",
     "nodes": "{{count}} nodes",
     "openNode": "Open node"
