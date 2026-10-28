@@ -79,6 +79,7 @@
   "job.not_found": 404,
   "logs.stream_failed": 502,
   "logs.too_large": 413,
+  "map.tile_unavailable": 502,
   "node.backup_failed": 502,
   "node.bulk_too_large": 422,
   "node.credentials_read_only": 422,

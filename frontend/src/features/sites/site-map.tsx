@@ -54,9 +54,10 @@ export function SiteMap({ nodes }: { nodes: (SiteNode & { latitude: number; long
       aria-label={t("sites.map")}
     >
       <TileLayer
-        url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+        url="/api/map/tiles/{z}/{x}/{y}.png"
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap</a> contributors'
         maxZoom={19}
+        noWrap
       />
       <MapEffects points={points} signature={signature} />
       {nodes.map((node) => (

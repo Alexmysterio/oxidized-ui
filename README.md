@@ -850,9 +850,10 @@ aggregated status per location. Nodes can carry a `Coordinates` (or `Coordenadas
 tag with either decimal values (`36.751112, -3.491751`) or degrees/minutes/seconds
 (`36°45'04.0"N 3°29'30.3"W`). The page plots them on an OpenStreetMap map; status
 counts and node links stay available for locations without coordinates. Tiles are
-loaded directly from OpenStreetMap in the browser. At startup, legacy
-`Latitude`/`Longitude` tag pairs are converted to `Coordinates` and the old keys are
-removed.
+proxied and cached by the backend (they are fetched from OpenStreetMap, never from
+the browser), so clients on isolated VLANs still get the map background. At startup,
+legacy `Latitude`/`Longitude` tag pairs are converted to `Coordinates` and the old
+keys are removed.
 
 ---
 

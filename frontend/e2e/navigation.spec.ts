@@ -259,11 +259,11 @@ test("sites page keeps its localized label and renders the OpenStreetMap", async
     "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=",
     "base64",
   );
-  await page.route("https://tile.openstreetmap.org/**", (route) =>
-    route.fulfill({ body: tile, contentType: "image/png" }),
-  );
   await page.route("**/api/**", async (route) => {
     const path = new URL(route.request().url()).pathname;
+    if (path.startsWith("/api/map/tiles/")) {
+      return route.fulfill({ body: tile, contentType: "image/png" });
+    }
     if (path.endsWith("/api/meta")) return route.fulfill({ json: meta });
     if (path.endsWith("/api/auth/session")) return route.fulfill({ json: session });
     if (path.endsWith("/api/nodes/sites")) {
@@ -306,6 +306,7 @@ test("sites page keeps its localized label and renders the OpenStreetMap", async
   await expect(page.locator("header")).toContainText(label);
   await expect(page.locator("aside")).not.toContainText(/nav\.[a-z]/);
   await expect(page.locator(".leaflet-container")).toBeVisible();
+  await expect(page.locator("img.leaflet-tile-loaded").first()).toBeVisible();
   await expect(page.getByRole("link", { name: "OpenStreetMap" })).toBeVisible();
   await expect(page.locator(".leaflet-interactive")).toHaveCount(1);
   await page.locator(".leaflet-interactive").click();
