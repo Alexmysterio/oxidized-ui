@@ -8,7 +8,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from .api_token_service import authenticate_token, context_from_token
-from .db import get_db
+from .db import SessionLocal, get_db
 from .errors import AppError
 from .models import User, UserSession
 from .scope_service import context_scope
@@ -62,6 +62,17 @@ def get_auth_context(request: Request, db: Session = Depends(get_db)) -> AuthCon
         csrf_token=csrf_token_for(raw),
         scope_groups=context_scope(user),
     )
+
+
+def validate_session(request: Request) -> None:
+    """Validate the session cookie without keeping a DB session open.
+
+    Used by long-running or high-volume endpoints (map tiles) that must not hold
+    a pooled connection while waiting on an external service.
+    """
+
+    with SessionLocal() as db:
+        _load_session(request, db)
 
 
 def require_admin(ctx: AuthContext = Depends(get_auth_context)) -> AuthContext:

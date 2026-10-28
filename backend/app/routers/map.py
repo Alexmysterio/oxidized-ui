@@ -1,17 +1,19 @@
 from __future__ import annotations
 
 import asyncio
+import socket
+import sys
 import time
 from collections import OrderedDict
 from threading import Lock
 
-import httpx
+import aiohttp
+from aiohttp.resolver import AsyncResolver
 from fastapi import APIRouter, Depends, Response
 
 from .. import __version__
-from ..auth_deps import get_auth_context
+from ..auth_deps import validate_session
 from ..errors import AppError
-from ..security import AuthContext
 
 router = APIRouter(prefix="/map", tags=["map"])
 
@@ -24,10 +26,12 @@ MAX_TILE_BYTES = 2 * 1024 * 1024
 MAX_CONCURRENT_FETCHES = 6
 FAILURE_THRESHOLD = 3
 COOLDOWN_SECONDS = 60
+TILE_FETCH_TIMEOUT = 6.0
 
 _cache: OrderedDict[tuple[int, int, int], tuple[float, bytes]] = OrderedDict()
 _cache_lock = Lock()
-_client: httpx.AsyncClient | None = None
+_session: aiohttp.ClientSession | None = None
+_resolver: AsyncResolver | None = None
 _semaphore: asyncio.Semaphore | None = None
 _failures = 0
 _open_until = 0.0
@@ -49,16 +53,31 @@ def _store(z: int, x: int, y: int, payload: bytes) -> None:
             _cache.popitem(last=False)
 
 
-def _get_client() -> httpx.AsyncClient:
-    global _client
-    if _client is None:
-        _client = httpx.AsyncClient(
-            timeout=httpx.Timeout(connect=2.0, read=4.0, write=4.0, pool=2.0),
-            limits=httpx.Limits(max_connections=8, max_keepalive_connections=4),
-            follow_redirects=True,
-            headers={"User-Agent": USER_AGENT, "Accept": "image/png,image/*;q=0.8"},
+def _get_session() -> aiohttp.ClientSession:
+    global _session, _resolver
+    if _session is None:
+        # aiodns resolves without blocking the shared anyio thread pool. That
+        # matters when DNS is black-holed: a threaded getaddrinfo can stay stuck
+        # for ~30s and accumulate until every API request stalls.
+        resolver: AsyncResolver | None = None
+        if sys.platform.startswith("linux"):
+            try:
+                resolver = AsyncResolver(timeout=2)
+            except Exception:  # noqa: BLE001 - fall back to the default resolver
+                resolver = None
+        _resolver = resolver
+        connector = aiohttp.TCPConnector(
+            resolver=resolver,
+            ttl_dns_cache=300,
+            family=socket.AF_INET,
         )
-    return _client
+        _session = aiohttp.ClientSession(
+            connector=connector,
+            timeout=aiohttp.ClientTimeout(total=5, connect=3, sock_read=3),
+            headers={"User-Agent": USER_AGENT, "Accept": "image/png,image/*;q=0.8"},
+            trust_env=True,
+        )
+    return _session
 
 
 def _get_semaphore() -> asyncio.Semaphore:
@@ -69,10 +88,13 @@ def _get_semaphore() -> asyncio.Semaphore:
 
 
 async def close_client() -> None:
-    global _client, _semaphore
-    if _client is not None:
-        await _client.aclose()
-        _client = None
+    global _session, _resolver, _semaphore
+    if _session is not None:
+        await _session.close()
+        _session = None
+    if _resolver is not None:
+        await _resolver.close()
+        _resolver = None
     _semaphore = None
 
 
@@ -95,13 +117,14 @@ async def _fetch_tile(z: int, x: int, y: int) -> bytes:
         if time.monotonic() < _open_until:
             raise AppError("map.tile_unavailable")
         try:
-            response = await _get_client().get(url)
-        except httpx.HTTPError as exc:
+            async with _get_session().get(url) as response:
+                content_type = response.headers.get("Content-Type", "")
+                payload = await response.read()
+                status = response.status
+        except (TimeoutError, aiohttp.ClientError) as exc:
             raise AppError("map.tile_unavailable") from exc
-    content_type = response.headers.get("content-type", "")
-    payload = response.content
     if (
-        response.status_code != 200
+        status != 200
         or not content_type.startswith("image/")
         or not payload
         or len(payload) > MAX_TILE_BYTES
@@ -119,12 +142,12 @@ async def _tile(z: int, x: int, y: int) -> bytes:
             return cached[1]
         raise AppError("map.tile_unavailable")
     try:
-        payload = await _fetch_tile(z, x, y)
-    except AppError:
+        payload = await asyncio.wait_for(_fetch_tile(z, x, y), timeout=TILE_FETCH_TIMEOUT)
+    except (AppError, TimeoutError):
         _record_failure()
         if cached is not None:
             return cached[1]
-        raise
+        raise AppError("map.tile_unavailable") from None
     _record_success()
     _store(z, x, y, payload)
     return payload
@@ -135,7 +158,7 @@ async def tile(
     z: int,
     x: int,
     y: int,
-    _context: AuthContext = Depends(get_auth_context),
+    _context: None = Depends(validate_session),
 ):
     limit = 1 << z
     if not (0 <= z <= MAX_ZOOM and 0 <= x < limit and 0 <= y < limit):
