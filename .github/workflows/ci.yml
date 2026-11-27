@@ -93,7 +93,7 @@ jobs:
           severity: CRITICAL,HIGH
           ignore-unfixed: true
       - name: SBOM
-        uses: anchore/sbom-action@v0.24.3
+        uses: anchore/sbom-action@v0.24.4
         with:
           image: oxidized-ui:ci
           format: spdx-json
